@@ -1,5 +1,6 @@
 package com.slm.barbershop.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.slm.barbershop.entity.User;
 import com.slm.barbershop.exception.BizException;
 import com.slm.barbershop.mapper.UserMapper;
@@ -25,8 +26,7 @@ public class AuthService {
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public LoginResponse login(LoginRequest request) {
-        User user = userMapper.selectOne(
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<User>()
+        User user = userMapper.selectOne(new LambdaQueryWrapper<User>()
                         .eq(User::getUsername, request.getUsername())
         );
 
