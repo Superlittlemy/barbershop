@@ -29,7 +29,7 @@ public class ShopService extends ServiceImpl<ShopMapper, Shop> {
     }
 
     public Shop update(Long id, ShopRequest request, Long userId) {
-        Shop shop = findById(id);
+        Shop shop = getById(id);
         if (shop == null) {
             throw new BizException(HttpStatus.NOT_FOUND, "店铺不存在");
         }
@@ -44,7 +44,7 @@ public class ShopService extends ServiceImpl<ShopMapper, Shop> {
     }
 
     public void delete(Long id, Long userId) {
-        Shop shop = findById(id);
+        Shop shop = getById(id);
         if (shop == null) {
             throw new BizException(HttpStatus.NOT_FOUND, "店铺不存在");
         }
@@ -55,7 +55,7 @@ public class ShopService extends ServiceImpl<ShopMapper, Shop> {
     }
 
     public Shop getById(Long id) {
-        return findById(id);
+        return shopMapper.selectById(id);
     }
 
     public List<Shop> listByUserId(Long userId) {
@@ -63,10 +63,6 @@ public class ShopService extends ServiceImpl<ShopMapper, Shop> {
                 new LambdaQueryWrapper<Shop>()
                         .eq(Shop::getUserId, userId)
         );
-    }
-
-    private Shop findById(Long id) {
-        return shopMapper.selectById(id);
     }
 
 }

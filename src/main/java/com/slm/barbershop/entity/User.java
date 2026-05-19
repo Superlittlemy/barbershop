@@ -1,13 +1,14 @@
 package com.slm.barbershop.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
 
+/**
+ * 系统用户实体
+ */
 @Data
 @TableName("sys_user")
 public class User {
@@ -19,8 +20,10 @@ public class User {
 
     private String password;
 
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
+    @TableField(fill = FieldFill.UPDATE)
     private LocalDateTime updateTime;
 
 }

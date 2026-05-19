@@ -24,7 +24,7 @@ public class ApiResponse<T> {
     /**
      * 调用成功（无数据返回）
      */
-    public static ApiResponse<?> ok() {
+    public static ApiResponse<Void> ok() {
         ResultStatus success = ResultStatus.SUCCESS;
         return new ApiResponse<>(success.getCode(), success.getMessage(), null);
     }
@@ -40,14 +40,14 @@ public class ApiResponse<T> {
     /**
      * 调用失败
      */
-    public static ApiResponse<?> failure(ResultStatus status) {
+    public static ApiResponse<Void> failure(ResultStatus status) {
         return new ApiResponse<>(status.getCode(), status.getMessage(), null);
     }
 
     /**
      * 调用失败（附带详细描述）
      */
-    public static ApiResponse<?> failure(ResultStatus status, String message) {
+    public static ApiResponse<Void> failure(ResultStatus status, String message) {
         return new ApiResponse<>(status.getCode(), message, null);
     }
 

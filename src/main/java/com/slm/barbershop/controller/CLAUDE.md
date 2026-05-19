@@ -43,6 +43,23 @@ public ShopResponse getById(@PathVariable Long id) {
 - **@Parameter**: 用于方法上，描述路径参数，必须指定 `in = ParameterIn.PATH`
 - **@Operation**: 标注接口方法，summary 提供接口简短描述
 - **@RequestBody**: 不需要额外 `@Parameter` 注解
+- **ApiResponse**: 所有接口返回必须使用 `ApiResponse<T>` 包装
+
+## 返回包装
+
+所有 Controller 接口返回必须使用 `ApiResponse<T>` 统一包装：
+
+```java
+// 有数据返回
+public ApiResponse<ShopResponse> create(@RequestBody ShopRequest request) {
+    return ApiResponse.ok(shopConverter.toResponse(shop));
+}
+
+// 无数据返回
+public ApiResponse<Void> delete(@PathVariable Long id) {
+    return ApiResponse.ok();
+}
+```
 
 ## 示例
 
@@ -52,3 +69,4 @@ public ShopResponse getById(@PathVariable Long id) {
 | Model 字段 | 字段上 | `@Schema(description = "xxx")` |
 | @PathVariable | 方法上 | `@Parameter(name = "id", description = "店铺ID", in = ParameterIn.PATH)` |
 | @RequestBody | 不标注 | 直接使用，文档由 Model 类的 @Schema 生成 |
+| 接口返回 | 方法上 | `ApiResponse<T>` 或 `ApiResponse<Void>` |

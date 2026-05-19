@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
      */
     @ResponseStatus(code = HttpStatus.BAD_REQUEST)
     @ExceptionHandler(BindException.class)
-    public ApiResponse<?> handler(BindException e) {
+    public ApiResponse<Void> handler(BindException e) {
         BindingResult bindingResult = e.getBindingResult();
         FieldError fieldError = bindingResult.getFieldErrors().get(0);
         return ApiResponse.failure(ResultStatus.REJECT, fieldError.getDefaultMessage());
@@ -40,7 +40,7 @@ public class GlobalExceptionHandler {
      */
     @ResponseStatus(code = HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ApiResponse<?> handler(MethodArgumentNotValidException e) {
+    public ApiResponse<Void> handler(MethodArgumentNotValidException e) {
         BindingResult bindingResult = e.getBindingResult();
         FieldError fieldError = bindingResult.getFieldErrors().get(0);
         return ApiResponse.failure(ResultStatus.REJECT, fieldError.getDefaultMessage());
@@ -51,9 +51,9 @@ public class GlobalExceptionHandler {
      */
     @ResponseStatus(code = HttpStatus.BAD_REQUEST)
     @ExceptionHandler(ConstraintViolationException.class)
-    public ApiResponse<?> handler(ConstraintViolationException e) {
+    public ApiResponse<Void> handler(ConstraintViolationException e) {
         Set<ConstraintViolation<?>> constraintViolations = e.getConstraintViolations();
-        return ApiResponse.failure(ResultStatus.ERROR, constraintViolations.iterator().next().getMessage());
+        return ApiResponse.failure(ResultStatus.REJECT, constraintViolations.iterator().next().getMessage());
     }
 
     /**
@@ -63,7 +63,7 @@ public class GlobalExceptionHandler {
      * @return 响应
      */
     @ExceptionHandler(BizException.class)
-    public ResponseEntity<ApiResponse<?>> handler(BizException e) {
+    public ResponseEntity<ApiResponse<Void>> handler(BizException e) {
         log.error(e.getMessage(), e);
         return ResponseEntity
                 .status(e.getStatus())
@@ -72,7 +72,7 @@ public class GlobalExceptionHandler {
 
     @ResponseStatus(code = HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(Exception.class)
-    public ApiResponse<?> handler(Exception e) {
+    public ApiResponse<Void> handler(Exception e) {
         log.error(e.getMessage(), e);
         return ApiResponse.failure(ResultStatus.ERROR, "服务器内部错误");
     }
