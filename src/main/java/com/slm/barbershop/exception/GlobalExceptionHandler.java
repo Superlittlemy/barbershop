@@ -47,7 +47,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * @Validated 注解触发的校验
+     * {@code @Validated} 注解触发的校验
      */
     @ResponseStatus(code = HttpStatus.BAD_REQUEST)
     @ExceptionHandler(ConstraintViolationException.class)
