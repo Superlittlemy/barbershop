@@ -28,6 +28,7 @@ public class JwtAuthenticationFilter implements Filter {
     private static final List<String> EXCLUDE_PATHS = Arrays.asList(
             "/auth/login",
             "/auth/register",
+            "/auth/send-email-code",
             "/swagger-ui",
             "/v3/api-docs",
             "/swagger-resources",

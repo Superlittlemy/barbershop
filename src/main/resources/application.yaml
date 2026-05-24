@@ -23,6 +23,11 @@ spring:
       connection-timeout: 20000
       # 连接测试sql
       connection-test-query: select 1
+  mail:
+    host: ${MAIL_HOST:smtp.163.com}
+    username: ${MAIL_USERNAME:15867153769@163.com}
+    password: ${MAIL_PASSWORD:XOCGWKJBWYFWPAVI}
+    default-encoding: UTF-8
 jwt:
   secret: ${JWT_SECRET:jAhi27Nmj9shXs7lsOvobA4hpjC5VNk9VF8DoM6yqTU=}
   access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:86400}

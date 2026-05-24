@@ -2,6 +2,8 @@ package com.slm.barbershop.controller;
 
 import com.slm.barbershop.model.ApiResponse;
 import com.slm.barbershop.model.AuthUser;
+import com.slm.barbershop.model.EmailCodeRequest;
+import com.slm.barbershop.model.EmailRegisterRequest;
 import com.slm.barbershop.model.LoginRequest;
 import com.slm.barbershop.model.LoginResponse;
 import com.slm.barbershop.service.AuthService;
@@ -10,6 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import javax.validation.Valid;
 
 @Tag(name = "认证", description = "用户认证相关接口")
 @RestController
@@ -36,6 +39,26 @@ public class AuthController {
     @GetMapping("/me")
     public ApiResponse<AuthUser> getCurrentUser() {
         return ApiResponse.ok(UserContext.getUser());
+    }
+
+    @Operation(summary = "发送验证码")
+    @PostMapping("/send-email-code")
+    public ApiResponse<Void> sendCode(@RequestParam String email) {
+        authService.sendCode(email);
+        return ApiResponse.ok();
+    }
+
+    @Operation(summary = "邮箱注册")
+    @PostMapping("/register/email")
+    public ApiResponse<Void> registerByEmail(@RequestBody @Valid EmailRegisterRequest request) {
+        authService.registerByEmail(request.getEmail(), request.getPassword());
+        return ApiResponse.ok();
+    }
+
+    @Operation(summary = "邮箱验证码登录")
+    @PostMapping("/login/email")
+    public ApiResponse<LoginResponse> loginByEmail(@RequestBody @Valid EmailCodeRequest request) {
+        return ApiResponse.ok(authService.emailLogin(request.getEmail(), request.getCode()));
     }
 
 }
