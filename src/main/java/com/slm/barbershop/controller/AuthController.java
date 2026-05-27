@@ -48,14 +48,7 @@ public class AuthController {
         return ApiResponse.ok();
     }
 
-    @Operation(summary = "邮箱注册")
-    @PostMapping("/register/email")
-    public ApiResponse<Void> registerByEmail(@RequestBody @Valid EmailRegisterRequest request) {
-        authService.registerByEmail(request.getEmail(), request.getPassword());
-        return ApiResponse.ok();
-    }
-
-    @Operation(summary = "邮箱验证码登录")
+    @Operation(summary = "邮箱验证码登录（支持自动注册）")
     @PostMapping("/login/email")
     public ApiResponse<LoginResponse> loginByEmail(@RequestBody @Valid EmailCodeRequest request) {
         return ApiResponse.ok(authService.emailLogin(request.getEmail(), request.getCode()));

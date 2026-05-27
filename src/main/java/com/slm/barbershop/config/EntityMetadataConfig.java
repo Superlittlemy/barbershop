@@ -15,14 +15,20 @@ public class EntityMetadataConfig implements MetaObjectHandler {
 
     @Override
     public void insertFill(MetaObject metaObject) {
-        this.strictInsertFill(metaObject, "createdBy", Long.class, UserContext.getUser().getId());
+        if (metaObject.hasSetter("createdBy")) {
+            Long userId = UserContext.getUser() != null ? UserContext.getUser().getId() : null;
+            this.strictInsertFill(metaObject, "createdBy", Long.class, userId);
+        }
         this.strictInsertFill(metaObject, "createdTime", LocalDateTime.class, LocalDateTime.now());
         this.strictInsertFill(metaObject, "isDeleted", Integer.class, 0);
     }
 
     @Override
     public void updateFill(MetaObject metaObject) {
-        this.strictUpdateFill(metaObject, "updatedBy", Long.class, UserContext.getUser().getId());
+        if (metaObject.hasSetter("updatedBy")) {
+            Long userId = UserContext.getUser() != null ? UserContext.getUser().getId() : null;
+            this.strictUpdateFill(metaObject, "updatedBy", Long.class, userId);
+        }
         this.strictUpdateFill(metaObject, "updatedTime", LocalDateTime.class, LocalDateTime.now());
     }
 

@@ -7,6 +7,7 @@ import com.slm.barbershop.mapper.UserMapper;
 import com.slm.barbershop.model.LoginRequest;
 import com.slm.barbershop.model.LoginResponse;
 import com.slm.barbershop.utils.JWTUtil;
+import com.slm.barbershop.utils.RandomUsernameGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -61,63 +62,24 @@ public class AuthService {
         User user = new User();
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
-        user.setCreateTime(LocalDateTime.now());
-        user.setUpdateTime(LocalDateTime.now());
+        user.setCreatedTime(LocalDateTime.now());
+        user.setUpdatedTime(LocalDateTime.now());
         userMapper.insert(user);
     }
 
     /**
-     * 发送验证码
+     * 发送验证码到邮箱
      */
     public void sendCode(String email) {
-        // 先检查邮箱是否已注册
-        User existUser = userMapper.selectOne(
-                new LambdaQueryWrapper<User>().eq(User::getEmail, email)
-        );
-        if (existUser != null && existUser.getEmailVerified()) {
-            throw new BizException(HttpStatus.BAD_REQUEST, "该邮箱已被注册");
-        }
-
-        // 生成并发送验证码
         String code = verifyCodeService.generateAndStore(email);
         emailService.sendVerifyCode(email, code);
     }
 
     /**
-     * 邮箱注册/发送验证码（合并登录）
-     * 如果邮箱已注册则只发送验证码，未注册则创建账号并发送验证码
-     */
-    public void registerByEmail(String email, String password) {
-        // 检查邮箱是否已注册且已验证
-        User existUser = userMapper.selectOne(
-                new LambdaQueryWrapper<User>().eq(User::getEmail, email)
-        );
-        if (existUser != null && existUser.getEmailVerified()) {
-            throw new BizException(HttpStatus.BAD_REQUEST, "该邮箱已被注册");
-        }
-
-        // 如果邮箱已注册但未验证，更新密码并发送验证码
-        if (existUser != null) {
-            existUser.setPassword(passwordEncoder.encode(password));
-            userMapper.updateById(existUser);
-        } else {
-            // 新用户创建账号
-            User user = new User();
-            user.setEmail(email);
-            user.setPassword(passwordEncoder.encode(password));
-            user.setEmailVerified(false);
-            user.setCreateTime(LocalDateTime.now());
-            user.setUpdateTime(LocalDateTime.now());
-            userMapper.insert(user);
-        }
-
-        // 发送验证码
-        String code = verifyCodeService.generateAndStore(email);
-        emailService.sendVerifyCode(email, code);
-    }
-
-    /**
-     * 邮箱验证码登录
+     * 邮箱验证码登录（合并注册）
+     * 验证码通过后：
+     * - 已注册用户直接登录
+     * - 未注册用户自动注册并登录
      */
     public LoginResponse emailLogin(String email, String code) {
         // 验证验证码
@@ -125,18 +87,19 @@ public class AuthService {
             throw new BizException(HttpStatus.UNAUTHORIZED, "验证码错误或已过期");
         }
 
-        // 查询用户
+        // 查询或创建用户
         User user = userMapper.selectOne(
                 new LambdaQueryWrapper<User>().eq(User::getEmail, email)
         );
         if (user == null) {
-            throw new BizException(HttpStatus.UNAUTHORIZED, "用户不存在");
+            // 未注册用户，自动创建账号
+            user = new User();
+            user.setUsername(RandomUsernameGenerator.generate());
+            user.setEmail(email);
+            user.setCreatedTime(LocalDateTime.now());
+            user.setUpdatedTime(LocalDateTime.now());
+            userMapper.insert(user);
         }
-
-        // 更新邮箱验证状态
-        user.setEmailVerified(true);
-        user.setUpdateTime(LocalDateTime.now());
-        userMapper.updateById(user);
 
         // 生成token
         String token = jwtUtil.generateJwtToken(user.getId(), user.getUsername());

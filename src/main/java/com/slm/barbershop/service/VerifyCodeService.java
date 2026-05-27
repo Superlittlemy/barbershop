@@ -60,18 +60,4 @@ public class VerifyCodeService {
         return false;
     }
 
-    /**
-     * 获取验证码（用于测试或调试，不暴露给外部）
-     */
-    public String getCode(String email) {
-        VerifyCode verifyCode = verifyCodes.get(email);
-        return verifyCode != null ? verifyCode.getCode() : null;
-    }
-
-    /**
-     * 删除验证码
-     */
-    public void remove(String email) {
-        verifyCodes.remove(email);
-    }
 }

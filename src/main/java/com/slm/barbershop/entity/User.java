@@ -20,19 +20,14 @@ public class User {
     private String password;
 
     /**
-     * 用户邮箱（用于登录）
+     * 邮箱
      */
     private String email;
 
-    /**
-     * 邮箱是否已验证
-     */
-    private Boolean emailVerified;
-
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createTime;
+    private LocalDateTime createdTime;
 
     @TableField(fill = FieldFill.UPDATE)
-    private LocalDateTime updateTime;
+    private LocalDateTime updatedTime;
 
 }

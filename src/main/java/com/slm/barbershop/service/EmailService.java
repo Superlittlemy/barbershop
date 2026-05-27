@@ -1,8 +1,10 @@
 package com.slm.barbershop.service;
 
+import com.slm.barbershop.exception.BizException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -30,10 +32,10 @@ public class EmailService {
             message.setSubject("Barbershop验证码");
             message.setText("您的验证码是：" + code + "\n验证码有效期15分钟，请勿泄露给他人。");
             javaMailSender.send(message);
-            log.info("验证码已发送到: {}", to);
+            log.info("邮箱验证码已发送到: {}", to);
         } catch (Exception e) {
-            log.error("发送验证码失败: {}", to, e);
-            throw new RuntimeException("发送验证码失败", e);
+            log.error("发送邮箱验证码失败: {}", to, e);
+            throw new BizException(HttpStatus.INTERNAL_SERVER_ERROR, "发送邮箱验证码失败");
         }
     }
 
