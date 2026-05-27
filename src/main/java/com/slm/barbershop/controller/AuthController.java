@@ -3,7 +3,6 @@ package com.slm.barbershop.controller;
 import com.slm.barbershop.model.ApiResponse;
 import com.slm.barbershop.model.AuthUser;
 import com.slm.barbershop.model.EmailCodeRequest;
-import com.slm.barbershop.model.EmailRegisterRequest;
 import com.slm.barbershop.model.LoginRequest;
 import com.slm.barbershop.model.LoginResponse;
 import com.slm.barbershop.service.AuthService;
