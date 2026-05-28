@@ -931,7 +931,7 @@
                 <h1>让理发店管理<br>更简单、更优雅</h1>
                 <p>为理发店量身打造的会员管理与营销平台，助力您的业务增长</p>
                 <div class="hero-btns">
-                    <a href="#" class="btn btn-primary" onclick="showSection('login')">开始使用</a>
+                    <a href="#" class="btn btn-primary" onclick="goToConsole()">开始使用</a>
                     <a href="#features" class="btn btn-secondary">了解更多</a>
                 </div>
             </div>
@@ -1029,7 +1029,7 @@
         </section>
 
         <!-- CTA -->
-        <section class="cta">
+        <section class="cta" id="ctaSection">
             <div class="container">
                 <h2>准备好开始了</h2>
                 <p>注册账号，创建您的第一家店铺，开始优雅的管理之旅</p>
@@ -1105,7 +1105,7 @@
                     <div class="dashboard-card">
                         <h3>店铺管理</h3>
                         <p>管理您的店铺信息、营业时间、联系方式等</p>
-                        <a href="#" class="card-link">
+                        <a href="shop-management.html" class="card-link">
                             立即管理
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <line x1="5" y1="12" x2="19" y2="12"/>
@@ -1175,7 +1175,7 @@
 
     <script>
         // API Base URL - 后端服务地址
-        const API_BASE = 'http://localhost:8080/barbershop';
+        const API_BASE = '/api/barbershop';
 
         // State
         let currentUser = null;
@@ -1319,15 +1319,26 @@
         }
 
         // Update nav based on auth state
+        function goToConsole() {
+            if (currentUser) {
+                window.location.href = 'shop-management.html';
+            } else {
+                showSection('login');
+            }
+        }
+
         function updateNavAuth() {
             const navLogin = document.getElementById('navLogin');
             const navDashboard = document.getElementById('navDashboard');
+            const ctaSection = document.getElementById('ctaSection');
             if (currentUser) {
                 navLogin.style.display = 'none';
                 navDashboard.style.display = 'block';
+                ctaSection.style.display = 'none';
             } else {
                 navLogin.style.display = 'block';
                 navDashboard.style.display = 'none';
+                ctaSection.style.display = 'block';
             }
         }
 
