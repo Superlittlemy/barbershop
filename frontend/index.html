@@ -127,6 +127,18 @@
         .shop-card-stat-label { font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
         .shop-card-stat-value { font-size: 16px; font-weight: 700; color: var(--text); }
         .shop-card-actions { display: flex; gap: 6px; }
+        .shop-card-linkable { cursor: pointer; }
+        .shop-card-linkable:hover { border-color: var(--border-strong); }
+
+        /* Shop detail */
+        .shop-detail-banner { display: flex; gap: 18px; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 20px; margin-bottom: 20px; }
+        .shop-detail-logo { width: 72px; height: 72px; border-radius: 12px; background: linear-gradient(135deg, #2A2A2A 0%, #1A1A1A 100%); color: var(--text-inverse); display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+        .shop-detail-logo img { width: 100%; height: 100%; object-fit: cover; }
+        .shop-detail-logo svg { width: 32px; height: 32px; }
+        .shop-detail-info { flex: 1; min-width: 0; }
+        .shop-detail-name { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+        .shop-detail-line { font-size: 13px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+        .shop-detail-line svg { width: 13px; height: 13px; color: var(--text-tertiary); flex-shrink: 0; }
 
         /* Right Activity Panel */
         .activity-panel { width: 280px; flex-shrink: 0; padding: 24px 20px; height: calc(100vh - 56px); overflow-y: auto; position: sticky; top: 56px; }
@@ -290,19 +302,10 @@
             <div class="page-header">
                 <h1 class="page-title" id="pageTitle">概览</h1>
                 <p class="page-subtitle" id="pageSubtitle">欢迎回来</p>
-                <div class="page-actions" id="pageActions">
-                    <button class="btn" id="actionAddShop" onclick="openShopModal()">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        添加店铺
-                    </button>
-                    <a href="member-portal.html" class="btn btn-primary">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        新增会员
-                    </a>
-                </div>
+                <div class="page-actions" id="pageActions"></div>
             </div>
 
-            <div class="sub-nav">
+            <div class="sub-nav" id="subNav">
                 <a class="sub-nav-item" data-view="overview" href="#overview">概览</a>
                 <a class="sub-nav-item" data-view="shops" href="#shops">店铺管理</a>
             </div>
@@ -357,6 +360,39 @@
                         <p class="empty-desc">创建您的第一家店铺，开始管理</p>
                         <button class="btn btn-primary" onclick="openShopModal()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加店铺</button>
                     </div>
+                </div>
+            </div>
+
+            <div data-view-pane="shop-detail" hidden class="fade-in">
+                <div class="shop-detail-banner" id="shopDetailBanner"></div>
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-label">本店会员</div>
+                        <div class="kpi-value" id="kpiShopMembers">—</div>
+                        <div class="kpi-trend">当前店铺</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">储值总额</div>
+                        <div class="kpi-value" id="kpiShopStored">¥—</div>
+                        <div class="kpi-trend">会员余额合计</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">平均余额</div>
+                        <div class="kpi-value" id="kpiShopAvg">¥—</div>
+                        <div class="kpi-trend">人均储值</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">注册时间</div>
+                        <div class="kpi-value" id="kpiShopCreated" style="font-size: 18px; padding-top: 6px;">—</div>
+                        <div class="kpi-trend">店铺开通日</div>
+                    </div>
+                </div>
+                <div class="section-card">
+                    <div class="section-header">
+                        <div class="section-title">本店会员</div>
+                        <a id="shopDetailMembersLink" class="btn btn-ghost" href="member-portal.html">前往会员管理 →</a>
+                    </div>
+                    <div class="section-body" id="shopMembersList"></div>
                 </div>
             </div>
         </main>
@@ -459,6 +495,40 @@
                     </div>
                 </div>
             </div>
+
+            <div data-activity-pane="shop-detail" hidden>
+                <div class="activity-card">
+                    <div class="activity-header">店铺操作</div>
+                    <div class="activity-list">
+                        <button class="activity-item" style="background: transparent; border: none; cursor: pointer; text-align: left; font-family: inherit; width: 100%;" data-shop-action="edit" onclick="shopDetailAction('edit')">
+                            <div class="activity-dot" style="background: var(--info, #4A6FA5);"></div>
+                            <div class="activity-content">
+                                <strong>编辑店铺信息</strong>
+                                <div class="activity-time">→</div>
+                            </div>
+                        </button>
+                        <button class="activity-item" style="background: transparent; border: none; cursor: pointer; text-align: left; font-family: inherit; width: 100%; color: var(--error);" data-shop-action="delete" onclick="shopDetailAction('delete')">
+                            <div class="activity-dot" style="background: var(--error);"></div>
+                            <div class="activity-content">
+                                <strong>删除店铺</strong>
+                                <div class="activity-time">不可恢复</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+                <div class="activity-card">
+                    <div class="activity-header">提示</div>
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-dot"></div>
+                            <div class="activity-content">
+                                点击会员可在会员管理中查看交易明细
+                                <div class="activity-time">—</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </aside>
     </div>
 
@@ -535,35 +605,97 @@
         const API_BASE = '/api/barbershop';
         let currentUser = null;
         let shops = [];
+        let shopsLoaded = false;
         let editingShopId = null;
         const shopStats = new Map(); // shopId -> { memberCount, totalBalance }
 
         /* ----- View routing ----- */
         function currentView() {
             const hash = (location.hash || '').replace('#', '');
+            if (hash.startsWith('shop/')) return 'shop-detail';
             return hash === 'shops' ? 'shops' : 'overview';
         }
+        function getShopIdFromHash() {
+            const hash = (location.hash || '').replace('#', '');
+            return hash.startsWith('shop/') ? decodeURIComponent(hash.slice(5)) : null;
+        }
         function switchView(view) {
-            if (view !== 'overview' && view !== 'shops') view = 'overview';
-            if (location.hash !== '#' + view) {
+            if (view !== 'overview' && view !== 'shops' && view !== 'shop-detail') view = 'overview';
+            if (view !== 'shop-detail' && location.hash !== '#' + view) {
                 history.replaceState(null, '', '#' + view);
             }
             document.querySelectorAll('[data-view-pane]').forEach(p => p.hidden = p.dataset.viewPane !== view);
             document.querySelectorAll('[data-activity-pane]').forEach(p => p.hidden = p.dataset.activityPane !== view);
-            document.querySelectorAll('.sub-nav-item').forEach(b => b.classList.toggle('active', b.dataset.view === view));
-            document.querySelectorAll('.sidebar-item[data-nav]').forEach(b => b.classList.toggle('active', b.dataset.nav === view));
+            document.getElementById('subNav').hidden = view === 'shop-detail';
+            const navTarget = view === 'shop-detail' ? 'shops' : view;
+            document.querySelectorAll('.sub-nav-item').forEach(b => b.classList.toggle('active', b.dataset.view === navTarget));
+            document.querySelectorAll('.sidebar-item[data-nav]').forEach(b => b.classList.toggle('active', b.dataset.nav === navTarget));
             const title = document.getElementById('pageTitle');
             const sub = document.getElementById('pageSubtitle');
             if (view === 'shops') {
                 title.textContent = '店铺管理';
                 sub.textContent = '管理您的店铺信息';
+                renderPageActions('shops');
                 loadShopViewStats();
+            } else if (view === 'shop-detail') {
+                const shopId = getShopIdFromHash();
+                if (shopId) {
+                    const shop = shops.find(s => String(s.id) === String(shopId));
+                    title.textContent = shop ? shop.name : '店铺详情';
+                    sub.textContent = shop ? (shop.address || '查看店铺信息') : '—';
+                    renderPageActions('shop-detail', shopId);
+                    if (currentUser && !shopsLoaded) return;
+                    loadShopDetail(shopId);
+                } else {
+                    location.hash = '#shops';
+                }
             } else {
                 title.textContent = '概览';
                 sub.textContent = currentUser ? `欢迎回来，${currentUser.memberName || currentUser.username || ''}` : '欢迎回来';
+                renderPageActions('overview');
             }
         }
         window.addEventListener('hashchange', () => switchView(currentView()));
+
+        function renderPageActions(view, shopId) {
+            const el = document.getElementById('pageActions');
+            if (view === 'shop-detail') {
+                el.innerHTML = `
+                    <a class="btn" href="#shops">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                        返回店铺管理
+                    </a>
+                    <button class="btn" data-shop-action="edit" onclick="shopDetailAction('edit')">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        编辑
+                    </button>
+                    <button class="btn btn-danger" data-shop-action="delete" onclick="shopDetailAction('delete')">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        删除
+                    </button>
+                    <a class="btn btn-primary" href="member-portal.html?shopId=${encodeURIComponent(shopId || '')}">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        新增会员
+                    </a>`;
+            } else {
+                el.innerHTML = `
+                    <button class="btn" onclick="openShopModal()">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        添加店铺
+                    </button>
+                    <a href="member-portal.html" class="btn btn-primary">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        新增会员
+                    </a>`;
+            }
+        }
+
+        function shopDetailAction(kind) {
+            const shopId = getShopIdFromHash();
+            if (!shopId) return;
+            if (kind === 'edit') editShop(shopId);
+            else if (kind === 'delete') deleteShop(shopId);
+        }
 
         /* ----- Modals / toasts ----- */
         function openModal() {
@@ -666,6 +798,7 @@
             localStorage.removeItem('token');
             localStorage.removeItem('member');
             currentUser = null;
+            shopsLoaded = false;
             closeUserMenu();
             applyAuth();
             showToast('已退出登录', 'success');
@@ -706,6 +839,7 @@
             const shopsRes = await apiCall('/shop/list');
             if (shopsRes.code !== 20000) return;
             shops = shopsRes.data || [];
+            shopsLoaded = true;
             document.getElementById('kpiShops').textContent = shops.length;
             document.getElementById('shopCount').textContent = shops.length;
             renderSidebarShops();
@@ -760,7 +894,7 @@
                 return;
             }
             el.innerHTML = shops.slice(0, 6).map(s => `
-                <a class="sidebar-item" href="#shops" data-shop-jump="${s.id}">
+                <a class="sidebar-item" href="#shop/${encodeURIComponent(s.id)}" data-shop-jump="${escapeHtml(s.id)}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
                     <span>${escapeHtml(s.name)}</span>
                 </a>
@@ -781,8 +915,9 @@
                 const stat = shopStats.get(s.id) || { memberCount: '—', totalBalance: '—' };
                 const memberCount = stat.memberCount;
                 const balance = stat.totalBalance;
+                const sid = escapeHtml(s.id);
                 return `
-                <div class="shop-card">
+                <div class="shop-card shop-card-linkable" onclick="location.hash='shop/${sid}'">
                     <div class="shop-card-head">
                         <div class="shop-card-logo">
                             ${s.logo
@@ -809,11 +944,11 @@
                         </div>
                     </div>
                     <div class="shop-card-actions">
-                        <button class="btn btn-sm" onclick="editShop('${s.id}')">
+                        <button class="btn btn-sm" onclick="event.stopPropagation(); editShop('${sid}')">
                             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                             编辑
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteShop('${s.id}')">
+                        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteShop('${sid}')">
                             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                             删除
                         </button>
@@ -827,6 +962,78 @@
             let active = 0;
             for (const [, v] of shopStats) { if (v.memberCount > 0) active++; }
             document.getElementById('statActiveShops').textContent = active;
+        }
+
+        /* ----- Shop detail ----- */
+        async function loadShopDetail(shopId) {
+            const shop = shops.find(s => String(s.id) === String(shopId));
+            if (!shop) {
+                showToast('店铺不存在', 'error');
+                location.hash = '#shops';
+                return;
+            }
+            renderShopDetailBanner(shop);
+            const link = document.getElementById('shopDetailMembersLink');
+            if (link) link.href = `member-portal.html?shopId=${encodeURIComponent(shopId)}`;
+
+            document.getElementById('kpiShopCreated').textContent = shop.createdTime
+                ? new Date(shop.createdTime).toISOString().slice(0, 10)
+                : '—';
+            document.getElementById('kpiShopMembers').textContent = '—';
+            document.getElementById('kpiShopStored').textContent = '¥—';
+            document.getElementById('kpiShopAvg').textContent = '¥—';
+            document.getElementById('shopMembersList').innerHTML = '<div class="recent-item"><div class="recent-avatar">…</div><div class="recent-content"><div class="recent-name">加载中</div></div></div>';
+
+            const res = await apiCall(`/member/list?shopId=${encodeURIComponent(shopId)}`);
+            if (res.code !== 20000) {
+                renderShopMembers([]);
+                return;
+            }
+            const members = res.data || [];
+            const total = members.reduce((s, m) => s + parseFloat(m.balance || 0), 0);
+            document.getElementById('kpiShopMembers').textContent = members.length;
+            document.getElementById('kpiShopStored').textContent = `¥${total.toFixed(2)}`;
+            document.getElementById('kpiShopAvg').textContent = members.length > 0 ? `¥${(total / members.length).toFixed(2)}` : '¥0.00';
+            renderShopMembers(members);
+        }
+
+        function renderShopDetailBanner(shop) {
+            const logo = shop.logo
+                ? `<img src="${escapeHtml(shop.logo)}" alt="">`
+                : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3h12l4 6-10 13L2 9z"/></svg>`;
+            document.getElementById('shopDetailBanner').innerHTML = `
+                <div class="shop-detail-logo">${logo}</div>
+                <div class="shop-detail-info">
+                    <div class="shop-detail-name">${escapeHtml(shop.name)}</div>
+                    <div class="shop-detail-line">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        ${escapeHtml(shop.address || '未填写地址')}
+                    </div>
+                    <div class="shop-detail-line">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        ${escapeHtml(shop.phone || '未填写电话')}
+                    </div>
+                </div>`;
+        }
+
+        function renderShopMembers(members) {
+            const el = document.getElementById('shopMembersList');
+            if (!members.length) {
+                el.innerHTML = '<div class="empty-state"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><h3 class="empty-title">还没有会员</h3><p class="empty-desc">该店铺下还没有任何会员</p><a id="shopDetailAddMember" class="btn btn-primary">新增会员</a></div>';
+                const addLink = document.getElementById('shopDetailAddMember');
+                if (addLink) addLink.href = `member-portal.html?shopId=${encodeURIComponent(getShopIdFromHash() || '')}`;
+                return;
+            }
+            el.innerHTML = members.map(m => `
+                <a class="recent-item" href="member-portal.html?shopId=${encodeURIComponent(m.shopId || getShopIdFromHash() || '')}">
+                    <div class="recent-avatar">${escapeHtml((m.name || '?').charAt(0))}</div>
+                    <div class="recent-content">
+                        <div class="recent-name">${escapeHtml(m.name || '匿名')}</div>
+                        <div class="recent-meta">${escapeHtml(m.phone || '无手机号')}</div>
+                    </div>
+                    <div class="recent-amount">¥${parseFloat(m.balance || 0).toFixed(2)}</div>
+                </a>
+            `).join('');
         }
 
         /* ----- Shop CRUD ----- */
