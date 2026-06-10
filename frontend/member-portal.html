@@ -1,144 +1,772 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>会员中心</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f7; min-height: 100vh; }
-    .container { max-width: 375px; margin: 0 auto; padding: 20px 16px; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>会员管理 — BARBERSHOP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #FAFAF8; --surface: #FFFFFF; --surface-alt: #F5F3EE; --surface-hover: #F0EDE6;
+            --border: #E8E4DC; --border-strong: #1A1A1A;
+            --text: #1A1A1A; --text-secondary: #4A4A4A; --text-tertiary: #8A8A8A; --text-inverse: #FFFFFF;
+            --accent: #C4A77D; --accent-hover: #B39567; --accent-light: rgba(196, 167, 125, 0.12);
+            --success: #4A9D5B; --success-hover: #3d8549; --success-light: rgba(74, 157, 91, 0.1);
+            --error: #D64545; --error-light: rgba(214, 69, 69, 0.1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        ::selection { background: var(--accent); color: var(--text-inverse); }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'DM Sans', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; }
 
-    /* Profile Card */
-    .profile-card { background: #fff; border-radius: 16px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-    .profile-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
-    .avatar { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 24px; font-weight: 600; }
-    .profile-info h1 { font-size: 20px; color: #1a1a1a; margin-bottom: 4px; }
-    .profile-info p { font-size: 13px; color: #8e8e93; }
-    .store-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0f0f5; padding: 6px 12px; border-radius: 20px; font-size: 12px; color: #666; margin-top: 12px; }
-    .store-badge::before { content: '📍'; }
+        /* Topbar */
+        .topbar { display: flex; align-items: center; height: 56px; padding: 0 20px; background: rgba(250, 250, 248, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; }
+        .topbar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 500; letter-spacing: 0.12em; }
+        .topbar-brand-mark { width: 28px; height: 28px; border-radius: 50%; background: var(--text); display: flex; align-items: center; justify-content: center; }
+        .topbar-brand-mark svg { width: 14px; height: 14px; stroke: var(--text-inverse); fill: none; }
+        .topbar-search { flex: 1; max-width: 320px; margin: 0 24px; position: relative; }
+        .topbar-search input { width: 100%; height: 32px; padding: 0 12px 0 32px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; color: var(--text); transition: all 0.15s; }
+        .topbar-search input:focus { outline: none; border-color: var(--border-strong); }
+        .topbar-search input::placeholder { color: var(--text-tertiary); }
+        .topbar-search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--text-tertiary); pointer-events: none; }
+        .topbar-actions { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+        .topbar-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: var(--text-inverse); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; cursor: pointer; }
 
-    /* Balance Card */
-    .balance-card { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 16px; padding: 28px 24px; margin-bottom: 16px; color: #fff; }
-    .balance-label { font-size: 13px; opacity: 0.7; margin-bottom: 8px; letter-spacing: 1px; }
-    .balance-amount { font-size: 42px; font-weight: 700; letter-spacing: -1px; }
-    .balance-amount::before { content: '¥'; font-size: 24px; margin-right: 4px; }
-    .balance-hint { font-size: 12px; opacity: 0.5; margin-top: 8px; }
+        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; min-height: 32px; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; text-decoration: none; }
+        .btn:hover { border-color: var(--border-strong); background: var(--surface-hover); }
+        .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        .btn-primary { background: var(--text); color: var(--text-inverse); border-color: var(--text); }
+        .btn-primary:hover { background: #000; }
+        .btn-ghost { background: transparent; border-color: transparent; }
+        .btn-ghost:hover { background: var(--surface-hover); }
+        .btn-danger { color: var(--error); border-color: var(--error); background: var(--surface); }
+        .btn-danger:hover { background: var(--error); color: var(--text-inverse); }
+        .btn-icon { width: 32px; height: 32px; padding: 0; justify-content: center; }
+        .btn-success { background: var(--success); color: var(--text-inverse); border-color: var(--success); }
+        .btn-success:hover { background: var(--success-hover); border-color: var(--success-hover); }
+        .btn-warn { background: var(--surface); color: var(--text); border-color: var(--border); }
+        .btn-warn:hover { border-color: var(--text); }
 
-    /* Menu */
-    .menu-section { background: #fff; border-radius: 16px; padding: 8px 0; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-    .menu-item { display: flex; align-items: center; padding: 16px 20px; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: background 0.2s; }
-    .menu-item:last-child { border-bottom: none; }
-    .menu-item:hover { background: #fafafa; }
-    .menu-icon { width: 40px; height: 40px; border-radius: 10px; background: #f0f0f5; display: flex; align-items: center; justify-content: center; margin-right: 14px; font-size: 18px; }
-    .menu-text { flex: 1; font-size: 15px; color: #1a1a1a; }
-    .menu-arrow { color: #c7c7cc; font-size: 14px; }
+        .dashboard-layout { display: flex; align-items: flex-start; }
 
-    /* Book Button */
-    .book-btn { display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(102, 126, 234, 0.35); }
-    .book-btn:active { transform: scale(0.98); }
+        /* Sidebar */
+        .sidebar { width: 280px; flex-shrink: 0; background: var(--bg); border-right: 1px solid var(--border); padding: 16px 12px; height: calc(100vh - 56px); overflow-y: auto; position: sticky; top: 56px; }
+        .sidebar-section { margin-bottom: 20px; }
+        .sidebar-section-title { font-size: 11px; font-weight: 500; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.08em; padding: 0 8px 8px; display: flex; align-items: center; justify-content: space-between; }
+        .sidebar-item { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 4px; font-size: 13px; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; text-decoration: none; }
+        .sidebar-item:hover { background: var(--surface-hover); color: var(--text); }
+        .sidebar-item.active { background: var(--accent-light); color: var(--text); font-weight: 500; }
+        .sidebar-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+        .sidebar-item-count { margin-left: auto; font-size: 11px; color: var(--text-tertiary); }
+        .sidebar-empty { padding: 8px 12px; font-size: 12px; color: var(--text-tertiary); font-style: italic; }
 
-    /* Modal */
-    .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: flex-end; justify-content: center; }
-    .modal.active { display: flex; }
-    .modal-content { background: #fff; border-radius: 20px 20px 0 0; width: 100%; max-width: 375px; max-height: 80vh; overflow-y: auto; padding: 24px; animation: slideUp 0.3s ease; }
-    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .modal-title { font-size: 18px; font-weight: 600; }
-    .modal-close { width: 32px; height: 32px; border-radius: 50%; background: #f5f5f5; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; color: #666; }
-    .time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-    .time-slot { padding: 12px; text-align: center; border: 1px solid #e5e5e5; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.2s; }
-    .time-slot.selected { background: #667eea; color: #fff; border-color: #667eea; }
-    .time-slot:active { transform: scale(0.95); }
-    .confirm-book { width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        /* Shop selector */
+        .shop-selector { margin-bottom: 16px; padding: 0 8px; }
+        .shop-selector select { width: 100%; height: 32px; padding: 0 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 12px; color: var(--text); cursor: pointer; }
+        .shop-selector select:focus { outline: none; border-color: var(--border-strong); }
 
-    /* Footer */
-    .footer { text-align: center; font-size: 11px; color: #8e8e93; line-height: 1.6; }
-  </style>
+        /* Member list item (sidebar) */
+        .member-row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 4px; font-size: 13px; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
+        .member-row:hover { background: var(--surface-hover); color: var(--text); }
+        .member-row.active { background: var(--accent-light); color: var(--text); font-weight: 500; }
+        .member-avatar { width: 24px; height: 24px; border-radius: 50%; background: var(--surface-alt); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; flex-shrink: 0; }
+        .member-row.active .member-avatar { background: var(--accent); color: var(--text-inverse); }
+        .member-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .member-balance { font-size: 11px; color: var(--text-tertiary); }
+        .member-row.active .member-balance { color: var(--text); }
+
+        /* Main */
+        .main { flex: 1; min-width: 0; padding: 24px 28px; }
+        .page-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 20px; gap: 16px; flex-wrap: wrap; }
+        .page-title { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 400; color: var(--text); letter-spacing: -0.01em; }
+        .page-subtitle { font-size: 13px; color: var(--text-tertiary); margin-top: 4px; }
+        .page-actions { display: flex; gap: 8px; }
+
+        /* Section Card */
+        .section-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 16px; }
+        .section-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid var(--border); }
+        .section-title { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 500; color: var(--text); }
+
+        /* Member Detail */
+        .member-header { padding: 20px 24px; display: flex; gap: 16px; align-items: center; }
+        .member-big-avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--accent-light); color: var(--accent-hover); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 500; flex-shrink: 0; font-family: 'Cormorant Garamond', serif; }
+        .member-info { flex: 1; }
+        .member-name-big { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 500; margin-bottom: 2px; }
+        .member-meta { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--text-tertiary); }
+        .member-meta-item { display: flex; align-items: center; gap: 4px; }
+        .member-actions { display: flex; gap: 6px; }
+
+        /* Balance display */
+        .balance-display { padding: 20px 24px; background: var(--bg); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .balance-label { font-size: 11px; font-weight: 500; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+        .balance-value { font-size: 32px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; line-height: 1; }
+        .balance-actions { display: flex; gap: 8px; }
+
+        /* Table */
+        .table-wrap { overflow-x: auto; }
+        .table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .table th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 500; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); background: var(--bg); }
+        .table td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
+        .table tr:nth-child(even) td { background: var(--surface-alt); }
+        .table tr:hover td { background: var(--surface-hover); }
+        .col-actions { text-align: right; width: 1%; white-space: nowrap; }
+        .amount-pos { color: var(--success); font-weight: 500; }
+        .amount-neg { color: var(--error); font-weight: 500; }
+        .type-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; line-height: 1.5; }
+        .type-store { background: var(--success-light); color: var(--success); }
+        .type-consume { background: var(--error-light); color: var(--error); }
+
+        /* Activity Panel */
+        .activity-panel { width: 280px; flex-shrink: 0; padding: 24px 20px; height: calc(100vh - 56px); overflow-y: auto; position: sticky; top: 56px; }
+        .activity-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 16px; }
+        .activity-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 12px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+        .activity-list { padding: 8px 0; }
+        .activity-item { display: flex; gap: 10px; padding: 10px 16px; font-size: 12px; }
+        .activity-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-top: 6px; }
+        .activity-content { flex: 1; color: var(--text-secondary); line-height: 1.5; }
+        .activity-content strong { color: var(--text); font-weight: 500; }
+        .activity-time { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+
+        /* Empty state */
+        .empty-state { text-align: center; padding: 64px 24px; }
+        .empty-icon { width: 56px; height: 56px; margin: 0 auto 16px; background: var(--surface-alt); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--text-tertiary); }
+        .empty-icon svg { width: 24px; height: 24px; }
+        .empty-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; margin-bottom: 8px; }
+        .empty-desc { color: var(--text-tertiary); font-size: 13px; margin-bottom: 16px; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: all 0.2s; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; max-width: 440px; width: calc(100% - 32px); transform: translateY(8px) scale(0.98); transition: transform 0.2s; }
+        .modal-overlay.active .modal { transform: translateY(0) scale(1); }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+        .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 500; }
+        .modal-close { width: 28px; height: 28px; padding: 0; background: transparent; border: 1px solid var(--border); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); }
+        .modal-close:hover { background: var(--surface-hover); color: var(--text); }
+        .modal-close svg { width: 14px; height: 14px; }
+        .modal-body { padding: 20px; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--border); }
+
+        .input-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+        .input-label { font-size: 11px; font-weight: 500; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.08em; }
+        .input { width: 100%; height: 36px; padding: 0 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 13px; color: var(--text); transition: all 0.15s; }
+        .input:focus { outline: none; border-color: var(--border-strong); }
+        .input::placeholder { color: var(--text-tertiary); }
+        .input-prefix { position: relative; }
+        .input-prefix .prefix { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); font-size: 13px; pointer-events: none; }
+        .input-prefix .input { padding-left: 26px; }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(16px); background: var(--text); color: var(--text-inverse); padding: 10px 18px; border-radius: 6px; font-size: 13px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); opacity: 0; transition: all 0.2s; z-index: 300; pointer-events: none; }
+        .toast.active { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--error); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.3s ease forwards; }
+        .stagger > * { animation: fadeIn 0.3s ease forwards; opacity: 0; }
+        .stagger > *:nth-child(1) { animation-delay: 0.03s; }
+        .stagger > *:nth-child(2) { animation-delay: 0.06s; }
+        .stagger > *:nth-child(3) { animation-delay: 0.09s; }
+        .stagger > *:nth-child(4) { animation-delay: 0.12s; }
+
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+        @media (max-width: 1280px) { .activity-panel { width: 240px; padding: 20px 16px; } }
+        @media (max-width: 1024px) {
+            .activity-panel { display: none; }
+            .sidebar { width: 64px; }
+            .sidebar-item span:not(.sidebar-item-count), .sidebar-section-title a, .sidebar-section-title span:not(:first-child), .shop-selector, .member-row .member-name, .member-row .member-balance { display: none; }
+            .member-row { justify-content: center; padding: 6px; }
+        }
+        @media (max-width: 768px) {
+            .dashboard-layout { flex-direction: column; }
+            .sidebar { position: fixed; left: -280px; top: 56px; width: 280px; height: calc(100vh - 56px); background: var(--surface); z-index: 100; transition: left 0.2s; }
+            .sidebar.open { left: 0; }
+            .sidebar-item span, .member-row .member-name, .member-row .member-balance, .shop-selector, .sidebar-section-title a { display: inline; }
+            .main { padding: 16px; }
+            .page-header { flex-direction: column; align-items: flex-start; }
+            .balance-display { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .topbar-search { display: none; }
+            .table-wrap { overflow-x: auto; }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Profile Card -->
-    <div class="profile-card">
-      <div class="profile-header">
-        <div class="avatar">李</div>
-        <div class="profile-info">
-          <h1>李明</h1>
-          <p>138****8888</p>
-          <div class="store-badge">星光理发店 · 会员</div>
+    <header class="topbar">
+        <a href="index.html" class="topbar-brand">
+            <span class="topbar-brand-mark"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M6 3h12l4 6-10 13L2 9z"/></svg></span>
+            BARBERSHOP
+        </a>
+        <div class="topbar-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="search" placeholder="搜索会员..." id="topbarSearch">
         </div>
-      </div>
+        <div class="topbar-actions">
+            <button class="btn btn-ghost btn-icon" title="通知">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </button>
+            <a href="index.html#shops" class="btn btn-ghost" title="店铺管理">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                店铺
+            </a>
+            <div class="topbar-avatar" id="topbarAvatar" title="账户">U</div>
+        </div>
+    </header>
+
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-section-title"><span>导航</span></div>
+                <a class="sidebar-item" href="index.html">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    <span>概览</span>
+                </a>
+                <a class="sidebar-item" href="index.html#shops">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                    <span>店铺管理</span>
+                </a>
+                <a class="sidebar-item active" href="member-portal.html">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                    <span>会员管理</span>
+                    <span class="sidebar-item-count" id="memberCount">0</span>
+                </a>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                    <span>店铺筛选</span>
+                </div>
+                <div class="shop-selector">
+                    <select id="shopSelect">
+                        <option value="">选择店铺...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                    <span>会员</span>
+                    <a href="#" onclick="event.preventDefault(); openMemberModal();" style="color: var(--accent); text-decoration: none; font-size: 11px; font-weight: 500;">+ 新增</a>
+                </div>
+                <div id="sidebarMemberList">
+                    <div class="sidebar-empty">请先选择店铺</div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">会员管理</h1>
+                    <p class="page-subtitle" id="pageSubtitle">选择左侧会员查看详情</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-primary" onclick="openMemberModal()">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        新增会员
+                    </button>
+                </div>
+            </div>
+
+            <div id="memberDetail">
+                <div class="section-card">
+                    <div class="empty-state">
+                        <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+                        <h3 class="empty-title">还没有会员</h3>
+                        <p class="empty-desc" id="emptyDesc">先选择店铺，再添加会员</p>
+                        <button class="btn btn-primary" onclick="openMemberModal()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增会员</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <aside class="activity-panel">
+            <div class="activity-card">
+                <div class="activity-header">会员活动</div>
+                <div class="activity-list" id="activityList">
+                    <div class="activity-item">
+                        <div class="activity-dot"></div>
+                        <div class="activity-content">
+                            <strong>选择会员查看活动</strong>
+                            <div class="activity-time">—</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="activity-card">
+                <div class="activity-header">操作说明</div>
+                <div class="activity-list">
+                    <div class="activity-item">
+                        <div class="activity-dot" style="background: var(--success);"></div>
+                        <div class="activity-content">
+                            <strong>储值</strong><br>增加会员账户余额
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-dot" style="background: var(--error);"></div>
+                        <div class="activity-content">
+                            <strong>消费</strong><br>扣除会员账户余额
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
     </div>
 
-    <!-- Balance Card -->
-    <div class="balance-card">
-      <div class="balance-label">账户余额</div>
-      <div class="balance-amount">888.00</div>
-      <div class="balance-hint">最近消费: 2024-03-15</div>
+    <!-- Member Modal -->
+    <div class="modal-overlay" id="memberModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title" id="memberModalTitle">新增会员</div>
+                <button class="modal-close" onclick="closeMemberModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <form id="memberForm" onsubmit="handleMemberSubmit(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="memberId" name="id">
+                    <div class="input-group">
+                        <label class="input-label">所属店铺</label>
+                        <select id="memberShop" name="shopId" class="input" required>
+                            <option value="">选择店铺...</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">会员姓名</label>
+                        <input type="text" id="memberName" name="name" class="input" placeholder="姓名" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">手机号</label>
+                        <input type="tel" id="memberPhone" name="phone" class="input" placeholder="11 位手机号">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" onclick="closeMemberModal()">取消</button>
+                    <button type="submit" class="btn btn-primary" id="memberSubmitBtn">保存</button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <!-- Menu -->
-    <div class="menu-section">
-      <div class="menu-item">
-        <div class="menu-icon">💳</div>
-        <span class="menu-text">消费记录</span>
-        <span class="menu-arrow">›</span>
-      </div>
-      <div class="menu-item">
-        <div class="menu-icon">🎁</div>
-        <span class="menu-text">优惠券</span>
-        <span class="menu-arrow">›</span>
-      </div>
-      <div class="menu-item">
-        <div class="menu-icon">⚙️</div>
-        <span class="menu-text">设置</span>
-        <span class="menu-arrow">›</span>
-      </div>
+    <!-- Transaction Modal (Store/Consume) -->
+    <div class="modal-overlay" id="txModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title" id="txModalTitle">储值</div>
+                <button class="modal-close" onclick="closeTxModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <form id="txForm" onsubmit="handleTxSubmit(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="txMemberId">
+                    <input type="hidden" id="txType">
+                    <div style="background: var(--bg); border-radius: 6px; padding: 12px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
+                        <span style="font-size: 13px; color: var(--text-secondary);">当前余额</span>
+                        <strong id="txCurrentBalance" style="font-size: 16px; color: var(--text);">¥0.00</strong>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label" id="txAmountLabel">金额</label>
+                        <div class="input-prefix">
+                            <span class="prefix">¥</span>
+                            <input type="number" id="txAmount" class="input" step="0.01" min="0.01" placeholder="0.00" required>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">备注（可选）</label>
+                        <input type="text" id="txRemark" class="input" placeholder="例如：剪发 30 元">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" onclick="closeTxModal()">取消</button>
+                    <button type="submit" class="btn btn-primary" id="txSubmitBtn">确认</button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <!-- Book Button -->
-    <button class="book-btn" onclick="openModal()">📅 立即预约理发</button>
+    <div class="toast" id="toast"></div>
 
-    <!-- Footer -->
-    <div class="footer">
-      会员卡仅限持卡人本人使用<br>
-      最终解释权归店铺所有
-    </div>
-  </div>
+    <script>
+        const API_BASE = '/api/barbershop';
+        let shops = [];
+        let members = [];
+        let currentMemberId = null;
+        let currentShopId = null;
+        let editingMemberId = null;
 
-  <!-- Booking Modal -->
-  <div class="modal" id="bookingModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <span class="modal-title">选择预约时间</span>
-        <div class="modal-close" onclick="closeModal()">✕</div>
-      </div>
-      <div class="time-grid">
-        <div class="time-slot">09:00</div>
-        <div class="time-slot">10:00</div>
-        <div class="time-slot">11:00</div>
-        <div class="time-slot selected">14:00</div>
-        <div class="time-slot">15:00</div>
-        <div class="time-slot">16:00</div>
-        <div class="time-slot">17:00</div>
-        <div class="time-slot">18:00</div>
-        <div class="time-slot">19:00</div>
-      </div>
-      <button class="confirm-book" onclick="confirmBooking()">确认预约</button>
-    </div>
-  </div>
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) { window.location.href = 'index.html'; return; }
+            const member = JSON.parse(localStorage.getItem('member') || '{}');
+            const name = member.memberName || member.username || 'U';
+            document.getElementById('topbarAvatar').textContent = name.charAt(0).toUpperCase();
+        }
 
-  <script>
-    function openModal() { document.getElementById('bookingModal').classList.add('active'); }
-    function closeModal() { document.getElementById('bookingModal').classList.remove('active'); }
-    function confirmBooking() { alert('预约成功！'); closeModal(); }
+        async function apiCall(endpoint, method = 'GET', body) {
+            const token = localStorage.getItem('token');
+            const opts = { method, headers: { 'Content-Type': 'application/json' } };
+            if (token) opts.headers['Authorization'] = `Bearer ${token}`;
+            if (body) opts.body = JSON.stringify(body);
+            const r = await fetch(`${API_BASE}${endpoint}`, opts);
+            return r.json();
+        }
 
-    document.querySelectorAll('.time-slot').forEach(slot => {
-      slot.addEventListener('click', function() {
-        document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
-        this.classList.add('selected');
-      });
-    });
-  </script>
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast active ' + type;
+            setTimeout(() => toast.classList.remove('active'), 3000);
+        }
+
+        async function loadShops() {
+            try {
+                const data = await apiCall('/shop/list');
+                if (data.code === 20000) {
+                    shops = data.data || [];
+                    populateShopSelects();
+                    const params = new URLSearchParams(window.location.search);
+                    const preselected = params.get('shopId');
+                    if (preselected && shops.find(s => s.id == preselected)) {
+                        document.getElementById('shopSelect').value = preselected;
+                        currentShopId = parseInt(preselected);
+                    } else if (shops.length > 0) {
+                        currentShopId = shops[0].id;
+                        document.getElementById('shopSelect').value = currentShopId;
+                    }
+                    if (currentShopId) loadMembers(currentShopId);
+                    else renderEmpty();
+                }
+            } catch (e) { showToast('加载店铺失败', 'error'); }
+        }
+
+        function populateShopSelects() {
+            const opts = shops.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+            document.getElementById('shopSelect').innerHTML = '<option value="">选择店铺...</option>' + opts;
+            document.getElementById('memberShop').innerHTML = '<option value="">选择店铺...</option>' + opts;
+        }
+
+        async function loadMembers(shopId) {
+            try {
+                const data = await apiCall(`/member/list?shopId=${shopId}`);
+                if (data.code === 20000) {
+                    members = data.data || [];
+                    renderSidebar();
+                    if (members.length > 0) selectMember(members[0].id);
+                    else { currentMemberId = null; renderEmpty(); }
+                }
+            } catch (e) { showToast('加载会员失败', 'error'); }
+        }
+
+        function renderSidebar() {
+            const el = document.getElementById('sidebarMemberList');
+            document.getElementById('memberCount').textContent = members.length;
+            if (members.length === 0) {
+                el.innerHTML = '<div class="sidebar-empty">该店铺还没有会员</div>';
+                return;
+            }
+            el.innerHTML = members.map(m => `
+                <div class="member-row ${m.id === currentMemberId ? 'active' : ''}" onclick="selectMember(${m.id})">
+                    <div class="member-avatar">${escapeHtml((m.name || '?').charAt(0))}</div>
+                    <div class="member-name">${escapeHtml(m.name || '未命名')}</div>
+                    <div class="member-balance">¥${parseFloat(m.balance || 0).toFixed(0)}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderEmpty() {
+            document.getElementById('pageSubtitle').textContent = shops.length === 0 ? '请先添加店铺' : '选择左侧会员查看详情';
+            document.getElementById('memberDetail').innerHTML = `
+                <div class="section-card"><div class="empty-state">
+                    <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+                    <h3 class="empty-title">${shops.length === 0 ? '还没有店铺' : '该店铺还没有会员'}</h3>
+                    <p class="empty-desc">${shops.length === 0 ? '请先在店铺管理中添加一家店铺' : '点击右上角"新增会员"开始'}</p>
+                    ${shops.length > 0 ? '<button class="btn btn-primary" onclick="openMemberModal()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增会员</button>' : '<a href="index.html#shops" class="btn btn-primary">去添加店铺</a>'}
+                </div></div>
+            `;
+        }
+
+        async function selectMember(memberId) {
+            currentMemberId = memberId;
+            const m = members.find(x => x.id === memberId);
+            if (!m) return;
+            renderSidebar();
+            const shop = shops.find(s => s.id === currentShopId);
+            document.getElementById('pageSubtitle').textContent = `${shop ? shop.name + ' · ' : ''}${m.name || '未命名'}`;
+            renderMemberDetail(m);
+            loadTransactions(memberId);
+        }
+
+        function renderMemberDetail(m) {
+            const html = `
+                <div class="section-card fade-in">
+                    <div class="member-header">
+                        <div class="member-big-avatar">${escapeHtml((m.name || '?').charAt(0))}</div>
+                        <div class="member-info">
+                            <h2 class="member-name-big">${escapeHtml(m.name || '未命名')}</h2>
+                            <div class="member-meta">
+                                <span class="member-meta-item">
+                                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                    ${escapeHtml(m.phone || '未填写电话')}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="member-actions">
+                            <button class="btn" onclick="editMember(${m.id})">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                编辑
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteMember(${m.id})">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                删除
+                            </button>
+                        </div>
+                    </div>
+                    <div class="balance-display">
+                        <div>
+                            <div class="balance-label">账户余额</div>
+                            <div class="balance-value">¥${parseFloat(m.balance || 0).toFixed(2)}</div>
+                        </div>
+                        <div class="balance-actions">
+                            <button class="btn btn-success" onclick="openTxModal(${m.id}, 'store')">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                储值
+                            </button>
+                            <button class="btn btn-warn" onclick="openTxModal(${m.id}, 'consume')" style="color: var(--error); border-color: var(--error);">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                消费
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-header">
+                        <div class="section-title">交易记录</div>
+                    </div>
+                    <div class="table-wrap" id="txTableWrap">
+                        <div style="padding: 16px 18px; color: var(--text-tertiary); font-size: 13px;">加载中...</div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('memberDetail').innerHTML = html;
+        }
+
+        async function loadTransactions(memberId) {
+            try {
+                const data = await apiCall(`/member/${memberId}/transactions`);
+                if (data.code === 20000) renderTxTable(data.data || []);
+            } catch (e) { /* */ }
+        }
+
+        function renderTxTable(txs) {
+            const wrap = document.getElementById('txTableWrap');
+            if (!wrap) return;
+            if (txs.length === 0) {
+                wrap.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-tertiary); font-size: 13px;">暂无交易记录</div>';
+                return;
+            }
+            wrap.innerHTML = `
+                <table class="table">
+                    <thead><tr>
+                        <th>类型</th>
+                        <th>金额</th>
+                        <th>交易前</th>
+                        <th>交易后</th>
+                        <th>备注</th>
+                        <th>时间</th>
+                    </tr></thead>
+                    <tbody>
+                        ${txs.map(t => {
+                            const isStore = (t.type || '').toUpperCase() === 'STORE';
+                            return `
+                            <tr>
+                                <td><span class="type-badge ${isStore ? 'type-store' : 'type-consume'}">${isStore ? '储值' : '消费'}</span></td>
+                                <td class="${isStore ? 'amount-pos' : 'amount-neg'}">${isStore ? '+' : '-'}¥${parseFloat(t.amount).toFixed(2)}</td>
+                                <td>¥${parseFloat(t.balanceBefore).toFixed(2)}</td>
+                                <td>¥${parseFloat(t.balanceAfter).toFixed(2)}</td>
+                                <td>${escapeHtml(t.remark || '—')}</td>
+                                <td style="color: var(--text-tertiary); font-size: 12px;">${formatTime(t.createdTime)}</td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function renderActivities(txs) {
+            const el = document.getElementById('activityList');
+            if (!txs || txs.length === 0) {
+                el.innerHTML = `<div class="activity-item"><div class="activity-dot"></div><div class="activity-content"><strong>暂无活动</strong><div class="activity-time">—</div></div></div>`;
+                return;
+            }
+            el.innerHTML = txs.slice(0, 6).map(t => {
+                const isStore = (t.type || '').toUpperCase() === 'STORE';
+                return `
+                    <div class="activity-item">
+                        <div class="activity-dot" style="background: ${isStore ? 'var(--success)' : 'var(--error)'};"></div>
+                        <div class="activity-content">
+                            <strong>${isStore ? '储值' : '消费'}</strong> ¥${parseFloat(t.amount).toFixed(2)}
+                            <div class="activity-time">${formatTime(t.createdTime)}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openMemberModal(memberId = null) {
+            if (shops.length === 0) { showToast('请先添加店铺', 'error'); return; }
+            editingMemberId = memberId;
+            const modal = document.getElementById('memberModal');
+            const form = document.getElementById('memberForm');
+            const title = document.getElementById('memberModalTitle');
+            form.reset();
+            if (memberId) {
+                const m = members.find(x => x.id === memberId);
+                if (m) {
+                    title.textContent = '编辑会员';
+                    document.getElementById('memberId').value = m.id;
+                    document.getElementById('memberShop').value = m.shopId || '';
+                    document.getElementById('memberName').value = m.name || '';
+                    document.getElementById('memberPhone').value = m.phone || '';
+                }
+            } else {
+                title.textContent = '新增会员';
+                document.getElementById('memberId').value = '';
+                document.getElementById('memberShop').value = currentShopId || '';
+            }
+            modal.classList.add('active');
+        }
+        function closeMemberModal() { document.getElementById('memberModal').classList.remove('active'); editingMemberId = null; }
+        function editMember(id) { openMemberModal(id); }
+
+        async function handleMemberSubmit(e) {
+            e.preventDefault();
+            const form = e.target;
+            const id = document.getElementById('memberId').value;
+            const data = {
+                shopId: parseInt(form.shopId.value),
+                name: form.name.value.trim(),
+                phone: form.phone.value.trim()
+            };
+            if (!data.shopId || !data.name) { showToast('请填写店铺和姓名', 'error'); return; }
+            const btn = document.getElementById('memberSubmitBtn');
+            btn.disabled = true; btn.textContent = '保存中...';
+            try {
+                const res = id
+                    ? await apiCall(`/member/${id}`, 'PUT', data)
+                    : await apiCall('/member', 'POST', data);
+                if (res.code === 20000) {
+                    showToast(id ? '更新成功' : '创建成功', 'success');
+                    closeMemberModal();
+                    if (data.shopId !== currentShopId) {
+                        currentShopId = data.shopId;
+                        document.getElementById('shopSelect').value = currentShopId;
+                    }
+                    await loadMembers(currentShopId);
+                    if (!id && res.data) selectMember(res.data.id);
+                } else showToast(res.message || '保存失败', 'error');
+            } catch (e) { showToast('保存失败', 'error'); }
+            btn.disabled = false; btn.textContent = '保存';
+        }
+
+        async function deleteMember(id) {
+            if (!confirm('确定要删除该会员吗？相关交易记录也会删除。')) return;
+            try {
+                const res = await apiCall(`/member/${id}?shopId=${currentShopId}`, 'DELETE');
+                if (res.code === 20000) {
+                    showToast('已删除', 'success');
+                    currentMemberId = null;
+                    loadMembers(currentShopId);
+                } else showToast(res.message || '删除失败', 'error');
+            } catch (e) { showToast('删除失败', 'error'); }
+        }
+
+        function openTxModal(memberId, type) {
+            const m = members.find(x => x.id === memberId);
+            if (!m) return;
+            document.getElementById('txMemberId').value = memberId;
+            document.getElementById('txType').value = type;
+            document.getElementById('txModalTitle').textContent = type === 'store' ? '储值' : '消费';
+            document.getElementById('txAmountLabel').textContent = type === 'store' ? '储值金额' : '消费金额';
+            document.getElementById('txCurrentBalance').textContent = `¥${parseFloat(m.balance || 0).toFixed(2)}`;
+            document.getElementById('txAmount').value = '';
+            document.getElementById('txRemark').value = type === 'store' ? '会员充值' : '';
+            document.getElementById('txModal').classList.add('active');
+        }
+        function closeTxModal() { document.getElementById('txModal').classList.remove('active'); }
+
+        async function handleTxSubmit(e) {
+            e.preventDefault();
+            const memberId = parseInt(document.getElementById('txMemberId').value);
+            const type = document.getElementById('txType').value;
+            const amount = parseFloat(document.getElementById('txAmount').value);
+            const remark = document.getElementById('txRemark').value.trim();
+            if (!amount || amount <= 0) { showToast('请输入有效金额', 'error'); return; }
+            const m = members.find(x => x.id === memberId);
+            if (type === 'consume' && amount > parseFloat(m.balance || 0)) {
+                showToast('余额不足', 'error'); return;
+            }
+            const btn = document.getElementById('txSubmitBtn');
+            btn.disabled = true; btn.textContent = '处理中...';
+            try {
+                const endpoint = type === 'store' ? 'store' : 'consume';
+                const res = await apiCall(`/member/${memberId}/${endpoint}`, 'POST', { amount, remark });
+                if (res.code === 20000) {
+                    showToast(type === 'store' ? '储值成功' : '消费成功', 'success');
+                    closeTxModal();
+                    await loadMembers(currentShopId);
+                    selectMember(memberId);
+                } else showToast(res.message || '操作失败', 'error');
+            } catch (e) { showToast('操作失败', 'error'); }
+            btn.disabled = false; btn.textContent = '确认';
+        }
+
+        function formatTime(iso) {
+            if (!iso) return '—';
+            try {
+                const d = new Date(iso);
+                const now = new Date();
+                const diff = (now - d) / 1000;
+                if (diff < 60) return '刚刚';
+                if (diff < 3600) return Math.floor(diff / 60) + ' 分钟前';
+                if (diff < 86400) return Math.floor(diff / 3600) + ' 小时前';
+                return d.toLocaleDateString('zh-CN');
+            } catch (e) { return iso; }
+        }
+
+        function escapeHtml(str) {
+            if (str == null) return '';
+            return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+
+        document.getElementById('shopSelect').addEventListener('change', e => {
+            currentShopId = e.target.value ? parseInt(e.target.value) : null;
+            currentMemberId = null;
+            if (currentShopId) loadMembers(currentShopId);
+            else { members = []; renderSidebar(); renderEmpty(); }
+        });
+
+        document.getElementById('topbarSearch').addEventListener('input', e => {
+            const q = e.target.value.toLowerCase().trim();
+            const rows = document.querySelectorAll('.member-row');
+            rows.forEach(r => {
+                const name = r.querySelector('.member-name')?.textContent.toLowerCase() || '';
+                r.style.display = name.includes(q) ? '' : 'none';
+            });
+        });
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') { closeMemberModal(); closeTxModal(); }
+        });
+        document.getElementById('memberModal').addEventListener('click', e => { if (e.target.id === 'memberModal') closeMemberModal(); });
+        document.getElementById('txModal').addEventListener('click', e => { if (e.target.id === 'txModal') closeTxModal(); });
+
+        checkAuth();
+        loadShops();
+    </script>
 </body>
 </html>
