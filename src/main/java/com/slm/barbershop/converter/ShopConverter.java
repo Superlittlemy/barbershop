@@ -6,19 +6,14 @@ import com.slm.barbershop.model.ShopResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
+import org.mapstruct.TargetType;
 
 import java.util.List;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ShopConverter {
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "createdTime", ignore = true)
-    @Mapping(target = "updatedBy", ignore = true)
-    @Mapping(target = "updatedTime", ignore = true)
-    @Mapping(target = "isDeleted", ignore = true)
-    Shop toEntity(ShopRequest request);
+    void updateEntity(@TargetType Shop shop, ShopRequest request);
 
     @Mapping(target = "userId", source = "userId")
     Shop toEntityWithUserId(ShopRequest request, Long userId);

@@ -1,6 +1,5 @@
 package com.slm.barbershop.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.slm.barbershop.converter.ShopConverter;
 import com.slm.barbershop.entity.Shop;
@@ -36,10 +35,8 @@ public class ShopService extends ServiceImpl<ShopMapper, Shop> {
         if (!shop.getUserId().equals(userId)) {
             throw new BizException(HttpStatus.FORBIDDEN, "无权限修改此店铺");
         }
-        Shop updated = shopConverter.toEntity(request);
-        updated.setId(id);
-        updated.setUserId(userId);
-        shopMapper.updateById(updated);
+        shopConverter.updateEntity(shop, request);
+        shopMapper.updateById(shop);
         return shop;
     }
 
@@ -54,15 +51,8 @@ public class ShopService extends ServiceImpl<ShopMapper, Shop> {
         shopMapper.deleteById(id);
     }
 
-    public Shop getById(Long id) {
-        return shopMapper.selectById(id);
-    }
-
     public List<Shop> listByUserId(Long userId) {
-        return shopMapper.selectList(
-                new LambdaQueryWrapper<Shop>()
-                        .eq(Shop::getUserId, userId)
-        );
+        return this.lambdaQuery().eq(Shop::getUserId, userId).orderByDesc(Shop::getId).list();
     }
 
 }
