@@ -636,6 +636,7 @@
                 title.textContent = '店铺管理';
                 sub.textContent = '管理您的店铺信息';
                 renderPageActions('shops');
+                renderShopGrid();
                 loadShopViewStats();
             } else if (view === 'shop-detail') {
                 const shopId = getShopIdFromHash();
