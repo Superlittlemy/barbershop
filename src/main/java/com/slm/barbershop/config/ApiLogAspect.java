@@ -11,6 +11,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
+import org.springframework.web.multipart.MultipartFile;
 import java.util.Arrays;
 
 
@@ -41,7 +42,13 @@ public class ApiLogAspect {
                         joinPoint.getSignature().getDeclaringTypeName(),
                         joinPoint.getSignature().getName());
                 logger.info("IP             : {}", request.getRemoteAddr());
-                logger.info("Request Args   : {}", Arrays.toString(joinPoint.getArgs()));
+                Object[] safeArgs = Arrays.stream(joinPoint.getArgs())
+                        .map(a -> a instanceof MultipartFile
+                                ? "MultipartFile[" + ((MultipartFile) a).getOriginalFilename()
+                                + ", " + ((MultipartFile) a).getSize() + "B]"
+                                : a)
+                        .toArray();
+                logger.info("Request Args   : {}", Arrays.toString(safeArgs));
             }
         } catch (Exception e) {
             logger.error("记录请求日志失败", e);
