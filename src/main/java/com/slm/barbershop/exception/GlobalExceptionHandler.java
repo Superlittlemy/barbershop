@@ -12,6 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
@@ -68,6 +69,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(e.getStatus())
                 .body(ApiResponse.failure(ResultStatus.REJECT, e.getMessage()));
+    }
+
+    /**
+     * 上传文件超过最大限制
+     */
+    @ResponseStatus(code = HttpStatus.PAYLOAD_TOO_LARGE)
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ApiResponse<Void> handler(MaxUploadSizeExceededException e) {
+        log.warn("文件大小超过限制: {}", e.getMessage());
+        return ApiResponse.failure(ResultStatus.REJECT, "文件大小超过限制(20MB)");
     }
 
     @ResponseStatus(code = HttpStatus.INTERNAL_SERVER_ERROR)
