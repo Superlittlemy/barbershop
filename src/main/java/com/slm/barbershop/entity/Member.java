@@ -1,6 +1,9 @@
 package com.slm.barbershop.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.Version;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -33,5 +36,12 @@ public class Member extends BaseEntity {
      * 余额
      */
     private BigDecimal balance;
+
+    /**
+     * 乐观锁版本号
+     */
+    @Version
+    @TableField(fill = FieldFill.INSERT)
+    private Long version;
 
 }

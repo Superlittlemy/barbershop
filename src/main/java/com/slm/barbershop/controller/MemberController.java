@@ -80,7 +80,7 @@ public class MemberController {
     @Parameter(name = "id", description = "会员ID", in = ParameterIn.PATH)
     @PostMapping("/{id}/store")
     public ApiResponse<MemberTransactionResponse> store(@PathVariable Long id, @RequestBody MemberTransactionRequest request) {
-        MemberTransaction transaction = transactionService.store(id, request.getAmount(), request.getRemark());
+        MemberTransaction transaction = transactionService.store(id, request.getAmount(), request.getRemark(), request.getIdempotencyKey());
         return ApiResponse.ok(transactionConverter.toResponse(transaction));
     }
 
@@ -88,7 +88,7 @@ public class MemberController {
     @Parameter(name = "id", description = "会员ID", in = ParameterIn.PATH)
     @PostMapping("/{id}/consume")
     public ApiResponse<MemberTransactionResponse> consume(@PathVariable Long id, @RequestBody MemberTransactionRequest request) {
-        MemberTransaction transaction = transactionService.consume(id, request.getAmount(), request.getRemark());
+        MemberTransaction transaction = transactionService.consume(id, request.getAmount(), request.getRemark(), request.getIdempotencyKey());
         return ApiResponse.ok(transactionConverter.toResponse(transaction));
     }
 

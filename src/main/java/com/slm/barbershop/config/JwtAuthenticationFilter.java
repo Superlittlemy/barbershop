@@ -61,7 +61,7 @@ public class JwtAuthenticationFilter implements Filter {
         }
 
         String authToken = authHeader.split(" ")[1];
-        log.info("authToken: {}", authToken);
+        log.debug("authToken: {}", authToken);
 
         try {
             Claims claims = jwtUtil.getClaimsFromJwt(authToken);

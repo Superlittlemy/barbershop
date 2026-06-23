@@ -1,6 +1,7 @@
 package com.slm.barbershop.exception;
 
 import com.slm.barbershop.enums.ResultStatus;
+import com.slm.barbershop.lock.DistributedLockException;
 import com.slm.barbershop.model.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -86,6 +87,16 @@ public class GlobalExceptionHandler {
     public ApiResponse<Void> handler(Exception e) {
         log.error(e.getMessage(), e);
         return ApiResponse.failure(ResultStatus.ERROR, "服务器内部错误");
+    }
+
+    /**
+     * 锁冲突
+     */
+    @ResponseStatus(code = HttpStatus.SERVICE_UNAVAILABLE)
+    @ExceptionHandler(DistributedLockException.class)
+    public ApiResponse<Void> handler(DistributedLockException e) {
+        log.warn("锁冲突: {}", e.getMessage());
+        return ApiResponse.failure(ResultStatus.REJECT, e.getMessage());
     }
 
 }

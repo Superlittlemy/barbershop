@@ -18,4 +18,7 @@ public class MemberTransactionRequest {
     @Schema(description = "备注")
     private String remark;
 
+    @Schema(description = "幂等键")
+    private String idempotencyKey;
+
 }

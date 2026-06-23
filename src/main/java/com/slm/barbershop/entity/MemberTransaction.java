@@ -1,6 +1,7 @@
 package com.slm.barbershop.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -50,6 +51,12 @@ public class MemberTransaction {
      * 备注
      */
     private String remark;
+
+    /**
+     * 幂等键(客户端UUID)
+     */
+    @TableField("idempotency_key")
+    private String idempotencyKey;
 
     /**
      * 创建时间

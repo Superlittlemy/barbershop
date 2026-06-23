@@ -37,6 +37,11 @@ spring:
   jackson:
     deserialization:
       fail-on-unknown-properties: false
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:redis123456}
+    database: ${REDIS_DATABASE:0}
 jwt:
   secret: ${JWT_SECRET:jAhi27Nmj9shXs7lsOvobA4hpjC5VNk9VF8DoM6yqTU=}
   access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:86400}

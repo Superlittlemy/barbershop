@@ -35,11 +35,10 @@ public class MemberService extends ServiceImpl<MemberMapper, Member> {
         if (member == null) {
             throw new BizException(HttpStatus.NOT_FOUND, "会员不存在");
         }
-        Member updated = memberConverter.toEntity(request);
-        updated.setId(id);
-        updated.setShopId(shopId);
-        updated.setBalance(member.getBalance());
-        memberMapper.updateById(updated);
+        // 只更新 name / phone，余额由 MemberTransactionService 单独维护
+        member.setName(request.getName());
+        member.setPhone(request.getPhone());
+        memberMapper.updateById(member);
         return member;
     }
 
