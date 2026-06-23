@@ -173,6 +173,23 @@
         .input-row { display: flex; gap: 8px; }
         .input-row .input { flex: 1; }
         .input-hint { font-size: 11px; color: var(--text-tertiary); margin-top: 4px; }
+
+        /* Logo uploader */
+        .logo-uploader { display: flex; gap: 14px; align-items: flex-start; padding: 12px; border: 1px dashed var(--border); border-radius: 6px; background: var(--surface-alt); transition: all 0.15s; }
+        .logo-uploader:hover { border-color: var(--border-strong); }
+        .logo-preview { width: 88px; height: 88px; flex-shrink: 0; border-radius: 8px; background: linear-gradient(135deg, #2A2A2A 0%, #1A1A1A 100%); color: var(--text-inverse); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .logo-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .logo-preview .placeholder { width: 36px; height: 36px; opacity: 0.7; }
+        .logo-uploader-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+        .logo-uploader-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .logo-source { font-size: 11px; color: var(--text-tertiary); }
+        .logo-source.saved { color: var(--success); }
+        .logo-source.new { color: var(--accent-hover); }
+        .logo-error { font-size: 11px; color: var(--error); min-height: 14px; }
+        .logo-uploader.has-error { border-color: var(--error); background: var(--error-light); }
+        .logo-uploader.is-uploading { opacity: 0.7; pointer-events: none; }
+        .logo-file-input { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+
         .btn-send-code { padding: 0 14px; height: 36px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; font-size: 12px; cursor: pointer; white-space: nowrap; color: var(--text); transition: all 0.15s; }
         .btn-send-code:hover:not(:disabled) { border-color: var(--border-strong); background: var(--surface-hover); }
         .btn-send-code:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -697,8 +714,22 @@
                     </div>
                     <div class="input-group">
                         <label class="input-label">店铺 Logo</label>
-                        <input type="url" id="shopLogo" name="logo" class="input" placeholder="https://...">
-                        <div class="input-hint">支持图片链接，留空显示默认图标</div>
+                        <input type="hidden" id="shopLogo" name="logo" value="">
+                        <div class="logo-uploader" id="logoUploader">
+                            <div class="logo-preview" id="logoPreview">
+                                <svg class="placeholder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+                            </div>
+                            <div class="logo-uploader-main">
+                                <div class="logo-uploader-row">
+                                    <input type="file" id="logoFileInput" class="logo-file-input" accept="image/png,image/jpeg,image/webp">
+                                    <button type="button" class="btn btn-sm" id="logoSelectBtn">选择图片</button>
+                                    <button type="button" class="btn btn-sm btn-ghost" id="logoClearBtn" style="display:none;">清除</button>
+                                    <span class="logo-source" id="logoSource"></span>
+                                </div>
+                                <div class="input-hint">支持 PNG / JPG / WebP，大小不超过 2MB</div>
+                                <div class="logo-error" id="logoError"></div>
+                            </div>
+                        </div>
                     </div>
                     <div class="input-group">
                         <label class="input-label">店铺地址</label>
@@ -915,6 +946,107 @@
             document.body.style.overflow = '';
             document.getElementById('authForm').reset();
         }
+        /* ----- Logo uploader ----- */
+        let logoSavedUrl = null;
+        let logoObjectUrl = null;
+        let logoUploading = false;
+
+        function initLogoUploader() {
+            const fileInput = document.getElementById('logoFileInput');
+            const selectBtn = document.getElementById('logoSelectBtn');
+            const clearBtn = document.getElementById('logoClearBtn');
+            if (!fileInput || !selectBtn || !clearBtn) return;
+            selectBtn.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', () => {
+                const file = fileInput.files && fileInput.files[0];
+                if (file) handleLogoFileSelected(file);
+                fileInput.value = '';
+            });
+            clearBtn.addEventListener('click', () => {
+                document.getElementById('shopLogo').value = '';
+                logoSavedUrl = null;
+                setLogoUploaderState(null, 'none');
+            });
+        }
+
+        function setLogoUploaderState(url, source) {
+            if (logoObjectUrl) { URL.revokeObjectURL(logoObjectUrl); logoObjectUrl = null; }
+            const preview = document.getElementById('logoPreview');
+            const sourceEl = document.getElementById('logoSource');
+            const clearBtn = document.getElementById('logoClearBtn');
+            const errorEl = document.getElementById('logoError');
+            const uploader = document.getElementById('logoUploader');
+            errorEl.textContent = '';
+            uploader.classList.remove('has-error');
+            if (url) {
+                preview.innerHTML = `<img src="${escapeHtml(url)}" alt="">`;
+            } else {
+                preview.innerHTML = '<svg class="placeholder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>';
+            }
+            sourceEl.className = 'logo-source';
+            if (source === 'saved') { sourceEl.textContent = '已保存'; sourceEl.classList.add('saved'); }
+            else if (source === 'new') { sourceEl.textContent = '新上传'; sourceEl.classList.add('new'); }
+            else { sourceEl.textContent = ''; }
+            clearBtn.style.display = url ? '' : 'none';
+        }
+
+        function setLogoLocalPreview(file) {
+            if (logoObjectUrl) URL.revokeObjectURL(logoObjectUrl);
+            logoObjectUrl = URL.createObjectURL(file);
+            const preview = document.getElementById('logoPreview');
+            preview.innerHTML = `<img src="${logoObjectUrl}" alt="">`;
+        }
+
+        function setLogoUploading(on) {
+            logoUploading = !!on;
+            const uploader = document.getElementById('logoUploader');
+            const submitBtn = document.getElementById('shopSubmitBtn');
+            uploader.classList.toggle('is-uploading', !!on);
+            submitBtn.disabled = !!on;
+        }
+
+        async function handleLogoFileSelected(file) {
+            const errorEl = document.getElementById('logoError');
+            const uploader = document.getElementById('logoUploader');
+            errorEl.textContent = '';
+            uploader.classList.remove('has-error');
+            setLogoLocalPreview(file);
+            setLogoUploading(true);
+            try {
+                const url = await uploadImageFile(file);
+                if (logoObjectUrl) { URL.revokeObjectURL(logoObjectUrl); logoObjectUrl = null; }
+                logoSavedUrl = url;
+                document.getElementById('shopLogo').value = url;
+                const preview = document.getElementById('logoPreview');
+                preview.innerHTML = `<img src="${escapeHtml(url)}" alt="">`;
+                const sourceEl = document.getElementById('logoSource');
+                sourceEl.textContent = '新上传';
+                sourceEl.className = 'logo-source new';
+                document.getElementById('logoClearBtn').style.display = '';
+            } catch (e) {
+                document.getElementById('shopLogo').value = logoSavedUrl || '';
+                setLogoUploaderState(logoSavedUrl, logoSavedUrl ? 'saved' : 'none');
+                errorEl.textContent = e.message || '上传失败';
+                uploader.classList.add('has-error');
+                showToast(e.message || '上传失败', 'error');
+            } finally {
+                setLogoUploading(false);
+            }
+        }
+
+        function resetLogoUploader() {
+            if (logoObjectUrl) { URL.revokeObjectURL(logoObjectUrl); logoObjectUrl = null; }
+            logoSavedUrl = null;
+            document.getElementById('logoError').textContent = '';
+            document.getElementById('logoUploader').classList.remove('has-error');
+            const sourceEl = document.getElementById('logoSource');
+            sourceEl.textContent = '';
+            sourceEl.className = 'logo-source';
+            document.getElementById('logoClearBtn').style.display = 'none';
+            const preview = document.getElementById('logoPreview');
+            preview.innerHTML = '<svg class="placeholder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>';
+        }
+
         function openShopModal(shopId = null) {
             if (!currentUser) { openModal(); return; }
             editingShopId = shopId;
@@ -935,11 +1067,14 @@
             fields.logo.value = (shop && shop.logo) || '';
             fields.address.value = (shop && shop.address) || '';
             fields.phone.value = (shop && shop.phone) || '';
+            logoSavedUrl = (shop && shop.logo) || null;
+            setLogoUploaderState(logoSavedUrl, logoSavedUrl ? 'saved' : 'none');
             document.getElementById('shopModal').classList.add('active');
         }
         function closeShopModal() {
             document.getElementById('shopModal').classList.remove('active');
             editingShopId = null;
+            resetLogoUploader();
         }
         function editShop(id) { openShopModal(id); }
 
@@ -1050,6 +1185,38 @@
                 applyAuth();
             }
             return data;
+        }
+
+        async function uploadImageFile(file) {
+            const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
+            const maxSize = 2 * 1024 * 1024;
+            if (!allowedTypes.includes(file.type)) {
+                throw new Error('仅支持 PNG / JPG / WebP 格式');
+            }
+            if (file.size > maxSize) {
+                throw new Error('文件大小不能超过 2MB');
+            }
+            const token = localStorage.getItem('token');
+            const form = new FormData();
+            form.append('file', file);
+            const opts = { method: 'POST', body: form };
+            if (token) opts.headers = { 'Authorization': `Bearer ${token}` };
+            const r = await fetch(`${API_BASE}/file/upload`, opts);
+            let data;
+            try { data = await r.json(); } catch (_) { throw new Error('上传失败'); }
+            if (data && data.message === '无效token') {
+                localStorage.removeItem('token');
+                localStorage.removeItem('member');
+                currentUser = null;
+                shopsLoaded = false;
+                applyAuth();
+            }
+            if (!data || data.code !== 20000) {
+                throw new Error((data && data.message) || '上传失败');
+            }
+            const url = data.data && data.data.accessUrl;
+            if (!url) throw new Error('上传响应缺少访问地址');
+            return url;
         }
 
         /* ----- Overview ----- */
@@ -1197,7 +1364,7 @@
             if (link) link.href = `#members?shopId=${encodeURIComponent(shopId)}`;
 
             document.getElementById('kpiShopCreated').textContent = shop.createdTime
-                ? new Date(shop.createdTime).toISOString().slice(0, 10)
+                ? String(shop.createdTime).slice(0, 10)
                 : '—';
             document.getElementById('kpiShopMembers').textContent = '—';
             document.getElementById('kpiShopStored').textContent = '¥—';
@@ -1259,6 +1426,7 @@
         /* ----- Shop CRUD ----- */
         async function handleShopSubmit(e) {
             e.preventDefault();
+            if (logoUploading) { showToast('Logo 正在上传，请稍候', 'error'); return; }
             const form = e.target;
             const id = document.getElementById('shopId').value;
             const data = {
@@ -1336,7 +1504,7 @@
             const q = location.hash.split('?')[1] || '';
             const params = new URLSearchParams(q);
             const sid = params.get('shopId');
-            return sid ? parseInt(sid) : null;
+            return sid || null;
         }
 
         function loadMembersView() {
@@ -1365,7 +1533,7 @@
                     document.getElementById('memberCount').textContent = memberState.list.length;
                     renderMemberSidebar();
                     if (memberState.list.length > 0) {
-                        const keep = memberState.list.find(m => m.id === memberState.memberId);
+                        const keep = memberState.list.find(m => String(m.id) === String(memberState.memberId));
                         selectMember(keep ? keep.id : memberState.list[0].id);
                     } else {
                         memberState.memberId = null;
@@ -1385,7 +1553,7 @@
                 return;
             }
             el.innerHTML = memberState.list.map(m => `
-                <div class="member-row ${m.id === memberState.memberId ? 'active' : ''}" onclick="selectMember(${m.id})">
+                <div class="member-row ${String(m.id) === String(memberState.memberId) ? 'active' : ''}" onclick="selectMember('${m.id}')">
                     <div class="member-avatar">${escapeHtml((m.name || '?').charAt(0))}</div>
                     <div class="member-name">${escapeHtml(m.name || '未命名')}</div>
                     <div class="member-balance">¥${parseFloat(m.balance || 0).toFixed(0)}</div>
@@ -1409,7 +1577,7 @@
 
         async function selectMember(memberId) {
             memberState.memberId = memberId;
-            const m = memberState.list.find(x => x.id === memberId);
+            const m = memberState.list.find(x => String(x.id) === String(memberId));
             if (!m) return;
             renderMemberSidebar();
             const shop = shops.find(s => s.id === memberState.shopId);
@@ -1433,11 +1601,11 @@
                             </div>
                         </div>
                         <div class="member-actions">
-                            <button class="btn" onclick="editMember(${m.id})">
+                            <button class="btn" onclick="editMember('${m.id}')">
                                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                 编辑
                             </button>
-                            <button class="btn btn-danger" onclick="deleteMember(${m.id})">
+                            <button class="btn btn-danger" onclick="deleteMember('${m.id}')">
                                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                 删除
                             </button>
@@ -1449,11 +1617,11 @@
                             <div class="balance-value">¥${parseFloat(m.balance || 0).toFixed(2)}</div>
                         </div>
                         <div class="balance-actions">
-                            <button class="btn btn-success" onclick="openTxModal(${m.id}, 'store')">
+                            <button class="btn btn-success" onclick="openTxModal('${m.id}', 'store')">
                                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                                 储值
                             </button>
-                            <button class="btn btn-warn" onclick="openTxModal(${m.id}, 'consume')" style="color: var(--error); border-color: var(--error);">
+                            <button class="btn btn-warn" onclick="openTxModal('${m.id}', 'consume')" style="color: var(--error); border-color: var(--error);">
                                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
                                 消费
                             </button>
@@ -1542,7 +1710,7 @@
             const title = document.getElementById('memberModalTitle');
             form.reset();
             if (memberId) {
-                const m = memberState.list.find(x => x.id === memberId);
+                const m = memberState.list.find(x => String(x.id) === String(memberId));
                 if (m) {
                     title.textContent = '编辑会员';
                     document.getElementById('memberId').value = m.id;
@@ -1561,14 +1729,16 @@
             document.getElementById('memberModal').classList.remove('active');
             memberState.editingId = null;
         }
-        function editMember(id) { openMemberModal(id); }
+        function editMember(id) {
+            openMemberModal(id);
+        }
 
         async function handleMemberSubmit(e) {
             e.preventDefault();
             const form = e.target;
             const id = document.getElementById('memberId').value;
             const data = {
-                shopId: parseInt(form.shopId.value),
+                shopId: form.shopId.value,
                 name: form.name.value.trim(),
                 phone: form.phone.value.trim()
             };
@@ -1606,7 +1776,7 @@
         }
 
         function openTxModal(memberId, type) {
-            const m = memberState.list.find(x => x.id === memberId);
+            const m = memberState.list.find(x => String(x.id) === String(memberId));
             if (!m) return;
             document.getElementById('txMemberId').value = memberId;
             document.getElementById('txType').value = type;
@@ -1621,12 +1791,12 @@
 
         async function handleTxSubmit(e) {
             e.preventDefault();
-            const memberId = parseInt(document.getElementById('txMemberId').value);
+            const memberId = document.getElementById('txMemberId').value;
             const type = document.getElementById('txType').value;
             const amount = parseFloat(document.getElementById('txAmount').value);
             const remark = document.getElementById('txRemark').value.trim();
             if (!amount || amount <= 0) { showToast('请输入有效金额', 'error'); return; }
-            const m = memberState.list.find(x => x.id === memberId);
+            const m = memberState.list.find(x => String(x.id) === String(memberId));
             if (type === 'consume' && amount > parseFloat(m.balance || 0)) {
                 showToast('余额不足', 'error'); return;
             }
@@ -1661,7 +1831,7 @@
         // 会员侧边栏事件
         document.getElementById('memberShopSelect').addEventListener('change', e => {
             const v = e.target.value;
-            memberState.shopId = v ? parseInt(v) : null;
+            memberState.shopId = v || null;
             memberState.memberId = null;
             if (memberState.shopId) loadMembers(memberState.shopId);
             else { memberState.list = []; renderMemberSidebar(); renderMemberEmpty('请先选择店铺', '请在顶部下拉中选择一家店铺', false); }
@@ -1674,6 +1844,7 @@
         document.getElementById('txModal').addEventListener('click', e => { if (e.target.id === 'txModal') closeTxModal(); });
 
         // Init
+        initLogoUploader();
         applyAuth();
         if (currentUser) loadAll();
     </script>

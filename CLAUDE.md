@@ -1,65 +1,28 @@
-# CLAUDE.md
+# sleep-center 项目
 
-Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
+## 技术栈版本
 
-**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
-
-## 1. Think Before Coding
-
-**Don't assume. Don't hide confusion. Surface tradeoffs.**
-
-Before implementing:
-- State your assumptions explicitly. If uncertain, ask.
-- If multiple interpretations exist, present them - don't pick silently.
-- If a simpler approach exists, say so. Push back when warranted.
-- If something is unclear, stop. Name what's confusing. Ask.
-
-## 2. Simplicity First
-
-**Minimum code that solves the problem. Nothing speculative.**
-
-- No features beyond what was asked.
-- No abstractions for single-use code.
-- No "flexibility" or "configurability" that wasn't requested.
-- No error handling for impossible scenarios.
-- If you write 200 lines and it could be 50, rewrite it.
-
-Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
-
-## 3. Surgical Changes
-
-**Touch only what you must. Clean up only your own mess.**
-
-When editing existing code:
-- Don't "improve" adjacent code, comments, or formatting.
-- Don't refactor things that aren't broken.
-- Match existing style, even if you'd do it differently.
-- If you notice unrelated dead code, mention it - don't delete it.
-
-When your changes create orphans:
-- Remove imports/variables/functions that YOUR changes made unused.
-- Don't remove pre-existing dead code unless asked.
-
-The test: Every changed line should trace directly to the user's request.
-
-## 4. Goal-Driven Execution
-
-**Define success criteria. Loop until verified.**
-
-Transform tasks into verifiable goals:
-- "Add validation" → "Write tests for invalid inputs, then make them pass"
-- "Fix the bug" → "Write a test that reproduces it, then make it pass"
-- "Refactor X" → "Ensure tests pass before and after"
-
-For multi-step tasks, state a brief plan:
-```
-1. [Step] → verify: [check]
-2. [Step] → verify: [check]
-3. [Step] → verify: [check]
-```
-
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
+## 技术栈
+- Java 11 + Spring Boot 2.7.18
+- 持久化框架：Mybatis-Plus 3.5.9
+- 统一响应结构：{ code: int, message: String, data: T }
 
 ---
 
-**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+## 项目开发约束
+
+## 范围控制规则
+1. **只修改指定文件**：除非明确要求，否则不修改非需求相关的文件
+2. **不主动重构**：存量代码保持原样，除非需求明确要求重构
+3. **最小化改动**：优先在现有类/方法内修改，不随意新增抽象层
+4. **禁止扩散**：不修改无关的工具类、配置类、公共模块
+
+## 需求理解规则
+1. 先输出"需求理解确认"，等用户确认后再编码
+2. 列出将要修改的文件清单，逐文件确认
+3. 标注改动边界：新增/修改/删除的行范围
+
+## 技术约束
+- 保持现有代码风格（缩进、命名、注释习惯）
+- 不引入新的第三方依赖（除非明确批准）
+- 不改变现有接口签名（除非需求要求）
