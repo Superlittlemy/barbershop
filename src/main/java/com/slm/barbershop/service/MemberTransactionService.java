@@ -7,7 +7,6 @@ import com.slm.barbershop.entity.MemberTransaction;
 import com.slm.barbershop.enums.TransactionType;
 import com.slm.barbershop.exception.BizException;
 import com.slm.barbershop.lock.DistributedLock;
-import com.slm.barbershop.lock.LockStrategyFactory;
 import com.slm.barbershop.mapper.MemberMapper;
 import com.slm.barbershop.mapper.MemberTransactionMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +24,6 @@ import java.util.List;
 
 @Service
 public class MemberTransactionService extends ServiceImpl<MemberTransactionMapper, MemberTransaction> {
-
-    private final String LOCK_PREFIX = "member_transaction:";
 
     @Autowired
     private MemberTransactionMapper transactionMapper;
@@ -72,7 +69,7 @@ public class MemberTransactionService extends ServiceImpl<MemberTransactionMappe
     /**
      * 单次带事务的余额变更;乐观锁冲突时抛 {@link OptimisticLockingFailureException} 由策略重试
      */
-    @DistributedLock(key = LOCK_PREFIX + "#memberId", mode = DistributedLock.Mode.REDIS)
+    @DistributedLock(key = "'member_transaction:' + #memberId", mode = DistributedLock.Mode.REDIS)
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public MemberTransaction doUpdate(Long memberId,
                                       BigDecimal amount,

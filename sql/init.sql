@@ -34,6 +34,7 @@ CREATE TABLE member (
     phone VARCHAR(20) NOT NULL COMMENT '手机号',
     avatar VARCHAR(255) DEFAULT '' COMMENT '会员头像URL',
     balance DECIMAL(10,2) DEFAULT 0 COMMENT '余额',
+    version BIGINT NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
     created_by BIGINT COMMENT '创建人',
     created_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_by BIGINT COMMENT '更新人',
@@ -51,7 +52,9 @@ CREATE TABLE member_transaction (
     balance_before DECIMAL(10,2) COMMENT '交易前余额',
     balance_after DECIMAL(10,2) COMMENT '交易后余额',
     remark VARCHAR(255) COMMENT '备注',
+    idempotency_key VARCHAR(64) DEFAULT NULL COMMENT '幂等键(客户端UUID)',
     created_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    UNIQUE KEY uk_idempotency_key (idempotency_key),
     INDEX idx_member_id (member_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='会员交易流水表';
 

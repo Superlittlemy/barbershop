@@ -799,6 +799,7 @@
                         <label class="input-label">备注（可选）</label>
                         <input type="text" id="txRemark" class="input" placeholder="例如：剪发 30 元">
                     </div>
+                    <input type="hidden" id="txIdempotencyKey" />
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn" onclick="closeTxModal()">取消</button>
@@ -1756,6 +1757,10 @@
             document.getElementById('txCurrentBalance').textContent = `¥${parseFloat(m.balance || 0).toFixed(2)}`;
             document.getElementById('txAmount').value = '';
             document.getElementById('txRemark').value = type === 'store' ? '会员充值' : '';
+            document.getElementById('txIdempotencyKey').value =
+                (window.crypto && crypto.randomUUID)
+                    ? crypto.randomUUID()
+                    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
             document.getElementById('txModal').classList.add('active');
         }
         function closeTxModal() { document.getElementById('txModal').classList.remove('active'); }
@@ -1775,8 +1780,12 @@
             btn.disabled = true; btn.textContent = '处理中...';
             try {
                 const endpoint = type === 'store' ? 'store' : 'consume';
-                const res = await apiCall(`/member/${memberId}/${endpoint}`, 'POST', { amount, remark });
-                if (res.code === 20000) {
+                const res = await apiCall(`/member/${memberId}/${endpoint}`, 'POST', {
+                    amount,
+                    remark,
+                    idempotencyKey: document.getElementById('txIdempotencyKey').value,
+                });
+                if (res.code === 20000 || res.code === 409) {
                     showToast(type === 'store' ? '储值成功' : '消费成功', 'success');
                     closeTxModal();
                     await loadMembers(memberState.shopId);
