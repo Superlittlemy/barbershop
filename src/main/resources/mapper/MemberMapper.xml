@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.slm.barbershop.mapper.MemberMapper">
+
+    <resultMap id="MemberMatchVO" type="com.slm.barbershop.model.MemberMatchVO">
+        <id property="memberId" column="member_id" />
+        <result property="shopId" column="shop_id" />
+        <result property="shopName" column="shop_name" />
+        <result property="name" column="name" />
+        <result property="phone" column="phone" />
+    </resultMap>
+
+    <select id="matchAcrossShops" resultMap="MemberMatchVO">
+        SELECT m.id   AS member_id,
+               m.shop_id,
+               s.name AS shop_name,
+               m.name,
+               m.phone
+        FROM member m
+        INNER JOIN shop s ON s.id = m.shop_id AND s.is_deleted = 0
+        WHERE m.phone = #{phone}
+          AND m.name  = #{name}
+          AND m.is_deleted = 0
+        ORDER BY m.id ASC
+    </select>
+
+</mapper>
