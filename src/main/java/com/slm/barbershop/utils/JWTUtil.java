@@ -20,6 +20,8 @@ public class JWTUtil {
 
     private final static SecureDigestAlgorithm<SecretKey, SecretKey> ALGORITHM = Jwts.SIG.HS256;
 
+    public static final String MEMBER_TOKEN_SUBJECT_PREFIX = "member:";
+
     private final SecretKey key;
     private final long accessTokenExpiration;
     private final String issuer = "barbershop";
@@ -39,6 +41,10 @@ public class JWTUtil {
     }
 
     public String generateJwtToken(Long id, String username) {
+        return generateJwtToken(id, username, subject);
+    }
+
+    public String generateJwtToken(Long id, String username, String subject) {
         return Jwts.builder()
                 .header()
                 .add("typ", "JWT")
