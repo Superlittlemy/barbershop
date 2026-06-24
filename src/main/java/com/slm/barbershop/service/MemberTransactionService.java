@@ -1,7 +1,10 @@
 package com.slm.barbershop.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.slm.barbershop.converter.MemberTransactionConverter;
 import com.slm.barbershop.entity.Member;
 import com.slm.barbershop.entity.MemberTransaction;
 import com.slm.barbershop.enums.TransactionType;
@@ -9,6 +12,7 @@ import com.slm.barbershop.exception.BizException;
 import com.slm.barbershop.lock.DistributedLock;
 import com.slm.barbershop.mapper.MemberMapper;
 import com.slm.barbershop.mapper.MemberTransactionMapper;
+import com.slm.barbershop.model.MemberTransactionPageVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.DuplicateKeyException;
@@ -30,6 +34,9 @@ public class MemberTransactionService extends ServiceImpl<MemberTransactionMappe
 
     @Autowired
     private MemberMapper memberMapper;
+
+    @Autowired
+    private MemberTransactionConverter transactionConverter;
 
     /**
      * 注入自身代理,使 {@link #doUpdate} 上的 @Transactional 通过代理生效
@@ -141,6 +148,27 @@ public class MemberTransactionService extends ServiceImpl<MemberTransactionMappe
                         .eq(MemberTransaction::getMemberId, memberId)
                         .orderByDesc(MemberTransaction::getCreatedTime)
         );
+    }
+
+    /**
+     * 分页查询交易流水,按 created_time DESC, id DESC 排序。
+     * page 从 1 开始,size 默认 20,上限 100。
+     */
+    public MemberTransactionPageVO pageByMemberId(Long memberId, long page, long size) {
+        long p = Math.max(page, 1);
+        long s = Math.min(Math.max(size, 1), 100);
+        Page<MemberTransaction> mpPage = new Page<>(p, s);
+        LambdaQueryWrapper<MemberTransaction> wrapper = new LambdaQueryWrapper<MemberTransaction>()
+                .eq(MemberTransaction::getMemberId, memberId)
+                .orderByDesc(MemberTransaction::getCreatedTime)
+                .orderByDesc(MemberTransaction::getId);
+        IPage<MemberTransaction> result = transactionMapper.selectPage(mpPage, wrapper);
+        List<MemberTransaction> records = result.getRecords();
+        long total = result.getTotal();
+        boolean hasMore = p * s < total;
+        return new MemberTransactionPageVO(
+                transactionConverter.toResponseList(records),
+                total, p, s, hasMore);
     }
 
 }
