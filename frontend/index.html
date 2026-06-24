@@ -63,7 +63,17 @@
         .dashboard-layout { display: flex; align-items: flex-start; }
 
         /* Sidebar */
-        .sidebar { width: 240px; flex-shrink: 0; background: var(--bg); border-right: 1px solid var(--border); padding: 16px 12px; height: calc(100vh - 56px); overflow-y: auto; position: sticky; top: 56px; }
+        .sidebar { width: 240px; flex-shrink: 0; background: var(--bg); border-right: 1px solid var(--border); height: calc(100vh - 56px); position: sticky; top: 56px; display: flex; flex-direction: column; }
+.sidebar-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 16px 12px; }
+.sidebar-toggle { flex-shrink: 0; display: flex; align-items: center; justify-content: center; height: 40px; border: none; border-top: 1px solid var(--border); background: var(--bg); color: var(--text-tertiary); cursor: pointer; transition: all 0.15s; font-family: inherit; font-size: 12px; }
+.sidebar-toggle:hover { background: var(--surface-hover); color: var(--text); }
+.sidebar-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.sidebar[data-state="collapsed"] { width: 64px; }
+.sidebar[data-state="collapsed"] .sidebar-item span,
+.sidebar[data-state="collapsed"] .sidebar-section-title span:last-child,
+.sidebar[data-state="collapsed"] .sidebar-section-title a { display: none; }
+.sidebar[data-state="collapsed"] .shop-selector,
+.sidebar[data-state="collapsed"] .sidebar-section[data-members-only] { display: none; }
         .sidebar-section { margin-bottom: 24px; }
         .sidebar-section-title { font-size: 11px; font-weight: 500; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.08em; padding: 0 8px 8px; display: flex; align-items: center; justify-content: space-between; }
         .sidebar-item { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 4px; font-size: 13px; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; text-decoration: none; }
@@ -249,11 +259,13 @@
 
         /* Table (transactions) */
         .table-wrap { overflow-x: auto; }
-        .table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
         .table th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 500; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); background: var(--bg); }
         .table td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text-secondary); }
         .table tr:nth-child(even) td { background: var(--surface-alt); }
         .table tr:hover td { background: var(--surface-hover); }
+        .col-amount { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
+.col-truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .amount-pos { color: var(--success); font-weight: 500; }
         .amount-neg { color: var(--error); font-weight: 500; }
         .type-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; line-height: 1.5; }
@@ -265,7 +277,32 @@
         .input-prefix .prefix { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); font-size: 13px; pointer-events: none; }
         .input-prefix .input { padding-left: 26px; }
 
-        /* Animations */
+        /* Member table (members view content area) */
+.member-table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.member-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+.member-table th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 500; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); background: var(--bg); }
+.member-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: middle; }
+.member-table tr:last-child td { border-bottom: none; }
+.member-table tbody tr:hover td { background: var(--surface-hover); }
+.member-table tbody tr:nth-child(even) td { background: var(--surface-alt); }
+.member-table-name { display: flex; align-items: center; gap: 10px; cursor: pointer; color: var(--text); }
+.member-table-name:hover { color: var(--accent-hover); }
+.member-table-name .member-name-text { font-weight: 500; }
+.member-table-balance { font-weight: 600; color: var(--text); }
+.member-table-actions { display: flex; gap: 4px; flex-wrap: nowrap; overflow-x: auto; min-width: max-content; -webkit-overflow-scrolling: touch; }
+.member-table-actions .btn { padding: 3px 8px; min-height: 24px; font-size: 11px; }
+
+/* Tx list modal */
+.modal.modal-wide { max-width: 720px; }
+.tx-modal-header { padding: 12px 22px; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.tx-modal-header .member-summary { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.tx-modal-header .member-summary .member-avatar { width: 32px; height: 32px; font-size: 13px; }
+.tx-modal-header .member-summary .info { min-width: 0; }
+.tx-modal-header .member-summary .name { font-size: 14px; font-weight: 500; color: var(--text); }
+.tx-modal-header .member-summary .meta { font-size: 11px; color: var(--text-tertiary); }
+.tx-modal-body { padding: 0; max-height: 60vh; overflow-y: auto; }
+
+/* Animations */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
         .fade-in { animation: fadeIn 0.3s ease forwards; }
         .stagger > * { animation: fadeIn 0.3s ease forwards; opacity: 0; }
@@ -280,18 +317,20 @@
         @media (max-width: 1280px) { .activity-panel { width: 240px; padding: 20px 16px; } }
         @media (max-width: 1024px) {
             .activity-panel { display: none; }
-            .sidebar { width: 64px; }
-            .sidebar-item span:not(.sidebar-item-count), .sidebar-section-title span:last-child, .sidebar-section-title a { display: none; }
+            .sidebar:not([data-state="expanded"]) { width: 64px; }
+            .sidebar:not([data-state="expanded"]) .sidebar-item span,
+            .sidebar:not([data-state="expanded"]) .sidebar-section-title span:last-child,
+            .sidebar:not([data-state="expanded"]) .sidebar-section-title a { display: none; }
+            .sidebar:not([data-state="expanded"]) .shop-selector,
+            .sidebar:not([data-state="expanded"]) .sidebar-section[data-members-only] { display: none; }
             .shop-grid { grid-template-columns: 1fr; }
-            .member-row .member-name, .member-row .member-balance, .shop-selector, .sidebar-section[data-members-only] { display: none; }
-            .member-row { justify-content: center; padding: 6px; }
         }
         @media (max-width: 768px) {
             .dashboard-layout { flex-direction: column; }
             .sidebar { position: fixed; left: -240px; top: 56px; width: 240px; height: calc(100vh - 56px); background: var(--surface); z-index: 100; transition: left 0.2s; }
             .sidebar.open { left: 0; }
-            .sidebar-item span:not(.sidebar-item-count), .sidebar-section-title span:last-child, .sidebar-section-title a { display: inline; }
-            .member-row .member-name, .member-row .member-balance, .shop-selector, .sidebar-section[data-members-only] { display: block; }
+            .sidebar-item span, .sidebar-section-title span:last-child, .sidebar-section-title a { display: inline; }
+            .shop-selector, .sidebar-section[data-members-only] { display: block; }
             .main { padding: 16px; }
             .kpi-grid { grid-template-columns: 1fr 1fr; }
             .topbar-search { display: none; }
@@ -305,14 +344,16 @@
             <span class="topbar-brand-mark"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M6 3h12l4 6-10 13L2 9z"/></svg></span>
             BARBERSHOP
         </a>
-        <div class="topbar-search">
+        <!-- TODO 搜索功能 -->
+        <!-- <div class="topbar-search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <input type="search" placeholder="搜索会员、店铺或记录...">
-        </div>
+        </div> -->
         <div class="topbar-actions">
-            <button class="btn btn-ghost btn-icon" title="通知">
+            <!-- TODO 通知功能 -->
+            <!-- <button class="btn btn-ghost btn-icon" title="通知">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            </button>
+            </button> -->
             <div class="user-menu">
                 <div class="topbar-avatar" id="topbarAvatar" title="账户" onclick="toggleUserMenu()">U</div>
                 <div class="user-dropdown" id="userDropdown">
@@ -335,6 +376,7 @@
 
     <div class="dashboard-layout">
         <aside class="sidebar" id="sidebar">
+            <div class="sidebar-scroll">
             <div class="sidebar-section">
                 <div class="sidebar-section-title"><span>导航</span></div>
                 <a class="sidebar-item" data-nav="overview" href="#overview">
@@ -353,7 +395,7 @@
                 </a>
             </div>
 
-            <div class="sidebar-section" data-hide-on-members>
+            <div class="sidebar-section" data-show-on-shops>
                 <div class="sidebar-section-title">
                     <span>我的店铺</span>
                     <a href="#shops" id="sidebarAddShop" style="color: var(--accent); text-decoration: none; font-size: 11px;">+ 新增</a>
@@ -371,17 +413,11 @@
                     </select>
                 </div>
             </div>
-
-            <div class="sidebar-section" data-members-only hidden>
-                <div class="sidebar-section-title">
-                    <span>会员</span>
-                    <a href="#" id="sidebarAddMember" style="color: var(--accent); text-decoration: none; font-size: 11px;">+ 新增</a>
-                </div>
-                <div id="sidebarMemberList">
-                    <div class="sidebar-empty">请先选择店铺</div>
-                </div>
             </div>
-        </aside>
+            <button class="sidebar-toggle" id="sidebarToggle" type="button" onclick="toggleSidebar()" title="展开/收起侧栏">
+                <svg id="sidebarToggleIcon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            </aside>
 
         <main class="main">
             <div class="page-header">
@@ -414,22 +450,7 @@
                     </div>
                 </div>
 
-                <div class="section-card">
-                    <div class="section-header">
-                        <div class="section-title">最近活动</div>
-                        <a href="#members" class="btn btn-ghost">会员管理 →</a>
-                    </div>
-                    <div class="section-body" id="recentList">
-                        <div class="recent-item">
-                            <div class="recent-avatar">空</div>
-                            <div class="recent-content">
-                                <div class="recent-name">暂无活动</div>
-                                <div class="recent-meta">登录后开始使用</div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
-            </div>
 
             <div data-view-pane="shops" hidden class="fade-in">
                 <div class="shop-grid" id="shopGrid"></div>
@@ -476,14 +497,8 @@
             </div>
 
             <div data-view-pane="members" hidden class="fade-in">
-                <div id="memberDetail">
-                    <div class="section-card">
-                        <div class="empty-state">
-                            <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
-                            <h3 class="empty-title">还没有会员</h3>
-                            <p class="empty-desc" id="memberEmptyDesc">先选择店铺，再添加会员</p>
-                        </div>
-                    </div>
+                <div id="membersContent">
+                    <!-- rendered by renderMembersView() -->
                 </div>
             </div>
         </main>
@@ -573,14 +588,12 @@
                             <div class="activity-dot"></div>
                             <div class="activity-content">
                                 <strong>店铺总数</strong> <span id="statTotalShops">0</span>
-                                <div class="activity-time">—</div>
                             </div>
                         </div>
                         <div class="activity-item">
                             <div class="activity-dot" style="background: var(--success);"></div>
                             <div class="activity-content">
                                 <strong>含会员的店铺</strong> <span id="statActiveShops">0</span>
-                                <div class="activity-time">—</div>
                             </div>
                         </div>
                     </div>
@@ -809,6 +822,34 @@
         </div>
     </div>
 
+    <!-- Tx List Modal -->
+    <div class="modal-overlay" id="txListModal">
+        <div class="modal modal-wide">
+            <div class="modal-header">
+                <div class="modal-title">交易记录</div>
+                <button class="modal-close" onclick="closeTxListModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="tx-modal-header">
+                <div class="member-summary">
+                    <div class="member-avatar" id="txListAvatar">?</div>
+                    <div class="info">
+                        <div class="name" id="txListName">—</div>
+                        <div class="meta" id="txListMeta">—</div>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.08em;">当前余额</div>
+                    <div style="font-size: 18px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums;" id="txListBalance">¥0.00</div>
+                </div>
+            </div>
+            <div class="tx-modal-body" id="txListBody">
+                <div style="padding: 24px; text-align: center; color: var(--text-tertiary); font-size: 13px;">加载中...</div>
+            </div>
+        </div>
+    </div>
+
     <div class="toast" id="toast"></div>
 
     <script>
@@ -843,7 +884,7 @@
             const navTarget = view === 'shop-detail' ? 'shops' : view;
             document.querySelectorAll('.sidebar-item[data-nav]').forEach(b => b.classList.toggle('active', b.dataset.nav === navTarget));
             document.querySelectorAll('[data-members-only]').forEach(el => el.hidden = view !== 'members');
-            document.querySelectorAll('[data-hide-on-members]').forEach(el => el.hidden = view === 'members');
+            document.querySelectorAll('[data-show-on-shops]').forEach(el => el.hidden = !(view === 'shops' || view === 'shop-detail'));
             const title = document.getElementById('pageTitle');
             const sub = document.getElementById('pageSubtitle');
             if (view === 'shops') {
@@ -895,7 +936,15 @@
                         删除
                     </button>`;
             } else if (view === 'members') {
-                el.innerHTML = '';
+                el.innerHTML = `<button class="btn btn-primary" onclick="openMemberModal()">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    新增会员
+                </button>`;
+            } else if (view === 'shops') {
+                el.innerHTML = `<button class="btn btn-primary" onclick="openShopModal()">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    新增店铺
+                </button>`;
             } else {
                 el.innerHTML = '';
             }
@@ -1138,6 +1187,8 @@
                 if (ddEmail) ddEmail.textContent = '点击头像登录';
                 const sideEl = document.getElementById('sidebarShopList');
                 if (sideEl) sideEl.innerHTML = '<div class="sidebar-empty">请先登录</div>';
+                const mc = document.getElementById('memberCount');
+                if (mc) mc.textContent = '0';
             }
             switchView(currentView());
         }
@@ -1229,20 +1280,8 @@
             document.getElementById('kpiMembers').textContent = totalMembers;
             document.getElementById('kpiStored').textContent = `¥${totalBalance.toFixed(2)}`;
             document.getElementById('kpiTx').textContent = totalTx;
-            renderRecentList();
+            document.getElementById('memberCount').textContent = totalMembers;
             if (currentView() === 'shops') renderShopGrid(); // refresh member counts
-        }
-
-        function renderRecentList() {
-            const el = document.getElementById('recentList');
-            const allMembers = [];
-            for (const shop of shops) {
-                // We don't have full member list cached; just skip to keep simple
-            }
-            if (allMembers.length === 0) {
-                el.innerHTML = '<div class="recent-item"><div class="recent-avatar">空</div><div class="recent-content"><div class="recent-name">暂无活动</div><div class="recent-meta">先添加店铺，再创建会员</div></div></div>';
-                return;
-            }
         }
 
         /* ----- Sidebar shops ----- */
@@ -1441,7 +1480,7 @@
         }
 
         document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') { closeModal(); closeShopModal(); closeMemberModal(); closeTxModal(); }
+            if (e.key === 'Escape') { closeModal(); closeShopModal(); closeMemberModal(); closeTxModal(); closeTxListModal(); }
         });
         document.getElementById('authModal').addEventListener('click', e => { if (e.target.id === 'authModal') closeModal(); });
         document.getElementById('shopModal').addEventListener('click', e => { if (e.target.id === 'shopModal') closeShopModal(); });
@@ -1459,17 +1498,22 @@
         const memberState = {
             list: [],            // current shop's members
             shopId: null,        // currently selected shop
-            memberId: null,      // currently selected member
             editingId: null
         };
 
         function populateMemberShopSelect() {
+            const shopOpts = shops.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+            const sidebarOpts = shopOpts;
+            // 新增/编辑会员的弹窗下拉保留占位项，强制用户主动选择
+            const modalOpts = '<option value="">选择店铺...</option>' + shopOpts;
             const sel = document.getElementById('memberShopSelect');
-            const opts = '<option value="">选择店铺...</option>' +
-                shops.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
-            sel.innerHTML = opts;
+            if (sel) {
+                sel.innerHTML = sidebarOpts;
+                // 重置 innerHTML 会让 select.value 复位为空选项，需回填当前店铺
+                if (memberState.shopId) sel.value = memberState.shopId;
+            }
             const mSel = document.getElementById('memberShop');
-            if (mSel) mSel.innerHTML = opts;
+            if (mSel) mSel.innerHTML = modalOpts;
         }
 
         function getMemberShopIdFromQuery() {
@@ -1486,15 +1530,11 @@
             if (preselect && shops.find(s => s.id === preselect)) target = preselect;
             else if (memberState.shopId && shops.find(s => s.id === memberState.shopId)) target = memberState.shopId;
             else if (shops.length > 0) target = shops[0].id;
-            if (target) {
-                document.getElementById('memberShopSelect').value = target;
-                memberState.shopId = target;
-                loadMembers(target);
-            } else {
-                memberState.shopId = null;
-                renderMemberSidebar();
-                renderMemberEmpty('还没有店铺', '请先在店铺管理中添加一家店铺', false);
-            }
+            memberState.shopId = target || null;
+            const sel = document.getElementById('memberShopSelect');
+            if (sel) sel.value = target || '';
+            if (target) loadMembers(target);
+            else { memberState.list = []; renderMembersView(); }
         }
 
         async function loadMembers(shopId) {
@@ -1502,137 +1542,107 @@
                 const data = await apiCall(`/member/list?shopId=${shopId}`);
                 if (data.code === 20000) {
                     memberState.list = data.data || [];
-                    document.getElementById('memberCount').textContent = memberState.list.length;
-                    renderMemberSidebar();
-                    if (memberState.list.length > 0) {
-                        const keep = memberState.list.find(m => String(m.id) === String(memberState.memberId));
-                        selectMember(keep ? keep.id : memberState.list[0].id);
-                    } else {
-                        memberState.memberId = null;
-                        renderMemberEmpty('该店铺还没有会员', '点击右上角"新增会员"开始', true);
-                    }
+                    renderMembersView();
                 }
             } catch (e) { showToast('加载会员失败', 'error'); }
         }
 
-        function renderMemberSidebar() {
-            const el = document.getElementById('sidebarMemberList');
-            document.getElementById('memberCount').textContent = memberState.list.length;
-            if (memberState.list.length === 0) {
-                el.innerHTML = memberState.shopId
-                    ? '<div class="sidebar-empty">该店铺还没有会员</div>'
-                    : '<div class="sidebar-empty">请先选择店铺</div>';
+        function renderMembersView() {
+            const container = document.getElementById('membersContent');
+            if (shops.length === 0) {
+                container.innerHTML = `
+                    <div class="section-card"><div class="empty-state">
+                        <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+                        <h3 class="empty-title">还没有店铺</h3>
+                        <p class="empty-desc">请先在店铺管理中添加一家店铺</p>
+                        <a href="#shops" class="btn btn-primary">去添加店铺</a>
+                    </div></div>`;
                 return;
             }
-            el.innerHTML = memberState.list.map(m => `
-                <div class="member-row ${String(m.id) === String(memberState.memberId) ? 'active' : ''}" onclick="selectMember('${m.id}')">
-                    <div class="member-avatar">${escapeHtml((m.name || '?').charAt(0))}</div>
-                    <div class="member-name">${escapeHtml(m.name || '未命名')}</div>
-                    <div class="member-balance">¥${parseFloat(m.balance || 0).toFixed(0)}</div>
-                </div>
-            `).join('');
+            if (memberState.list.length === 0) {
+                container.innerHTML = `
+                    <div class="section-card"><div class="empty-state">
+                        <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+                        <h3 class="empty-title">该店铺还没有会员</h3>
+                        <p class="empty-desc">点击左上角"新增会员"开始</p>
+                    </div></div>`;
+                return;
+            }
+            container.innerHTML = `
+                <div class="member-table-card">
+                    <table class="member-table">
+                        <thead><tr>
+                            <th>会员</th>
+                            <th>手机号</th>
+                            <th>余额</th>
+                            <th style="width: 200px">操作</th>
+                        </tr></thead>
+                        <tbody>
+                            ${memberState.list.map(m => {
+                                const mid = escapeHtml(String(m.id));
+                                const name = escapeHtml(m.name || '未命名');
+                                const initial = escapeHtml((m.name || '?').charAt(0));
+                                return `
+                                <tr>
+                                    <td>
+                                        <div class="member-table-name" onclick="viewMemberTransactions('${mid}')" title="点击查看交易记录">
+                                            <div class="member-avatar">${initial}</div>
+                                            <span class="member-name-text">${name}</span>
+                                        </div>
+                                    </td>
+                                    <td class="col-truncate" title="${escapeHtml(m.phone || '')}">${escapeHtml(m.phone || '—')}</td>
+                                    <td class="col-amount"><span class="member-table-balance">¥${parseFloat(m.balance || 0).toFixed(2)}</span></td>
+                                    <td>
+                                        <div class="member-table-actions">
+                                            <button class="btn btn-sm" onclick="openTxModal('${mid}', 'store')">储值</button>
+                                            <button class="btn btn-sm" onclick="openTxModal('${mid}', 'consume')">消费</button>
+                                            <button class="btn btn-sm" onclick="editMember('${mid}')">编辑</button>
+                                            <button class="btn btn-sm btn-danger" onclick="deleteMember('${mid}')">删除</button>
+                                        </div>
+                                    </td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
         }
 
-        function renderMemberEmpty(title, desc, canAdd) {
-            const addBtn = canAdd
-                ? '<button class="btn btn-primary" onclick="openMemberModal()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增会员</button>'
-                : '<a href="#shops" class="btn btn-primary">去添加店铺</a>';
-            document.getElementById('memberDetail').innerHTML = `
-                <div class="section-card"><div class="empty-state">
-                    <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
-                    <h3 class="empty-title">${escapeHtml(title)}</h3>
-                    <p class="empty-desc">${escapeHtml(desc)}</p>
-                    ${addBtn}
-                </div></div>
-            `;
-        }
-
-        async function selectMember(memberId) {
-            memberState.memberId = memberId;
+        async function viewMemberTransactions(memberId) {
             const m = memberState.list.find(x => String(x.id) === String(memberId));
             if (!m) return;
-            renderMemberSidebar();
-            const shop = shops.find(s => s.id === memberState.shopId);
-            document.getElementById('pageSubtitle').textContent = `${shop ? shop.name + ' · ' : ''}${m.name || '未命名'}`;
-            renderMemberDetail(m);
-            loadTransactions(memberId);
-        }
-
-        function renderMemberDetail(m) {
-            const html = `
-                <div class="section-card fade-in">
-                    <div class="member-header">
-                        <div class="member-big-avatar">${escapeHtml((m.name || '?').charAt(0))}</div>
-                        <div class="member-info">
-                            <h2 class="member-name-big">${escapeHtml(m.name || '未命名')}</h2>
-                            <div class="member-meta">
-                                <span class="member-meta-item">
-                                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                                    ${escapeHtml(m.phone || '未填写电话')}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="member-actions">
-                            <button class="btn" onclick="editMember('${m.id}')">
-                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                编辑
-                            </button>
-                            <button class="btn btn-danger" onclick="deleteMember('${m.id}')">
-                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                                删除
-                            </button>
-                        </div>
-                    </div>
-                    <div class="balance-display">
-                        <div>
-                            <div class="balance-label">账户余额</div>
-                            <div class="balance-value">¥${parseFloat(m.balance || 0).toFixed(2)}</div>
-                        </div>
-                        <div class="balance-actions">
-                            <button class="btn btn-success" onclick="openTxModal('${m.id}', 'store')">
-                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                储值
-                            </button>
-                            <button class="btn btn-warn" onclick="openTxModal('${m.id}', 'consume')" style="color: var(--error); border-color: var(--error);">
-                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                消费
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="section-card">
-                    <div class="section-header">
-                        <div class="section-title">交易记录</div>
-                    </div>
-                    <div class="table-wrap" id="txTableWrap">
-                        <div style="padding: 16px 18px; color: var(--text-tertiary); font-size: 13px;">加载中...</div>
-                    </div>
-                </div>
-            `;
-            document.getElementById('memberDetail').innerHTML = html;
-        }
-
-        async function loadTransactions(memberId) {
+            document.getElementById('txListAvatar').textContent = (m.name || '?').charAt(0);
+            document.getElementById('txListName').textContent = m.name || '未命名';
+            document.getElementById('txListMeta').textContent = m.phone || '未填写电话';
+            document.getElementById('txListBalance').textContent = `¥${parseFloat(m.balance || 0).toFixed(2)}`;
+            document.getElementById('txListBody').innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-tertiary); font-size: 13px;">加载中...</div>';
+            document.getElementById('txListModal').classList.add('active');
             try {
                 const data = await apiCall(`/member/${memberId}/transactions`);
                 if (data.code === 20000) {
-                    renderTxTable(data.data || []);
+                    renderTxList(data.data || []);
                     renderMemberActivity(data.data || []);
+                } else {
+                    document.getElementById('txListBody').innerHTML = '<div style="padding: 24px; text-align: center; color: var(--error); font-size: 13px;">加载失败</div>';
                 }
-            } catch (e) { /* */ }
+            } catch (e) {
+                document.getElementById('txListBody').innerHTML = '<div style="padding: 24px; text-align: center; color: var(--error); font-size: 13px;">加载失败</div>';
+            }
         }
 
-        function renderTxTable(txs) {
-            const wrap = document.getElementById('txTableWrap');
-            if (!wrap) return;
+        function closeTxListModal() {
+            document.getElementById('txListModal').classList.remove('active');
+        }
+
+        function renderTxList(txs) {
+            const wrap = document.getElementById('txListBody');
             if (txs.length === 0) {
-                wrap.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-tertiary); font-size: 13px;">暂无交易记录</div>';
+                wrap.innerHTML = '<div style="padding: 32px; text-align: center; color: var(--text-tertiary); font-size: 13px;">暂无交易记录</div>';
                 return;
             }
             wrap.innerHTML = `
                 <table class="table">
                     <thead><tr>
-                        <th>类型</th><th>金额</th><th>交易前</th><th>交易后</th><th>备注</th><th>时间</th>
+                        <th style="width: 80px;">类型</th><th style="width: 100px;" class="col-amount">金额</th><th style="width: 100px;" class="col-amount">交易前</th><th style="width: 100px;" class="col-amount">交易后</th><th>备注</th><th style="width: 140px;">时间</th>
                     </tr></thead>
                     <tbody>
                         ${txs.map(t => {
@@ -1640,10 +1650,10 @@
                             return `
                             <tr>
                                 <td><span class="type-badge ${isStore ? 'type-store' : 'type-consume'}">${isStore ? '储值' : '消费'}</span></td>
-                                <td class="${isStore ? 'amount-pos' : 'amount-neg'}">${isStore ? '+' : '-'}¥${parseFloat(t.amount).toFixed(2)}</td>
-                                <td>¥${parseFloat(t.balanceBefore).toFixed(2)}</td>
-                                <td>¥${parseFloat(t.balanceAfter).toFixed(2)}</td>
-                                <td>${escapeHtml(t.remark || '—')}</td>
+                                <td class="col-amount ${isStore ? 'amount-pos' : 'amount-neg'}">${isStore ? '+' : '-'}¥${parseFloat(t.amount).toFixed(2)}</td>
+                                <td class="col-amount">¥${parseFloat(t.balanceBefore).toFixed(2)}</td>
+                                <td class="col-amount">¥${parseFloat(t.balanceAfter).toFixed(2)}</td>
+                                <td class="col-truncate" title="${escapeHtml(t.remark || '')}">${escapeHtml(t.remark || '—')}</td>
                                 <td style="color: var(--text-tertiary); font-size: 12px;">${formatTime(t.createdTime)}</td>
                             </tr>`;
                         }).join('')}
@@ -1726,10 +1736,10 @@
                     closeMemberModal();
                     if (data.shopId !== memberState.shopId) {
                         memberState.shopId = data.shopId;
-                        document.getElementById('memberShopSelect').value = memberState.shopId;
+                        const sel = document.getElementById('memberShopSelect');
+                        if (sel) sel.value = memberState.shopId;
                     }
                     await loadMembers(memberState.shopId);
-                    if (!id && res.data) selectMember(res.data.id);
                 } else showToast(res.message || '保存失败', 'error');
             } catch (e) { showToast('保存失败', 'error'); }
             btn.disabled = false; btn.textContent = '保存';
@@ -1741,7 +1751,6 @@
                 const res = await apiCall(`/member/${id}?shopId=${memberState.shopId}`, 'DELETE');
                 if (res.code === 20000) {
                     showToast('已删除', 'success');
-                    memberState.memberId = null;
                     loadMembers(memberState.shopId);
                 } else showToast(res.message || '删除失败', 'error');
             } catch (e) { showToast('删除失败', 'error'); }
@@ -1789,7 +1798,11 @@
                     showToast(type === 'store' ? '储值成功' : '消费成功', 'success');
                     closeTxModal();
                     await loadMembers(memberState.shopId);
-                    selectMember(memberId);
+                    // 若交易弹窗开着，刷新其数据
+                    const txListModal = document.getElementById('txListModal');
+                    if (txListModal && txListModal.classList.contains('active')) {
+                        viewMemberTransactions(memberId);
+                    }
                 } else showToast(res.message || '操作失败', 'error');
             } catch (e) { showToast('操作失败', 'error'); }
             btn.disabled = false; btn.textContent = '确认';
@@ -1808,23 +1821,64 @@
             } catch (e) { return iso; }
         }
 
-        // 会员侧边栏事件
+        // 会员视图事件
         document.getElementById('memberShopSelect').addEventListener('change', e => {
             const v = e.target.value;
             memberState.shopId = v || null;
-            memberState.memberId = null;
             if (memberState.shopId) loadMembers(memberState.shopId);
-            else { memberState.list = []; renderMemberSidebar(); renderMemberEmpty('请先选择店铺', '请在顶部下拉中选择一家店铺', false); }
-        });
-        document.getElementById('sidebarAddMember').addEventListener('click', e => {
-            e.preventDefault();
-            openMemberModal();
+            else { memberState.list = []; renderMembersView(); }
         });
         document.getElementById('memberModal').addEventListener('click', e => { if (e.target.id === 'memberModal') closeMemberModal(); });
         document.getElementById('txModal').addEventListener('click', e => { if (e.target.id === 'txModal') closeTxModal(); });
+        document.getElementById('txListModal').addEventListener('click', e => { if (e.target.id === 'txListModal') closeTxListModal(); });
+
+        // 侧栏展开/折叠
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const current = sidebar.dataset.state;
+            let next;
+            if (current === 'expanded') next = 'collapsed';
+            else if (current === 'collapsed') next = 'expanded';
+            else {
+                // 当前为 auto：依据视口决定下一步
+                next = window.matchMedia('(max-width: 1024px)').matches ? 'expanded' : 'collapsed';
+            }
+            sidebar.dataset.state = next;
+            localStorage.setItem('sidebar-pref', next);
+            updateSidebarToggleIcon();
+        }
+
+        function updateSidebarToggleIcon() {
+            const sidebar = document.getElementById('sidebar');
+            const isSmall = window.matchMedia('(max-width: 1024px)').matches;
+            const explicit = sidebar.dataset.state;
+            let isExpanded;
+            if (explicit === 'expanded') isExpanded = true;
+            else if (explicit === 'collapsed') isExpanded = false;
+            else isExpanded = !isSmall;
+            const icon = document.getElementById('sidebarToggleIcon');
+            const btn = document.getElementById('sidebarToggle');
+            // 展开态显示 chevron-left（点击收起），折叠态显示 chevron-right（点击展开）
+            icon.innerHTML = isExpanded
+                ? '<polyline points="15 18 9 12 15 6"/>'
+                : '<polyline points="9 18 15 12 9 6"/>';
+            btn.title = isExpanded ? '收起侧栏' : '展开侧栏';
+            btn.setAttribute('aria-label', btn.title);
+        }
+
+        function initSidebarToggle() {
+            const sidebar = document.getElementById('sidebar');
+            const pref = localStorage.getItem('sidebar-pref');
+            if (pref === 'expanded' || pref === 'collapsed') {
+                sidebar.dataset.state = pref;
+            }
+            updateSidebarToggleIcon();
+            window.addEventListener('resize', updateSidebarToggleIcon);
+        }
 
         // Init
         initLogoUploader();
+        initSidebarToggle();
         applyAuth();
         if (currentUser) loadAll();
     </script>
