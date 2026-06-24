@@ -29,6 +29,8 @@ public class JwtAuthenticationFilter implements Filter {
             "/auth/login",
             "/auth/register",
             "/auth/send-email-code",
+            "/member/login",
+            "/member/login/match",
             "/swagger-ui",
             "/v3/api-docs",
             "/swagger-resources",
@@ -67,8 +69,14 @@ public class JwtAuthenticationFilter implements Filter {
             Claims claims = jwtUtil.getClaimsFromJwt(authToken);
             Long userId = claims.get("id", Long.class);
             String username = claims.get("username", String.class);
+            String subject = claims.getSubject();
 
-            AuthUser authUser = new AuthUser(userId, username);
+            String type = AuthUser.TYPE_USER;
+            if (subject != null && subject.startsWith(JWTUtil.MEMBER_TOKEN_SUBJECT_PREFIX)) {
+                type = AuthUser.TYPE_MEMBER;
+            }
+
+            AuthUser authUser = new AuthUser(userId, username, type);
             UserContext.setUser(authUser);
 
             chain.doFilter(request, response);
