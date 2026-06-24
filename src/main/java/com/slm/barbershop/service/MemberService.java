@@ -6,12 +6,14 @@ import com.slm.barbershop.converter.MemberConverter;
 import com.slm.barbershop.entity.Member;
 import com.slm.barbershop.exception.BizException;
 import com.slm.barbershop.mapper.MemberMapper;
+import com.slm.barbershop.model.MemberMatchVO;
 import com.slm.barbershop.model.MemberRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -59,6 +61,17 @@ public class MemberService extends ServiceImpl<MemberMapper, Member> {
                 new LambdaQueryWrapper<Member>()
                         .eq(Member::getShopId, shopId)
         );
+    }
+
+    /**
+     * 跨店铺查找匹配手机号+姓名的会员。
+     * 入参校验由 Controller 完成；这里只负责查询。
+     */
+    public List<MemberMatchVO> match(String phone, String name) {
+        if (phone == null || phone.isEmpty() || name == null || name.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return memberMapper.matchAcrossShops(phone.trim(), name.trim());
     }
 
     private Member getByIdAndShopId(Long shopId, Long id) {
