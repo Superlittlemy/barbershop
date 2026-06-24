@@ -12,7 +12,19 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AuthUser {
 
+    public static final String TYPE_USER = "user";
+    public static final String TYPE_MEMBER = "member";
+
     private Long id;
     private String username;
+    private String type;
+
+    public AuthUser(Long id, String username) {
+        this(id, username, TYPE_USER);
+    }
+
+    public boolean isMember() {
+        return TYPE_MEMBER.equals(type);
+    }
 
 }
