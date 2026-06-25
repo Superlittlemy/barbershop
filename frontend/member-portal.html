@@ -365,11 +365,6 @@
         }
 
         try {
-            const balance = await apiCall('/member/' + memberId + '/balance', 'GET');
-            document.getElementById('balanceAmount').textContent = fmtMoney(balance);
-        } catch (e) { /* 已在 loadProfile 中提示 */ }
-
-        try {
             const pageData = await apiCall('/member/' + memberId + '/transactions/page?page=1&size=5', 'GET');
             if (pageData && pageData.records && pageData.records.length > 0) {
                 document.getElementById('balanceHint').textContent = '最近消费: ' + fmtDate(pageData.records[0].createdTime);
@@ -413,6 +408,9 @@
             }
         } catch (e) {
             alert('加载交易记录失败：' + e.message);
+            const btn = document.getElementById('loadMoreBtn');
+            btn.disabled = false;
+            btn.textContent = '加载更多';
         }
     }
 
@@ -428,7 +426,6 @@
             div.className = 'tx-item';
             const isConsume = r.type === 'CONSUME';
             const signClass = isConsume ? 'negative' : 'positive';
-            const sign = isConsume ? '-' : '+';
             const typeLabel = isConsume ? '消费' : '储值';
             div.innerHTML =
                 '<div class="tx-left">' +
