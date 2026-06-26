@@ -315,6 +315,78 @@
 
         @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
         @media (max-width: 1280px) { .activity-panel { width: 240px; padding: 20px 16px; } }
+
+        /* Tab bar (used inside shop-detail) */
+        .tab-bar { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin: 4px 0 20px; }
+        .tab-item { padding: 10px 18px; cursor: pointer; color: var(--text-secondary); border-bottom: 2px solid transparent; transition: all 0.15s; font-size: 13px; font-weight: 500; user-select: none; }
+        .tab-item:hover { color: var(--text); background: var(--surface-alt); }
+        .tab-item.active { color: var(--text); border-bottom-color: var(--accent); }
+        .tab-item-count { display: inline-block; margin-left: 6px; padding: 1px 7px; background: var(--surface-alt); color: var(--text-tertiary); border-radius: 10px; font-size: 11px; font-weight: 500; }
+        .tab-item.active .tab-item-count { background: var(--accent-light); color: var(--accent-hover); }
+
+        /* Status badge */
+        .status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; line-height: 1.5; }
+        .status-on { background: var(--success-light); color: var(--success); }
+        .status-off { background: var(--surface-alt); color: var(--text-tertiary); }
+
+        /* Service item list (row layout, like member list) */
+        .service-item-list { padding: 0; }
+        .service-item-header { display: grid; grid-template-columns: 1.4fr 1fr 2fr 100px 90px 160px; align-items: center; gap: 12px; padding: 10px 18px; font-size: 11px; font-weight: 500; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; background: var(--bg); border-bottom: 1px solid var(--border); }
+        .service-item-header-cell-price { text-align: right; }
+        .service-item-row { display: grid; grid-template-columns: 1.4fr 1fr 2fr 100px 90px 160px; align-items: center; gap: 12px; padding: 10px 18px; border-bottom: 1px solid var(--border); font-size: 13px; transition: background 0.1s; min-width: 0; }
+        .service-item-row:last-child { border-bottom: none; }
+        .service-item-row:hover { background: var(--surface-hover); }
+        .service-item-row-name { color: var(--text); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .service-item-row-cat { color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .service-item-row-desc { color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: help; }
+        .service-item-row-price { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+        .service-item-row-status { display: flex; justify-content: flex-start; }
+        .service-item-row-actions { display: flex; gap: 6px; justify-content: flex-end; }
+
+        /* Service category chips (filter for items) */
+        .category-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
+        .category-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px 4px 12px; border: 1px solid var(--border); border-radius: 16px; font-size: 12px; cursor: pointer; color: var(--text-secondary); background: var(--surface); transition: all 0.15s; }
+        .category-chip:hover { border-color: var(--border-strong); color: var(--text); }
+        .category-chip.active { background: var(--accent-light); color: var(--accent-hover); border-color: var(--accent); font-weight: 500; }
+        .category-chip-add { padding: 4px 12px; border: 1px dashed var(--border); border-radius: 16px; font-size: 12px; cursor: pointer; color: var(--text-tertiary); background: transparent; transition: all 0.15s; }
+        .category-chip-add:hover { border-color: var(--border-strong); color: var(--text); }
+        .category-chip-actions { display: inline-flex; gap: 2px; margin-left: 2px; }
+        .category-chip-actions button { width: 22px; height: 22px; padding: 0; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: none; border-radius: 50%; color: var(--text-tertiary); cursor: pointer; transition: all 0.15s; }
+        .category-chip-actions button:hover { background: var(--surface-hover); color: var(--text); }
+        .category-chip-actions button.danger:hover { background: var(--error-light); color: var(--error); }
+        .category-chip-actions svg { width: 12px; height: 12px; }
+
+        /* Items toolbar */
+        .items-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+        .items-toolbar-right { display: flex; gap: 8px; align-items: center; }
+
+        /* Consume item picker (inside tx modal) */
+        .consume-item-list { border: 1px solid var(--border); border-radius: 6px; max-height: 220px; overflow-y: auto; background: var(--surface); }
+        .consume-item-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+        .consume-item-row:last-child { border-bottom: none; }
+        .consume-item-row.is-off { opacity: 0.5; }
+        .consume-item-row .ci-name { flex: 1; min-width: 0; color: var(--text); }
+        .consume-item-row .ci-name small { color: var(--text-tertiary); font-size: 11px; margin-left: 4px; }
+        .consume-item-row .ci-price { color: var(--text-tertiary); font-variant-numeric: tabular-nums; min-width: 70px; text-align: right; }
+        .consume-item-row .ci-qty { width: 64px; }
+        .consume-item-row .ci-qty input { width: 100%; height: 28px; padding: 0 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; font-family: inherit; font-size: 12px; color: var(--text); text-align: center; }
+        .consume-item-row .ci-qty input:disabled { background: var(--bg); color: var(--text-tertiary); }
+        .consume-item-row .ci-subtotal { color: var(--text); font-weight: 500; min-width: 70px; text-align: right; font-variant-numeric: tabular-nums; }
+        .consume-item-empty { padding: 18px; text-align: center; color: var(--text-tertiary); font-size: 12px; }
+        .consume-mode-toggle { display: flex; gap: 0; margin-bottom: 8px; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; width: fit-content; }
+        .consume-mode-toggle button { padding: 6px 12px; background: var(--surface); border: none; font-size: 12px; cursor: pointer; color: var(--text-secondary); font-family: inherit; }
+        .consume-mode-toggle button.active { background: var(--accent-light); color: var(--accent-hover); font-weight: 500; }
+        .consume-total { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding: 10px 12px; background: var(--bg); border-radius: 6px; font-size: 13px; }
+        .consume-total-label { color: var(--text-secondary); }
+        .consume-total-value { color: var(--text); font-weight: 700; font-size: 16px; font-variant-numeric: tabular-nums; }
+
+        /* Tx items (inside txListModal) */
+        .tx-items { display: flex; flex-direction: column; gap: 2px; }
+        .tx-item { display: flex; gap: 8px; font-size: 12px; color: var(--text-secondary); align-items: center; }
+        .tx-item-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .tx-item-qty { color: var(--text-tertiary); }
+        .tx-item-subtotal { color: var(--text); font-variant-numeric: tabular-nums; min-width: 70px; text-align: right; }
+
         @media (max-width: 1024px) {
             .activity-panel { display: none; }
             .sidebar:not([data-state="expanded"]) { width: 64px; }
@@ -388,11 +460,6 @@
                     <span>店铺管理</span>
                     <span class="sidebar-item-count" id="shopCount">0</span>
                 </a>
-                <a class="sidebar-item" data-nav="members" href="#members">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                    <span>会员管理</span>
-                    <span class="sidebar-item-count" id="memberCount">0</span>
-                </a>
             </div>
 
             <div class="sidebar-section" data-show-on-shops>
@@ -402,15 +469,6 @@
                 </div>
                 <div id="sidebarShopList">
                     <div class="sidebar-empty">加载中...</div>
-                </div>
-            </div>
-
-            <div class="sidebar-section" data-members-only hidden>
-                <div class="sidebar-section-title"><span>店铺筛选</span></div>
-                <div class="shop-selector">
-                    <select id="memberShopSelect">
-                        <option value="">选择店铺...</option>
-                    </select>
                 </div>
             </div>
             </div>
@@ -464,6 +522,11 @@
             </div>
 
             <div data-view-pane="shop-detail" hidden class="fade-in">
+                <div class="sub-nav" id="shopDetailTabs">
+                    <a class="sub-nav-item" data-tab="info" href="#shop/PLACEHOLDER">店铺信息</a>
+                    <a class="sub-nav-item" data-tab="members" href="#shop/PLACEHOLDER/members">会员管理</a>
+                    <a class="sub-nav-item" data-tab="items" href="#shop/PLACEHOLDER/items">服务项目</a>
+                </div>
                 <div class="shop-detail-banner" id="shopDetailBanner"></div>
                 <div class="kpi-grid">
                     <div class="kpi-card">
@@ -487,18 +550,46 @@
                         <div class="kpi-trend">店铺开通日</div>
                     </div>
                 </div>
-                <div class="section-card">
-                    <div class="section-header">
-                        <div class="section-title">本店会员</div>
-                        <a id="shopDetailMembersLink" class="btn btn-ghost" href="#members">前往会员管理 →</a>
-                    </div>
-                    <div class="section-body" id="shopMembersList"></div>
+            </div>
+
+            <div data-view-pane="shop-members" hidden class="fade-in">
+                <div class="sub-nav" id="shopMembersTabs">
+                    <a class="sub-nav-item" data-tab="info" href="#shop/PLACEHOLDER">店铺信息</a>
+                    <a class="sub-nav-item" data-tab="members" href="#shop/PLACEHOLDER/members">会员管理</a>
+                    <a class="sub-nav-item" data-tab="items" href="#shop/PLACEHOLDER/items">服务项目</a>
+                </div>
+                <div id="shopMembersContent">
+                    <!-- rendered by renderMembersView() -->
                 </div>
             </div>
 
-            <div data-view-pane="members" hidden class="fade-in">
-                <div id="membersContent">
-                    <!-- rendered by renderMembersView() -->
+            <div data-view-pane="shop-items" hidden class="fade-in">
+                <div class="sub-nav" id="shopItemsTabs">
+                    <a class="sub-nav-item" data-tab="info" href="#shop/PLACEHOLDER">店铺信息</a>
+                    <a class="sub-nav-item" data-tab="members" href="#shop/PLACEHOLDER/members">会员管理</a>
+                    <a class="sub-nav-item" data-tab="items" href="#shop/PLACEHOLDER/items">服务项目</a>
+                </div>
+                <div class="items-toolbar">
+                    <div class="items-toolbar-left">
+                        <div class="category-chips" id="shopCategoryChips">
+                            <span class="sidebar-empty">加载中...</span>
+                        </div>
+                    </div>
+                    <div class="items-toolbar-right">
+                        <button class="btn" onclick="openServiceCategoryModal()">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            新增分类
+                        </button>
+                        <button class="btn btn-primary" onclick="openServiceItemModal()">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            新增项目
+                        </button>
+                    </div>
+                </div>
+                <div class="section-card" id="shopServiceItemCard">
+                    <div class="service-item-list" id="shopServiceItemList">
+                        <div class="consume-item-empty">加载中...</div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -542,10 +633,10 @@
                                 <div class="activity-time">→</div>
                             </div>
                         </a>
-                        <a class="activity-item" href="#members" style="text-decoration:none;">
+                        <a class="activity-item" href="#shops" style="text-decoration:none;">
                             <div class="activity-dot" style="background: #4A6FA5;"></div>
                             <div class="activity-content">
-                                <strong>管理会员</strong><br>会员列表、储值、消费
+                                <strong>管理会员</strong><br>进入店铺后切换到会员 Tab
                                 <div class="activity-time">→</div>
                             </div>
                         </a>
@@ -801,11 +892,21 @@
                         <span style="font-size: 13px; color: var(--text-secondary);">当前余额</span>
                         <strong id="txCurrentBalance" style="font-size: 16px; color: var(--text);">¥0.00</strong>
                     </div>
-                    <div class="input-group">
+                    <div class="input-group" id="txItemsGroup" hidden>
+                        <label class="input-label">选择服务项目</label>
+                        <div class="consume-item-list" id="txItemList">
+                            <div class="consume-item-empty">该店铺暂无服务项目</div>
+                        </div>
+                        <div class="consume-total">
+                            <span class="consume-total-label">合计</span>
+                            <span class="consume-total-value" id="txItemsTotal">¥0.00</span>
+                        </div>
+                    </div>
+                    <div class="input-group" id="txAmountGroup">
                         <label class="input-label" id="txAmountLabel">金额</label>
                         <div class="input-prefix">
                             <span class="prefix">¥</span>
-                            <input type="number" id="txAmount" class="input" step="0.01" min="0.01" placeholder="0.00" required>
+                            <input type="number" id="txAmount" class="input" step="0.01" min="0.01" placeholder="0.00">
                         </div>
                     </div>
                     <div class="input-group">
@@ -850,6 +951,93 @@
         </div>
     </div>
 
+    <!-- Service Category Modal -->
+    <div class="modal-overlay" id="serviceCategoryModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title" id="serviceCategoryModalTitle">新增分类</div>
+                <button class="modal-close" onclick="closeServiceCategoryModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <form id="serviceCategoryForm" onsubmit="handleServiceCategorySubmit(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="serviceCategoryId" name="id">
+                    <input type="hidden" id="serviceCategoryShopId" name="shopId">
+                    <div class="input-group">
+                        <label class="input-label">分类名称</label>
+                        <input type="text" id="serviceCategoryName" name="name" class="input" placeholder="例如：基础护理" maxlength="50" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">排序号（数字越小越靠前）</label>
+                        <input type="number" id="serviceCategorySortNo" name="sortNo" class="input" placeholder="0" value="0">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">状态</label>
+                        <select id="serviceCategoryStatus" name="status" class="input">
+                            <option value="1">启用</option>
+                            <option value="0">停用</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" onclick="closeServiceCategoryModal()">取消</button>
+                    <button type="submit" class="btn btn-primary" id="serviceCategorySubmitBtn">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Service Item Modal -->
+    <div class="modal-overlay" id="serviceItemModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title" id="serviceItemModalTitle">新增项目</div>
+                <button class="modal-close" onclick="closeServiceItemModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <form id="serviceItemForm" onsubmit="handleServiceItemSubmit(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="serviceItemId" name="id">
+                    <input type="hidden" id="serviceItemShopId" name="shopId">
+                    <div class="input-group">
+                        <label class="input-label">所属分类（可选）</label>
+                        <select id="serviceItemCategoryId" name="categoryId" class="input">
+                            <option value="">不分类</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">项目名称</label>
+                        <input type="text" id="serviceItemName" name="name" class="input" placeholder="例如：理发" maxlength="100" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">单价（¥）</label>
+                        <div class="input-prefix">
+                            <span class="prefix">¥</span>
+                            <input type="number" id="serviceItemPrice" name="price" class="input" step="0.01" min="0" placeholder="0.00" required>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">项目描述（可选）</label>
+                        <input type="text" id="serviceItemDescription" name="description" class="input" placeholder="例如：含洗剪吹" maxlength="500">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">状态</label>
+                        <select id="serviceItemStatus" name="status" class="input">
+                            <option value="1">上架</option>
+                            <option value="0">下架</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" onclick="closeServiceItemModal()">取消</button>
+                    <button type="submit" class="btn btn-primary" id="serviceItemSubmitBtn">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="toast" id="toast"></div>
 
     <script>
@@ -863,28 +1051,42 @@
         /* ----- View routing ----- */
         function currentView() {
             const hash = (location.hash || '').replace('#', '').split('?')[0];
-            if (hash.startsWith('shop/')) return 'shop-detail';
+            if (hash.startsWith('shop/')) {
+                // shop/{id}            → shop-detail
+                // shop/{id}/members    → shop-members
+                // shop/{id}/items      → shop-items
+                if (hash.split('/').length >= 3 && hash.endsWith('/members')) return 'shop-members';
+                if (hash.split('/').length >= 3 && hash.endsWith('/items'))   return 'shop-items';
+                return 'shop-detail';
+            }
             if (hash === 'shops') return 'shops';
-            if (hash === 'members') return 'members';
             return 'overview';
         }
         function getShopIdFromHash() {
             const hash = (location.hash || '').replace('#', '');
-            return hash.startsWith('shop/') ? decodeURIComponent(hash.slice(5)) : null;
+            if (!hash.startsWith('shop/')) return null;
+            const rest = hash.slice(5);              // {id} 或 {id}/members
+            const id = rest.split('/')[0];
+            return id ? decodeURIComponent(id) : null;
         }
         function switchView(view) {
-            if (!['overview', 'shops', 'shop-detail', 'members'].includes(view)) view = 'overview';
+            if (!['overview', 'shops', 'shop-detail', 'shop-members', 'shop-items'].includes(view)) view = 'overview';
             const queryIdx = location.hash.indexOf('?');
             const query = queryIdx >= 0 ? location.hash.slice(queryIdx) : '';
-            if (view !== 'shop-detail' && location.hash !== '#' + view + query) {
+            if (view !== 'shop-detail' && view !== 'shop-members' && view !== 'shop-items' && location.hash !== '#' + view + query) {
                 history.replaceState(null, '', '#' + view + query);
             }
             document.querySelectorAll('[data-view-pane]').forEach(p => p.hidden = p.dataset.viewPane !== view);
             document.querySelectorAll('[data-activity-pane]').forEach(p => p.hidden = p.dataset.activityPane !== view);
-            const navTarget = view === 'shop-detail' ? 'shops' : view;
+            const navTarget = (view === 'shop-detail' || view === 'shop-members' || view === 'shop-items') ? 'shops' : view;
             document.querySelectorAll('.sidebar-item[data-nav]').forEach(b => b.classList.toggle('active', b.dataset.nav === navTarget));
-            document.querySelectorAll('[data-members-only]').forEach(el => el.hidden = view !== 'members');
-            document.querySelectorAll('[data-show-on-shops]').forEach(el => el.hidden = !(view === 'shops' || view === 'shop-detail'));
+            document.querySelectorAll('[data-show-on-shops]').forEach(el => el.hidden = !(view === 'shops' || view === 'shop-detail' || view === 'shop-members' || view === 'shop-items'));
+            // 同步店铺详情页 Tabs 激活态
+            document.querySelectorAll('#shopDetailTabs .sub-nav-item, #shopMembersTabs .sub-nav-item, #shopItemsTabs .sub-nav-item')
+                .forEach(a => a.classList.toggle('active',
+                    (a.dataset.tab === 'info'    && view === 'shop-detail') ||
+                    (a.dataset.tab === 'members' && view === 'shop-members') ||
+                    (a.dataset.tab === 'items'   && view === 'shop-items')));
             const title = document.getElementById('pageTitle');
             const sub = document.getElementById('pageSubtitle');
             if (view === 'shops') {
@@ -893,12 +1095,6 @@
                 renderPageActions('shops');
                 renderShopGrid();
                 loadShopViewStats();
-            } else if (view === 'members') {
-                title.textContent = '会员管理';
-                sub.textContent = '选择左侧会员查看详情';
-                renderPageActions('members');
-                if (currentUser && !shopsLoaded) return;
-                loadMembersView();
             } else if (view === 'shop-detail') {
                 const shopId = getShopIdFromHash();
                 if (shopId) {
@@ -906,8 +1102,35 @@
                     title.textContent = shop ? shop.name : '店铺详情';
                     sub.textContent = shop ? (shop.address || '查看店铺信息') : '—';
                     renderPageActions('shop-detail', shopId);
+                    bindShopTabsHref(shopId);
                     if (currentUser && !shopsLoaded) return;
                     loadShopDetail(shopId);
+                } else {
+                    location.hash = '#shops';
+                }
+            } else if (view === 'shop-members') {
+                const shopId = getShopIdFromHash();
+                if (shopId) {
+                    const shop = shops.find(s => String(s.id) === String(shopId));
+                    title.textContent = shop ? shop.name : '店铺详情';
+                    sub.textContent = '管理本店会员';
+                    renderPageActions('shop-members', shopId);
+                    bindShopTabsHref(shopId);
+                    if (currentUser && !shopsLoaded) return;
+                    loadShopDetail(shopId);
+                } else {
+                    location.hash = '#shops';
+                }
+            } else if (view === 'shop-items') {
+                const shopId = getShopIdFromHash();
+                if (shopId) {
+                    const shop = shops.find(s => String(s.id) === String(shopId));
+                    title.textContent = shop ? shop.name : '店铺详情';
+                    sub.textContent = '维护本店服务项目';
+                    renderPageActions('shop-items', shopId);
+                    bindShopTabsHref(shopId);
+                    if (currentUser && !shopsLoaded) return;
+                    loadShopItemsView(shopId);
                 } else {
                     location.hash = '#shops';
                 }
@@ -935,11 +1158,20 @@
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                         删除
                     </button>`;
-            } else if (view === 'members') {
-                el.innerHTML = `<button class="btn btn-primary" onclick="openMemberModal()">
+            } else if (view === 'shop-members') {
+                el.innerHTML = `<a class="btn" href="#shops">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    返回店铺管理
+                </a>
+                <button class="btn btn-primary" onclick="openMemberModal()">
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     新增会员
                 </button>`;
+            } else if (view === 'shop-items') {
+                el.innerHTML = `<a class="btn" href="#shops">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    返回店铺管理
+                </a>`;
             } else if (view === 'shops') {
                 el.innerHTML = `<button class="btn btn-primary" onclick="openShopModal()">
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1280,7 +1512,8 @@
             document.getElementById('kpiMembers').textContent = totalMembers;
             document.getElementById('kpiStored').textContent = `¥${totalBalance.toFixed(2)}`;
             document.getElementById('kpiTx').textContent = totalTx;
-            document.getElementById('memberCount').textContent = totalMembers;
+            const memberCountEl = document.getElementById('memberCount');
+            if (memberCountEl) memberCountEl.textContent = totalMembers;
             if (currentView() === 'shops') renderShopGrid(); // refresh member counts
         }
 
@@ -1371,8 +1604,16 @@
                 return;
             }
             renderShopDetailBanner(shop);
-            const link = document.getElementById('shopDetailMembersLink');
-            if (link) link.href = `#members?shopId=${encodeURIComponent(shopId)}`;
+
+            // 替换详情页 Tabs 中的 PLACEHOLDER 为真实 shopId(三个 sub-nav 容器共用)
+            bindShopTabsHref(shopId);
+
+            // 如果在「会员管理」Tab 视图下，强制将 memberState.shopId 设为当前店铺
+            if (currentView() === 'shop-members') {
+                memberState.shopId = shopId;
+                loadMembersView();
+                return;
+            }
 
             document.getElementById('kpiShopCreated').textContent = shop.createdTime
                 ? String(shop.createdTime).slice(0, 10)
@@ -1380,7 +1621,6 @@
             document.getElementById('kpiShopMembers').textContent = '—';
             document.getElementById('kpiShopStored').textContent = '¥—';
             document.getElementById('kpiShopAvg').textContent = '¥—';
-            document.getElementById('shopMembersList').innerHTML = '<div class="recent-item"><div class="recent-avatar">…</div><div class="recent-content"><div class="recent-name">加载中</div></div></div>';
 
             const res = await apiCall(`/member/list?shopId=${encodeURIComponent(shopId)}`);
             if (res.code !== 20000) {
@@ -1392,7 +1632,6 @@
             document.getElementById('kpiShopMembers').textContent = members.length;
             document.getElementById('kpiShopStored').textContent = `¥${total.toFixed(2)}`;
             document.getElementById('kpiShopAvg').textContent = members.length > 0 ? `¥${(total / members.length).toFixed(2)}` : '¥0.00';
-            renderShopMembers(members);
         }
 
         function renderShopDetailBanner(shop) {
@@ -1414,24 +1653,25 @@
                 </div>`;
         }
 
-        function renderShopMembers(members) {
-            const el = document.getElementById('shopMembersList');
-            if (!members.length) {
-                el.innerHTML = '<div class="empty-state"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><h3 class="empty-title">还没有会员</h3><p class="empty-desc">该店铺下还没有任何会员</p><a id="shopDetailAddMember" class="btn btn-primary">新增会员</a></div>';
-                const addLink = document.getElementById('shopDetailAddMember');
-                if (addLink) addLink.href = `#members?shopId=${encodeURIComponent(getShopIdFromHash() || '')}`;
-                return;
-            }
-            el.innerHTML = members.map(m => `
-                <a class="recent-item" href="#members?shopId=${encodeURIComponent(m.shopId || getShopIdFromHash() || '')}">
-                    <div class="recent-avatar">${escapeHtml((m.name || '?').charAt(0))}</div>
-                    <div class="recent-content">
-                        <div class="recent-name">${escapeHtml(m.name || '匿名')}</div>
-                        <div class="recent-meta">${escapeHtml(m.phone || '无手机号')}</div>
-                    </div>
-                    <div class="recent-amount">¥${parseFloat(m.balance || 0).toFixed(2)}</div>
-                </a>
-            `).join('');
+        /**
+         * 将所有「店铺详情」相关 Tabs 里的 PLACEHOLDER href 替换为真实 shopId,
+         * 三个 Tab(店铺信息/会员管理/服务项目)的 sub-nav 共用同一函数,
+         * 避免 service-items 视图下 Tab 链接停留在 PLACEHOLDER 导致跳错页。
+         */
+        function bindShopTabsHref(shopId) {
+            if (!shopId) return;
+            const sid = encodeURIComponent(shopId);
+            const infoHref = '#shop/' + sid;
+            const membersHref = '#shop/' + sid + '/members';
+            const itemsHref = '#shop/' + sid + '/items';
+            // CSS 多选择器: A, B, C 表示"匹配 A 或 B 或 C";这里要分别取三个 sub-nav 容器下的子元素,
+            // 因此每个 data-tab 都要写三段独立 selector
+            const infoSel = '#shopDetailTabs .sub-nav-item[data-tab="info"], #shopMembersTabs .sub-nav-item[data-tab="info"], #shopItemsTabs .sub-nav-item[data-tab="info"]';
+            const membersSel = '#shopDetailTabs .sub-nav-item[data-tab="members"], #shopMembersTabs .sub-nav-item[data-tab="members"], #shopItemsTabs .sub-nav-item[data-tab="members"]';
+            const itemsSel = '#shopDetailTabs .sub-nav-item[data-tab="items"], #shopMembersTabs .sub-nav-item[data-tab="items"], #shopItemsTabs .sub-nav-item[data-tab="items"]';
+            document.querySelectorAll(infoSel).forEach(a => a.href = infoHref);
+            document.querySelectorAll(membersSel).forEach(a => a.href = membersHref);
+            document.querySelectorAll(itemsSel).forEach(a => a.href = itemsHref);
         }
 
         /* ----- Shop CRUD ----- */
@@ -1480,7 +1720,7 @@
         }
 
         document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') { closeModal(); closeShopModal(); closeMemberModal(); closeTxModal(); closeTxListModal(); }
+            if (e.key === 'Escape') { closeModal(); closeShopModal(); closeMemberModal(); closeTxModal(); closeTxListModal(); closeServiceCategoryModal(); closeServiceItemModal(); }
         });
         document.getElementById('authModal').addEventListener('click', e => { if (e.target.id === 'authModal') closeModal(); });
         document.getElementById('shopModal').addEventListener('click', e => { if (e.target.id === 'shopModal') closeShopModal(); });
@@ -1548,7 +1788,7 @@
         }
 
         function renderMembersView() {
-            const container = document.getElementById('membersContent');
+            const container = document.getElementById('shopMembersContent');
             if (shops.length === 0) {
                 container.innerHTML = `
                     <div class="section-card"><div class="empty-state">
@@ -1642,18 +1882,27 @@
             wrap.innerHTML = `
                 <table class="table">
                     <thead><tr>
-                        <th style="width: 80px;">类型</th><th style="width: 100px;" class="col-amount">金额</th><th style="width: 100px;" class="col-amount">交易前</th><th style="width: 100px;" class="col-amount">交易后</th><th>备注</th><th style="width: 140px;">时间</th>
+                        <th style="width: 80px;">类型</th><th style="width: 100px;" class="col-amount">金额</th><th>明细/备注</th><th style="width: 100px;" class="col-amount">交易前</th><th style="width: 100px;" class="col-amount">交易后</th><th style="width: 140px;">时间</th>
                     </tr></thead>
                     <tbody>
                         ${txs.map(t => {
                             const isStore = (t.type || '').toUpperCase() === 'STORE';
+                            const items = Array.isArray(t.items) ? t.items : [];
+                            const itemsHtml = items.length > 0
+                                ? `<div class="tx-items">${items.map(it => `
+                                    <div class="tx-item">
+                                        <span class="tx-item-name">${escapeHtml(it.itemName || '项目')}</span>
+                                        <span class="tx-item-qty">×${parseInt(it.quantity || 0)}</span>
+                                        <span class="tx-item-subtotal">¥${parseFloat(it.subtotal || 0).toFixed(2)}</span>
+                                    </div>`).join('')}</div>`
+                                : (t.remark ? `<span class="col-truncate" title="${escapeHtml(t.remark)}">${escapeHtml(t.remark)}</span>` : '<span style="color: var(--text-tertiary);">—</span>');
                             return `
                             <tr>
                                 <td><span class="type-badge ${isStore ? 'type-store' : 'type-consume'}">${isStore ? '储值' : '消费'}</span></td>
                                 <td class="col-amount ${isStore ? 'amount-pos' : 'amount-neg'}">${isStore ? '+' : '-'}¥${parseFloat(t.amount).toFixed(2)}</td>
-                                <td class="col-amount">¥${parseFloat(t.balanceBefore).toFixed(2)}</td>
-                                <td class="col-amount">¥${parseFloat(t.balanceAfter).toFixed(2)}</td>
-                                <td class="col-truncate" title="${escapeHtml(t.remark || '')}">${escapeHtml(t.remark || '—')}</td>
+                                <td>${itemsHtml}</td>
+                                <td class="col-amount">¥${parseFloat(t.balanceBefore || 0).toFixed(2)}</td>
+                                <td class="col-amount">¥${parseFloat(t.balanceAfter || 0).toFixed(2)}</td>
                                 <td style="color: var(--text-tertiary); font-size: 12px;">${formatTime(t.createdTime)}</td>
                             </tr>`;
                         }).join('')}
@@ -1770,9 +2019,83 @@
                 (window.crypto && crypto.randomUUID)
                     ? crypto.randomUUID()
                     : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+            // 消费场景下展示服务项选择
+            const itemsGroup = document.getElementById('txItemsGroup');
+            const amountGroup = document.getElementById('txAmountGroup');
+            const amountInput = document.getElementById('txAmount');
+            if (type === 'consume') {
+                itemsGroup.hidden = false;
+                amountGroup.hidden = false;
+                amountInput.required = false;
+                loadTxItems(m.shopId || memberState.shopId);
+            } else {
+                itemsGroup.hidden = true;
+                amountGroup.hidden = false;
+                amountInput.required = true;
+            }
             document.getElementById('txModal').classList.add('active');
         }
         function closeTxModal() { document.getElementById('txModal').classList.remove('active'); }
+
+        async function loadTxItems(shopId) {
+            const list = document.getElementById('txItemList');
+            const total = document.getElementById('txItemsTotal');
+            list.innerHTML = '<div class="consume-item-empty">加载中...</div>';
+            total.textContent = '¥0.00';
+            if (!shopId) {
+                list.innerHTML = '<div class="consume-item-empty">未关联店铺,无法加载服务项</div>';
+                return;
+            }
+            const res = await apiCall(`/service-item/list?shopId=${encodeURIComponent(shopId)}&includeOff=false`);
+            if (res.code !== 20000) {
+                list.innerHTML = '<div class="consume-item-empty">加载失败</div>';
+                return;
+            }
+            const items = res.data || [];
+            if (items.length === 0) {
+                list.innerHTML = '<div class="consume-item-empty">该店铺暂无服务项目,请直接输入金额</div>';
+                return;
+            }
+            list.innerHTML = items.map(it => {
+                const id = escapeHtml(String(it.id));
+                const name = escapeHtml(it.name || '');
+                const price = parseFloat(it.price || 0);
+                const cat = it.categoryName ? `<small>· ${escapeHtml(it.categoryName)}</small>` : '';
+                return `
+                <div class="consume-item-row" data-item-id="${id}" data-unit-price="${price}">
+                    <div class="ci-name">${name} ${cat}</div>
+                    <div class="ci-price">¥${price.toFixed(2)}</div>
+                    <div class="ci-qty"><input type="number" min="0" step="1" value="0" data-qty-input></div>
+                    <div class="ci-subtotal">¥0.00</div>
+                </div>`;
+            }).join('');
+            list.querySelectorAll('[data-qty-input]').forEach(inp => {
+                inp.addEventListener('input', updateTxItemsTotal);
+            });
+        }
+
+        function updateTxItemsTotal() {
+            const list = document.getElementById('txItemList');
+            const total = document.getElementById('txItemsTotal');
+            const amountInput = document.getElementById('txAmount');
+            let sum = 0;
+            const selectedItems = [];
+            list.querySelectorAll('.consume-item-row').forEach(row => {
+                const qty = parseInt(row.querySelector('[data-qty-input]').value || '0', 10) || 0;
+                const price = parseFloat(row.dataset.unitPrice || '0') || 0;
+                const subtotal = qty * price;
+                row.querySelector('.ci-subtotal').textContent = `¥${subtotal.toFixed(2)}`;
+                if (qty > 0) {
+                    sum += subtotal;
+                    selectedItems.push({ itemId: row.dataset.itemId, quantity: qty });
+                }
+            });
+            total.textContent = `¥${sum.toFixed(2)}`;
+            // 选中项目时自动填入金额(允许用户再次修改)
+            if (selectedItems.length > 0) {
+                amountInput.value = sum.toFixed(2);
+            }
+        }
 
         async function handleTxSubmit(e) {
             e.preventDefault();
@@ -1785,15 +2108,27 @@
             if (type === 'consume' && amount > parseFloat(m.balance || 0)) {
                 showToast('余额不足', 'error'); return;
             }
+            // 收集已选服务项
+            let items = null;
+            if (type === 'consume') {
+                const list = document.getElementById('txItemList');
+                items = [];
+                list.querySelectorAll('.consume-item-row').forEach(row => {
+                    const qty = parseInt(row.querySelector('[data-qty-input]').value || '0', 10) || 0;
+                    if (qty > 0) items.push({ itemId: row.dataset.itemId, quantity: qty });
+                });
+            }
             const btn = document.getElementById('txSubmitBtn');
             btn.disabled = true; btn.textContent = '处理中...';
             try {
                 const endpoint = type === 'store' ? 'store' : 'consume';
-                const res = await apiCall(`/member/${memberId}/${endpoint}`, 'POST', {
+                const body = {
                     amount,
                     remark,
                     idempotencyKey: document.getElementById('txIdempotencyKey').value,
-                });
+                };
+                if (items && items.length > 0) body.items = items;
+                const res = await apiCall(`/member/${memberId}/${endpoint}`, 'POST', body);
                 if (res.code === 20000 || res.code === 409) {
                     showToast(type === 'store' ? '储值成功' : '消费成功', 'success');
                     closeTxModal();
@@ -1822,15 +2157,284 @@
         }
 
         // 会员视图事件
-        document.getElementById('memberShopSelect').addEventListener('change', e => {
-            const v = e.target.value;
-            memberState.shopId = v || null;
-            if (memberState.shopId) loadMembers(memberState.shopId);
-            else { memberState.list = []; renderMembersView(); }
-        });
+        const memberShopSelectEl = document.getElementById('memberShopSelect');
+        if (memberShopSelectEl) {
+            memberShopSelectEl.addEventListener('change', e => {
+                const v = e.target.value;
+                memberState.shopId = v || null;
+                if (memberState.shopId) loadMembers(memberState.shopId);
+                else { memberState.list = []; renderMembersView(); }
+            });
+        }
         document.getElementById('memberModal').addEventListener('click', e => { if (e.target.id === 'memberModal') closeMemberModal(); });
         document.getElementById('txModal').addEventListener('click', e => { if (e.target.id === 'txModal') closeTxModal(); });
         document.getElementById('txListModal').addEventListener('click', e => { if (e.target.id === 'txListModal') closeTxListModal(); });
+        document.getElementById('serviceCategoryModal').addEventListener('click', e => { if (e.target.id === 'serviceCategoryModal') closeServiceCategoryModal(); });
+        document.getElementById('serviceItemModal').addEventListener('click', e => { if (e.target.id === 'serviceItemModal') closeServiceItemModal(); });
+
+        /* =====================================================
+         *  服务项目（店铺详情 Tab「服务项目」）
+         * ===================================================== */
+        const serviceState = {
+            shopId: null,
+            filterCategoryId: null, // null = 全部
+            categories: [],
+            items: [],
+        };
+
+        async function loadShopItemsView(shopId) {
+            serviceState.shopId = String(shopId);
+            // 同步三个 sub-nav 容器的 href(避免刷新时停留在 PLACEHOLDER)
+            bindShopTabsHref(shopId);
+            await loadServiceCategories();
+            await loadServiceItems();
+        }
+
+        async function loadServiceCategories() {
+            const sid = serviceState.shopId;
+            const el = document.getElementById('shopCategoryChips');
+            if (!sid) { el.innerHTML = '<span class="sidebar-empty">请先进入店铺</span>'; return; }
+            const res = await apiCall(`/service-category/list?shopId=${encodeURIComponent(sid)}&includeOff=false`);
+            if (res.code !== 20000) {
+                el.innerHTML = '<span class="sidebar-empty">加载分类失败</span>';
+                return;
+            }
+            serviceState.categories = res.data || [];
+            renderServiceCategoryChips();
+        }
+
+        function renderServiceCategoryChips() {
+            const el = document.getElementById('shopCategoryChips');
+            const active = serviceState.filterCategoryId;
+            const editIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+            const trashIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+            const chips = [`<span class="category-chip${active == null ? ' active' : ''}" onclick="setServiceItemCategoryFilter(null)">全部</span>`];
+            serviceState.categories.forEach(c => {
+                const id = escapeHtml(String(c.id));
+                const name = escapeHtml(c.name || '');
+                chips.push(`
+                    <span class="category-chip${String(active) === String(c.id) ? ' active' : ''}" data-cat-id="${id}">
+                        <span class="category-chip-label" onclick="setServiceItemCategoryFilter('${id}')">${name}</span>
+                        <span class="category-chip-actions" onclick="event.stopPropagation();">
+                            <button type="button" title="编辑分类" onclick="openServiceCategoryModal('${id}')">${editIcon}</button>
+                            <button type="button" class="danger" title="删除分类" onclick="deleteServiceCategory('${id}')">${trashIcon}</button>
+                        </span>
+                    </span>
+                `);
+            });
+            el.innerHTML = chips.join('');
+        }
+
+        function setServiceItemCategoryFilter(categoryId) {
+            serviceState.filterCategoryId = categoryId === null ? null : String(categoryId);
+            renderServiceCategoryChips();
+            loadServiceItems();
+        }
+
+        async function loadServiceItems() {
+            const sid = serviceState.shopId;
+            const el = document.getElementById('shopServiceItemList');
+            const loadingHeader = `
+                <div class="service-item-header">
+                    <div>项目名称</div>
+                    <div>分类</div>
+                    <div>描述</div>
+                    <div class="service-item-header-cell-price">单价</div>
+                    <div>状态</div>
+                    <div style="text-align: right;">操作</div>
+                </div>`;
+            if (!sid) { el.innerHTML = loadingHeader + '<div class="consume-item-empty">请先进入店铺</div>'; return; }
+            el.innerHTML = loadingHeader + '<div class="consume-item-empty">加载中...</div>';
+            const params = new URLSearchParams({ shopId: sid, includeOff: 'true' });
+            if (serviceState.filterCategoryId) params.set('categoryId', serviceState.filterCategoryId);
+            const res = await apiCall(`/service-item/list?${params.toString()}`);
+            if (res.code !== 20000) {
+                el.innerHTML = loadingHeader + '<div class="consume-item-empty">加载失败</div>';
+                return;
+            }
+            serviceState.items = res.data || [];
+            const countEl = document.getElementById('shopItemCount');
+            if (countEl) countEl.textContent = serviceState.items.length;
+            renderServiceItems();
+        }
+
+        function renderServiceItems() {
+            const el = document.getElementById('shopServiceItemList');
+            const items = serviceState.items;
+            const header = `
+                <div class="service-item-header">
+                    <div>项目名称</div>
+                    <div>分类</div>
+                    <div>描述</div>
+                    <div class="service-item-header-cell-price">单价</div>
+                    <div>状态</div>
+                    <div style="text-align: right;">操作</div>
+                </div>`;
+            if (items.length === 0) {
+                el.innerHTML = header + '<div class="consume-item-empty">暂无服务项目，点击右上角"新增项目"开始维护</div>';
+                return;
+            }
+            el.innerHTML = header + items.map(it => {
+                const id = escapeHtml(String(it.id));
+                const name = escapeHtml(it.name || '');
+                const cat = it.categoryName ? escapeHtml(it.categoryName) : '<span style="color: var(--text-tertiary);">未分类</span>';
+                const price = parseFloat(it.price || 0);
+                const on = it.status === 1;
+                const descTitle = it.description ? escapeHtml(it.description) : '';
+                const descHtml = it.description
+                    ? `<div class="service-item-row-desc" title="${descTitle}">${escapeHtml(it.description)}</div>`
+                    : `<div class="service-item-row-desc" style="color: var(--text-tertiary);">—</div>`;
+                return `
+                <div class="service-item-row">
+                    <div class="service-item-row-name">${name}</div>
+                    <div class="service-item-row-cat">${cat}</div>
+                    ${descHtml}
+                    <div class="service-item-row-price">¥${price.toFixed(2)}</div>
+                    <div class="service-item-row-status"><span class="status-badge ${on ? 'status-on' : 'status-off'}">${on ? '上架' : '下架'}</span></div>
+                    <div class="service-item-row-actions">
+                        <button class="btn btn-sm" onclick="openServiceItemModal('${id}')">编辑</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteServiceItem('${id}')">删除</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        /* ----- Service Category CRUD ----- */
+        function openServiceCategoryModal(categoryId = null) {
+            if (!serviceState.shopId) { showToast('请先进入店铺', 'error'); return; }
+            const title = document.getElementById('serviceCategoryModalTitle');
+            const idEl = document.getElementById('serviceCategoryId');
+            const nameEl = document.getElementById('serviceCategoryName');
+            const sortEl = document.getElementById('serviceCategorySortNo');
+            const statusEl = document.getElementById('serviceCategoryStatus');
+            document.getElementById('serviceCategoryShopId').value = serviceState.shopId;
+            if (categoryId) {
+                const cat = serviceState.categories.find(c => String(c.id) === String(categoryId));
+                title.textContent = '编辑分类';
+                idEl.value = cat ? cat.id : '';
+                nameEl.value = cat ? (cat.name || '') : '';
+                sortEl.value = cat && cat.sortNo != null ? cat.sortNo : 0;
+                statusEl.value = cat ? String(cat.status != null ? cat.status : 1) : '1';
+            } else {
+                title.textContent = '新增分类';
+                idEl.value = '';
+                nameEl.value = '';
+                sortEl.value = '0';
+                statusEl.value = '1';
+            }
+            document.getElementById('serviceCategoryModal').classList.add('active');
+        }
+        function closeServiceCategoryModal() { document.getElementById('serviceCategoryModal').classList.remove('active'); }
+        async function handleServiceCategorySubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('serviceCategoryId').value;
+            const data = {
+                shopId: document.getElementById('serviceCategoryShopId').value,
+                name: document.getElementById('serviceCategoryName').value.trim(),
+                sortNo: parseInt(document.getElementById('serviceCategorySortNo').value || '0', 10) || 0,
+                status: parseInt(document.getElementById('serviceCategoryStatus').value || '1', 10),
+            };
+            if (!data.name) { showToast('请填写分类名称', 'error'); return; }
+            const btn = document.getElementById('serviceCategorySubmitBtn');
+            btn.disabled = true; btn.textContent = '保存中...';
+            try {
+                const res = id
+                    ? await apiCall(`/service-category/${id}`, 'PUT', data)
+                    : await apiCall('/service-category', 'POST', data);
+                if (res.code === 20000) {
+                    showToast(id ? '更新成功' : '创建成功', 'success');
+                    closeServiceCategoryModal();
+                    await loadServiceCategories();
+                    await loadServiceItems();
+                } else showToast(res.message || '保存失败', 'error');
+            } catch (e) { showToast('保存失败', 'error'); }
+            btn.disabled = false; btn.textContent = '保存';
+        }
+        async function deleteServiceCategory(id) {
+            if (!confirm('确定要删除该分类吗?')) return;
+            try {
+                const res = await apiCall(`/service-category/${id}?shopId=${serviceState.shopId}`, 'DELETE');
+                if (res.code === 20000) {
+                    showToast('已删除', 'success');
+                    if (String(serviceState.filterCategoryId) === String(id)) serviceState.filterCategoryId = null;
+                    await loadServiceCategories();
+                    await loadServiceItems();
+                } else showToast(res.message || '删除失败', 'error');
+            } catch (e) { showToast('删除失败', 'error'); }
+        }
+
+        /* ----- Service Item CRUD ----- */
+        function populateServiceItemCategorySelect(selectedId) {
+            const sel = document.getElementById('serviceItemCategoryId');
+            const opts = ['<option value="">不分类</option>'];
+            serviceState.categories.forEach(c => {
+                const sel2 = selectedId && String(selectedId) === String(c.id) ? ' selected' : '';
+                opts.push(`<option value="${escapeHtml(String(c.id))}"${sel2}>${escapeHtml(c.name)}</option>`);
+            });
+            sel.innerHTML = opts.join('');
+        }
+        function openServiceItemModal(itemId = null) {
+            if (!serviceState.shopId) { showToast('请先进入店铺', 'error'); return; }
+            const title = document.getElementById('serviceItemModalTitle');
+            document.getElementById('serviceItemShopId').value = serviceState.shopId;
+            populateServiceItemCategorySelect(null);
+            if (itemId) {
+                const it = serviceState.items.find(x => String(x.id) === String(itemId));
+                title.textContent = '编辑项目';
+                document.getElementById('serviceItemId').value = it ? it.id : '';
+                document.getElementById('serviceItemName').value = it ? (it.name || '') : '';
+                document.getElementById('serviceItemPrice').value = it && it.price != null ? it.price : '';
+                document.getElementById('serviceItemDescription').value = it ? (it.description || '') : '';
+                document.getElementById('serviceItemStatus').value = it ? String(it.status != null ? it.status : 1) : '1';
+                populateServiceItemCategorySelect(it ? it.categoryId : null);
+            } else {
+                title.textContent = '新增项目';
+                document.getElementById('serviceItemId').value = '';
+                document.getElementById('serviceItemName').value = '';
+                document.getElementById('serviceItemPrice').value = '';
+                document.getElementById('serviceItemDescription').value = '';
+                document.getElementById('serviceItemStatus').value = '1';
+            }
+            document.getElementById('serviceItemModal').classList.add('active');
+        }
+        function closeServiceItemModal() { document.getElementById('serviceItemModal').classList.remove('active'); }
+        async function handleServiceItemSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('serviceItemId').value;
+            const data = {
+                shopId: document.getElementById('serviceItemShopId').value,
+                categoryId: document.getElementById('serviceItemCategoryId').value || null,
+                name: document.getElementById('serviceItemName').value.trim(),
+                price: parseFloat(document.getElementById('serviceItemPrice').value || '0'),
+                description: document.getElementById('serviceItemDescription').value.trim(),
+                status: parseInt(document.getElementById('serviceItemStatus').value || '1', 10),
+            };
+            if (!data.name) { showToast('请填写项目名称', 'error'); return; }
+            if (!data.price || data.price < 0) { showToast('请填写有效单价', 'error'); return; }
+            const btn = document.getElementById('serviceItemSubmitBtn');
+            btn.disabled = true; btn.textContent = '保存中...';
+            try {
+                const res = id
+                    ? await apiCall(`/service-item/${id}`, 'PUT', data)
+                    : await apiCall('/service-item', 'POST', data);
+                if (res.code === 20000) {
+                    showToast(id ? '更新成功' : '创建成功', 'success');
+                    closeServiceItemModal();
+                    await loadServiceItems();
+                } else showToast(res.message || '保存失败', 'error');
+            } catch (e) { showToast('保存失败', 'error'); }
+            btn.disabled = false; btn.textContent = '保存';
+        }
+        async function deleteServiceItem(id) {
+            if (!confirm('确定要删除该项目吗?')) return;
+            try {
+                const res = await apiCall(`/service-item/${id}?shopId=${serviceState.shopId}`, 'DELETE');
+                if (res.code === 20000) {
+                    showToast('已删除', 'success');
+                    await loadServiceItems();
+                } else showToast(res.message || '删除失败', 'error');
+            } catch (e) { showToast('删除失败', 'error'); }
+        }
 
         // 侧栏展开/折叠
         function toggleSidebar() {
