@@ -2086,7 +2086,7 @@
                 itemsGroup.hidden = false;
                 amountGroup.hidden = false;
                 amountInput.required = false;
-                loadTxItems(m.shopId || memberState.shopId);
+                renderConsumeSelected();
             } else {
                 itemsGroup.hidden = true;
                 amountGroup.hidden = false;
@@ -2210,65 +2210,108 @@
             if (pickerState.loaded) renderPickerList();
         });
 
-        async function loadTxItems(shopId) {
+        // ====== Consume selected items (compact row) ======
+        function renderConsumeEmpty() {
             const list = document.getElementById('txItemList');
-            const total = document.getElementById('txItemsTotal');
-            list.innerHTML = '<div class="consume-item-empty">加载中...</div>';
-            total.textContent = '¥0.00';
-            if (!shopId) {
-                list.innerHTML = '<div class="consume-item-empty">未关联店铺,无法加载服务项</div>';
-                return;
-            }
-            const res = await apiCall(`/service-item/list?shopId=${encodeURIComponent(shopId)}&includeOff=false`);
-            if (res.code !== 20000) {
-                list.innerHTML = '<div class="consume-item-empty">加载失败</div>';
-                return;
-            }
-            const items = res.data || [];
-            if (items.length === 0) {
-                list.innerHTML = '<div class="consume-item-empty">该店铺暂无服务项目,请直接输入金额</div>';
-                return;
-            }
-            list.innerHTML = items.map(it => {
-                const id = escapeHtml(String(it.id));
-                const name = escapeHtml(it.name || '');
-                const price = parseFloat(it.price || 0);
-                const cat = it.categoryName ? `<small>· ${escapeHtml(it.categoryName)}</small>` : '';
-                return `
-                <div class="consume-item-row" data-item-id="${id}" data-unit-price="${price}">
-                    <div class="ci-name">${name} ${cat}</div>
-                    <div class="ci-price">¥${price.toFixed(2)}</div>
-                    <div class="ci-qty"><input type="number" min="0" step="1" value="0" data-qty-input></div>
-                    <div class="ci-subtotal">¥0.00</div>
+            list.innerHTML = `
+                <div class="consume-selected-empty">
+                    <div>暂无服务项目，点击下方按钮添加</div>
+                    <button type="button" class="btn btn-primary add-btn" onclick="openServiceItemPicker()">+ 添加项目</button>
                 </div>`;
-            }).join('');
-            list.querySelectorAll('[data-qty-input]').forEach(inp => {
-                inp.addEventListener('input', updateTxItemsTotal);
+            document.getElementById('txAmount').value = '';
+        }
+
+        function renderConsumeSelected() {
+            const list = document.getElementById('txItemList');
+            if (pickerState.selected.size === 0) {
+                renderConsumeEmpty();
+                return;
+            }
+            list.innerHTML = '<div class="consume-selected-list">' +
+                Array.from(pickerState.selected.values()).map(it => {
+                    const id = escapeHtml(String(it.id));
+                    return `
+                    <div class="ci-selected-row" data-sel-id="${id}">
+                        <div class="cs-name" title="${escapeHtml(it.name)}">${escapeHtml(it.name)}</div>
+                        <div class="cs-price">¥<input type="number" class="cs-price-input" data-role="price" min="0" step="0.01" value="${it.price.toFixed(2)}"></div>
+                        <div class="cs-qty">
+                            <button type="button" data-role="dec">−</button>
+                            <input type="number" data-role="qty" min="1" max="999" step="1" value="${it.quantity}">
+                            <button type="button" data-role="inc">+</button>
+                        </div>
+                        <div class="cs-subtotal" data-role="subtotal">¥${(it.price * it.quantity).toFixed(2)}</div>
+                        <button type="button" class="cs-remove" data-role="remove" title="移除">✕</button>
+                    </div>`;
+                }).join('') + '</div>' +
+                '<div style="margin-top:10px;"><button type="button" class="btn" onclick="openServiceItemPicker()">+ 添加项目</button></div>';
+            bindConsumeSelectedEvents();
+        }
+
+        function bindConsumeSelectedEvents() {
+            const list = document.getElementById('txItemList');
+            list.querySelectorAll('.ci-selected-row').forEach(row => {
+                const id = row.dataset.selId;
+                const it = pickerState.selected.get(id);
+                if (!it) return;
+                const priceInput = row.querySelector('[data-role="price"]');
+                const qtyInput = row.querySelector('[data-role="qty"]');
+                priceInput.addEventListener('input', () => {
+                    const v = parseFloat(priceInput.value);
+                    it.price = (!isNaN(v) && v >= 0) ? Math.round(v * 100) / 100 : 0;
+                    row.querySelector('[data-role="subtotal"]').textContent = `¥${(it.price * it.quantity).toFixed(2)}`;
+                    recomputeConsumeTotal();
+                });
+                qtyInput.addEventListener('input', () => {
+                    let v = parseInt(qtyInput.value, 10);
+                    if (isNaN(v) || v < 1) v = 1;
+                    if (v > 999) v = 999;
+                    it.quantity = v;
+                    qtyInput.value = v;
+                    row.querySelector('[data-role="subtotal"]').textContent = `¥${(it.price * it.quantity).toFixed(2)}`;
+                    recomputeConsumeTotal();
+                });
+                row.querySelector('[data-role="dec"]').addEventListener('click', () => {
+                    if (it.quantity > 1) { it.quantity--; qtyInput.value = it.quantity; qtyInput.dispatchEvent(new Event('input')); }
+                });
+                row.querySelector('[data-role="inc"]').addEventListener('click', () => {
+                    if (it.quantity < 999) { it.quantity++; qtyInput.value = it.quantity; qtyInput.dispatchEvent(new Event('input')); }
+                });
+                row.querySelector('[data-role="remove"]').addEventListener('click', () => {
+                    pickerState.selected.delete(id);
+                    renderConsumeSelected();
+                    recomputeConsumeTotal();
+                });
             });
         }
 
-        function updateTxItemsTotal() {
-            const list = document.getElementById('txItemList');
-            const total = document.getElementById('txItemsTotal');
-            const amountInput = document.getElementById('txAmount');
+        function recomputeConsumeTotal() {
             let sum = 0;
-            const selectedItems = [];
-            list.querySelectorAll('.consume-item-row').forEach(row => {
-                const qty = parseInt(row.querySelector('[data-qty-input]').value || '0', 10) || 0;
-                const price = parseFloat(row.dataset.unitPrice || '0') || 0;
-                const subtotal = qty * price;
-                row.querySelector('.ci-subtotal').textContent = `¥${subtotal.toFixed(2)}`;
-                if (qty > 0) {
-                    sum += subtotal;
-                    selectedItems.push({ itemId: row.dataset.itemId, quantity: qty });
-                }
-            });
-            total.textContent = `¥${sum.toFixed(2)}`;
-            // 选中项目时自动填入金额(允许用户再次修改)
-            if (selectedItems.length > 0) {
-                amountInput.value = sum.toFixed(2);
-            }
+            pickerState.selected.forEach(it => { sum += it.price * it.quantity; });
+            document.getElementById('txItemsTotal').textContent = `¥${sum.toFixed(2)}`;
+            document.getElementById('txAmount').value = sum > 0 ? sum.toFixed(2) : '';
+            // 校验输入合法性,刷新提交按钮状态
+            validateConsumeInputs();
         }
+
+        function validateConsumeInputs() {
+            const btn = document.getElementById('txSubmitBtn');
+            const list = document.getElementById('txItemList');
+            let invalid = pickerState.selected.size === 0;
+            list.querySelectorAll('.ci-selected-row').forEach(row => {
+                const priceInput = row.querySelector('[data-role="price"]');
+                const qtyInput = row.querySelector('[data-role="qty"]');
+                const v = parseFloat(priceInput.value);
+                const q = parseInt(qtyInput.value, 10);
+                const priceBad = isNaN(v) || v < 0 || !/^\d+(\.\d{1,2})?$/.test(priceInput.value);
+                const qtyBad = isNaN(q) || q < 1 || q > 999;
+                priceInput.classList.toggle('input-error', priceBad);
+                qtyInput.classList.toggle('input-error', qtyBad);
+                if (priceBad || qtyBad) invalid = true;
+            });
+            btn.disabled = invalid;
+        }
+
+        // 暴露给 picker 加入按钮的回调在 Task 5 已实现,此处不重复
 
         async function handleTxSubmit(e) {
             e.preventDefault();
