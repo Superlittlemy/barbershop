@@ -2096,6 +2096,120 @@
         }
         function closeTxModal() { document.getElementById('txModal').classList.remove('active'); }
 
+        // ====== Service Item Picker (consume flow) ======
+        const pickerState = {
+            shopId: null,
+            categories: [],
+            items: [],
+            activeCatId: '',     // '' = 不限
+            keyword: '',
+            selected: new Map(), // itemId -> { id, name, price, quantity }
+            loaded: false,
+        };
+
+        async function openServiceItemPicker() {
+            const modal = document.getElementById('serviceItemPickerModal');
+            modal.classList.add('active');
+            // 每次打开都重新拉取,保证状态最新
+            pickerState.shopId = memberState.shopId;
+            pickerState.loaded = false;
+            await loadPickerData();
+            renderPickerTabs();
+            renderPickerList();
+            // 焦点放到搜索框
+            setTimeout(() => document.getElementById('pickerSearch').focus(), 50);
+        }
+
+        function closeServiceItemPicker() {
+            document.getElementById('serviceItemPickerModal').classList.remove('active');
+        }
+
+        async function loadPickerData() {
+            const shopId = pickerState.shopId;
+            const tabsEl = document.getElementById('pickerTabs');
+            const listEl = document.getElementById('pickerList');
+            tabsEl.innerHTML = '<button type="button" class="picker-tab active" data-cat-id="">不限</button>';
+            listEl.innerHTML = '<div class="consume-item-empty">加载中...</div>';
+            if (!shopId) {
+                listEl.innerHTML = '<div class="consume-item-empty">未关联店铺,无法加载</div>';
+                return;
+            }
+            const [catRes, itemRes] = await Promise.all([
+                apiCall(`/service-category/list?shopId=${encodeURIComponent(shopId)}&includeOff=false`),
+                apiCall(`/service-item/list?shopId=${encodeURIComponent(shopId)}&includeOff=false`),
+            ]);
+            pickerState.categories = (catRes.code === 20000 && catRes.data) ? catRes.data : [];
+            pickerState.items = (itemRes.code === 20000 && itemRes.data) ? itemRes.data : [];
+            pickerState.loaded = true;
+        }
+
+        function renderPickerTabs() {
+            const tabsEl = document.getElementById('pickerTabs');
+            const tabs = ['<button type="button" class="picker-tab' + (pickerState.activeCatId === '' ? ' active' : '') + '" data-cat-id="">不限</button>'];
+            for (const c of pickerState.categories) {
+                const active = String(c.id) === String(pickerState.activeCatId) ? ' active' : '';
+                tabs.push(`<button type="button" class="picker-tab${active}" data-cat-id="${c.id}">${escapeHtml(c.name || '')}</button>`);
+            }
+            tabsEl.innerHTML = tabs.join('');
+            tabsEl.querySelectorAll('.picker-tab').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    pickerState.activeCatId = btn.dataset.catId;
+                    renderPickerTabs();
+                    renderPickerList();
+                });
+            });
+        }
+
+        function renderPickerList() {
+            const listEl = document.getElementById('pickerList');
+            const kw = pickerState.keyword.trim().toLowerCase();
+            const items = pickerState.items.filter(it => {
+                if (pickerState.activeCatId !== '' && String(it.categoryId || '') !== String(pickerState.activeCatId)) return false;
+                if (kw && !(it.name || '').toLowerCase().includes(kw)) return false;
+                return true;
+            });
+            if (items.length === 0) {
+                listEl.innerHTML = '<div class="consume-item-empty">该店铺暂无匹配的服务项目</div>';
+                return;
+            }
+            listEl.innerHTML = items.map(it => {
+                const id = escapeHtml(String(it.id));
+                const name = escapeHtml(it.name || '');
+                const cat = it.categoryName ? `<small>· ${escapeHtml(it.categoryName)}</small>` : '';
+                const price = parseFloat(it.price || 0);
+                const added = pickerState.selected.has(String(it.id));
+                return `
+                <div class="picker-row${added ? ' is-added' : ''}" data-item-id="${id}">
+                    <div class="pr-name">${name} ${cat}</div>
+                    <div class="pr-price">¥${price.toFixed(2)}</div>
+                    <button type="button" class="btn pr-add" data-add-id="${id}" ${added ? 'disabled' : ''}>${added ? '已加入' : '+ 加入'}</button>
+                </div>`;
+            }).join('');
+            listEl.querySelectorAll('[data-add-id]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = btn.dataset.addId;
+                    if (pickerState.selected.has(id)) return;
+                    const it = pickerState.items.find(x => String(x.id) === id);
+                    if (!it) return;
+                    pickerState.selected.set(id, {
+                        id: Number(id),
+                        name: it.name,
+                        price: parseFloat(it.price || 0),
+                        quantity: 1,
+                    });
+                    renderPickerList();
+                    renderConsumeSelected();
+                    recomputeConsumeTotal();
+                });
+            });
+        }
+
+        // 搜索框输入监听(在 openServiceItemPicker 末尾注册一次即可)
+        document.getElementById('pickerSearch').addEventListener('input', (e) => {
+            pickerState.keyword = e.target.value || '';
+            if (pickerState.loaded) renderPickerList();
+        });
+
         async function loadTxItems(shopId) {
             const list = document.getElementById('txItemList');
             const total = document.getElementById('txItemsTotal');
