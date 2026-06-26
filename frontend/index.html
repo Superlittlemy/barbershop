@@ -332,9 +332,9 @@
 
         /* Service item list (row layout, like member list) */
         .service-item-list { padding: 0; }
-        .service-item-header { display: grid; grid-template-columns: 1.4fr 1fr 2fr 100px 90px 160px; align-items: center; gap: 12px; padding: 10px 18px; font-size: 11px; font-weight: 500; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; background: var(--bg); border-bottom: 1px solid var(--border); }
+        .service-item-header { display: grid; grid-template-columns: 1.4fr 1fr 2fr 100px 90px 120px; align-items: center; gap: 12px; padding: 10px 18px; font-size: 11px; font-weight: 500; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; background: var(--bg); border-bottom: 1px solid var(--border); }
         .service-item-header-cell-price { text-align: right; }
-        .service-item-row { display: grid; grid-template-columns: 1.4fr 1fr 2fr 100px 90px 160px; align-items: center; gap: 12px; padding: 10px 18px; border-bottom: 1px solid var(--border); font-size: 13px; transition: background 0.1s; min-width: 0; }
+        .service-item-row { display: grid; grid-template-columns: 1.4fr 1fr 2fr 100px 90px 120px; align-items: center; gap: 12px; padding: 10px 18px; border-bottom: 1px solid var(--border); font-size: 13px; transition: background 0.1s; min-width: 0; }
         .service-item-row:last-child { border-bottom: none; }
         .service-item-row:hover { background: var(--surface-hover); }
         .service-item-row-name { color: var(--text); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -342,7 +342,7 @@
         .service-item-row-desc { color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: help; }
         .service-item-row-price { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
         .service-item-row-status { display: flex; justify-content: flex-start; }
-        .service-item-row-actions { display: flex; gap: 6px; justify-content: flex-end; }
+        .service-item-row-actions { display: flex; gap: 6px; justify-content: flex-start; }
 
         /* Service category chips (filter for items) */
         .category-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
@@ -2510,7 +2510,7 @@
                     <div>描述</div>
                     <div class="service-item-header-cell-price">单价</div>
                     <div>状态</div>
-                    <div style="text-align: right;">操作</div>
+                    <div>操作</div>
                 </div>`;
             if (!sid) { el.innerHTML = loadingHeader + '<div class="consume-item-empty">请先进入店铺</div>'; return; }
             el.innerHTML = loadingHeader + '<div class="consume-item-empty">加载中...</div>';
@@ -2537,7 +2537,7 @@
                     <div>描述</div>
                     <div class="service-item-header-cell-price">单价</div>
                     <div>状态</div>
-                    <div style="text-align: right;">操作</div>
+                    <div>操作</div>
                 </div>`;
             if (items.length === 0) {
                 el.innerHTML = header + '<div class="consume-item-empty">暂无服务项目，点击右上角"新增项目"开始维护</div>';
