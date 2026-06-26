@@ -2078,18 +2078,31 @@
                 (window.crypto && crypto.randomUUID)
                     ? crypto.randomUUID()
                     : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-            // 消费场景下展示服务项选择
+
             const itemsGroup = document.getElementById('txItemsGroup');
             const amountGroup = document.getElementById('txAmountGroup');
             const amountInput = document.getElementById('txAmount');
+
             if (type === 'consume') {
                 itemsGroup.hidden = false;
                 amountGroup.hidden = false;
+                amountInput.readOnly = true;     // 消费金额由项目汇总自动填充,不允许直接输入
                 amountInput.required = false;
-                renderConsumeSelected();
+                pickerState.shopId = m.shopId || memberState.shopId;
+                pickerState.activeCatId = '';
+                pickerState.keyword = '';
+                pickerState.selected.clear();
+                pickerState.items = [];
+                pickerState.categories = [];
+                pickerState.loaded = false;
+                const searchEl = document.getElementById('pickerSearch');
+                if (searchEl) searchEl.value = '';
+                renderConsumeSelected();         // 渲染空态
+                recomputeConsumeTotal();         // 合计置零并禁用提交
             } else {
                 itemsGroup.hidden = true;
                 amountGroup.hidden = false;
+                amountInput.readOnly = false;
                 amountInput.required = true;
             }
             document.getElementById('txModal').classList.add('active');
@@ -2324,17 +2337,31 @@
             if (type === 'consume' && amount > parseFloat(m.balance || 0)) {
                 showToast('余额不足', 'error'); return;
             }
-            // 收集已选服务项
+            // 消费场景校验
+            const btn = document.getElementById('txSubmitBtn');
+            if (type === 'consume') {
+                if (pickerState.selected.size === 0) {
+                    showToast('请添加至少一个服务项目', 'error');
+                    btn.disabled = false; btn.textContent = '确认';
+                    return;
+                }
+                validateConsumeInputs();
+                if (document.getElementById('txSubmitBtn').disabled) {
+                    showToast('请检查项目单价与数量', 'error');
+                    btn.disabled = false; btn.textContent = '确认';
+                    return;
+                }
+            }
+
+            // 收集已选服务项(含单价)
             let items = null;
             if (type === 'consume') {
-                const list = document.getElementById('txItemList');
-                items = [];
-                list.querySelectorAll('.consume-item-row').forEach(row => {
-                    const qty = parseInt(row.querySelector('[data-qty-input]').value || '0', 10) || 0;
-                    if (qty > 0) items.push({ itemId: row.dataset.itemId, quantity: qty });
-                });
+                items = Array.from(pickerState.selected.values()).map(it => ({
+                    itemId: it.id,
+                    quantity: it.quantity,
+                    unitPrice: Number(it.price.toFixed(2)),
+                }));
             }
-            const btn = document.getElementById('txSubmitBtn');
             btn.disabled = true; btn.textContent = '处理中...';
             try {
                 const endpoint = type === 'store' ? 'store' : 'consume';
