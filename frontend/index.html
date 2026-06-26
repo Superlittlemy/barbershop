@@ -2200,12 +2200,12 @@
             }).join('');
             listEl.querySelectorAll('[data-add-id]').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    const id = btn.dataset.addId;
+                    const id = btn.dataset.addId;             // 始终是 String
                     if (pickerState.selected.has(id)) return;
                     const it = pickerState.items.find(x => String(x.id) === id);
                     if (!it) return;
                     pickerState.selected.set(id, {
-                        id: Number(id),
+                        id: it.id,                              // 保留原始类型(可能为 Long 字符串)
                         name: it.name,
                         price: parseFloat(it.price || 0),
                         quantity: 1,
@@ -2246,40 +2246,55 @@
                     return `
                     <div class="ci-selected-row" data-sel-id="${id}">
                         <div class="cs-name" title="${escapeHtml(it.name)}">${escapeHtml(it.name)}</div>
-                        <div class="cs-price">¥<input type="number" class="cs-price-input" data-role="price" min="0" step="0.01" value="${it.price.toFixed(2)}"></div>
+                        <div class="cs-price">¥<input type="text" inputmode="decimal" class="cs-price-input" data-role="price" value="${it.price.toFixed(2)}"></div>
                         <div class="cs-qty">
                             <button type="button" data-role="dec">−</button>
-                            <input type="number" data-role="qty" min="1" max="999" step="1" value="${it.quantity}">
+                            <input type="text" inputmode="numeric" data-role="qty" value="${it.quantity}">
                             <button type="button" data-role="inc">+</button>
                         </div>
                         <div class="cs-subtotal" data-role="subtotal">¥${(it.price * it.quantity).toFixed(2)}</div>
                         <button type="button" class="cs-remove" data-role="remove" title="移除">✕</button>
                     </div>`;
                 }).join('') + '</div>' +
-                '<div style="margin-top:10px;"><button type="button" class="btn" onclick="openServiceItemPicker()">+ 添加项目</button></div>';
+                '<div class="add-service-bar"><button type="button" class="btn-add-service" onclick="openServiceItemPicker()">+ 添加项目</button></div>';
             bindConsumeSelectedEvents();
         }
 
         function bindConsumeSelectedEvents() {
             const list = document.getElementById('txItemList');
             list.querySelectorAll('.ci-selected-row').forEach(row => {
-                const id = row.dataset.selId;
+                const id = String(row.dataset.selId);    // 统一为 String,与 selected 的 key 一致
                 const it = pickerState.selected.get(id);
                 if (!it) return;
                 const priceInput = row.querySelector('[data-role="price"]');
                 const qtyInput = row.querySelector('[data-role="qty"]');
                 priceInput.addEventListener('input', () => {
-                    const v = parseFloat(priceInput.value);
-                    it.price = (!isNaN(v) && v >= 0) ? Math.round(v * 100) / 100 : 0;
+                    // 接受 0~9999.99,其他字符已被 inputmode=decimal 抑制;但仍兜底
+                    const raw = priceInput.value.trim();
+                    if (!/^\d+(\.\d{0,2})?$/.test(raw)) {
+                        priceInput.classList.add('input-error');
+                        validateConsumeInputs();
+                        return;
+                    }
+                    const v = parseFloat(raw);
+                    priceInput.classList.remove('input-error');
+                    it.price = Math.round(v * 100) / 100;
                     row.querySelector('[data-role="subtotal"]').textContent = `¥${(it.price * it.quantity).toFixed(2)}`;
                     recomputeConsumeTotal();
                 });
                 qtyInput.addEventListener('input', () => {
-                    let v = parseInt(qtyInput.value, 10);
-                    if (isNaN(v) || v < 1) v = 1;
+                    const raw = qtyInput.value.trim();
+                    if (!/^\d+$/.test(raw)) {
+                        qtyInput.classList.add('input-error');
+                        validateConsumeInputs();
+                        return;
+                    }
+                    let v = parseInt(raw, 10);
+                    if (v < 1) v = 1;
                     if (v > 999) v = 999;
+                    qtyInput.classList.remove('input-error');
                     it.quantity = v;
-                    qtyInput.value = v;
+                    if (String(v) !== raw) qtyInput.value = v;   // 越界才回填
                     row.querySelector('[data-role="subtotal"]').textContent = `¥${(it.price * it.quantity).toFixed(2)}`;
                     recomputeConsumeTotal();
                 });
@@ -2357,7 +2372,7 @@
             let items = null;
             if (type === 'consume') {
                 items = Array.from(pickerState.selected.values()).map(it => ({
-                    itemId: it.id,
+                    itemId: String(it.id),                    // 用 String 避免 JS Number 丢精度
                     quantity: it.quantity,
                     unitPrice: Number(it.price.toFixed(2)),
                 }));
