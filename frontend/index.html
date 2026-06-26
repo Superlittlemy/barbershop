@@ -411,6 +411,16 @@
         .ci-selected-row .cs-remove { border: none; background: transparent; color: var(--text-tertiary); cursor: pointer; font-size: 16px; padding: 0; line-height: 1; }
         .ci-selected-row .cs-remove:hover { color: var(--error); }
         .input-error { border-color: var(--error) !important; }
+
+        /* Add service item button (centered, dark, padded) */
+        .add-service-bar { display: flex; justify-content: center; padding: 14px 0 6px; }
+        .btn-add-service { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 200px; height: 36px; padding: 0 24px; background: var(--text); color: var(--text-inverse); border: 1px solid var(--text); border-radius: 6px; font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
+        .btn-add-service:hover { opacity: 0.85; }
+
+        /* Suppress native number spinner across the app (use +/- icons or buttons instead) */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
         .consume-total { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding: 10px 12px; background: var(--bg); border-radius: 6px; font-size: 13px; }
         .consume-total-label { color: var(--text-secondary); }
         .consume-total-value { color: var(--text); font-weight: 700; font-size: 16px; font-variant-numeric: tabular-nums; }
@@ -912,7 +922,7 @@
 
     <!-- Transaction Modal (Store / Consume) -->
     <div class="modal-overlay" id="txModal">
-        <div class="modal">
+        <div class="modal modal-wide">
             <div class="modal-header">
                 <div class="modal-title" id="txModalTitle">储值</div>
                 <button class="modal-close" onclick="closeTxModal()">
@@ -2229,8 +2239,8 @@
             list.innerHTML = `
                 <div class="consume-selected-empty">
                     <div>暂无服务项目，点击下方按钮添加</div>
-                    <button type="button" class="btn btn-primary add-btn" onclick="openServiceItemPicker()">+ 添加项目</button>
-                </div>`;
+                </div>
+                <div class="add-service-bar"><button type="button" class="btn-add-service" onclick="openServiceItemPicker()">+ 添加项目</button></div>`;
             document.getElementById('txAmount').value = '';
         }
 
