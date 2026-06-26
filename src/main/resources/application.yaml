@@ -7,7 +7,7 @@ spring:
     name: barbershop
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/barbershop}
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/barbershop?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useLegacyDatetimeCode=false}
     username: ${SPRING_DATASOURCE_USERNAME:root}
     password: ${SPRING_DATASOURCE_PASSWORD:123456}
     hikari:

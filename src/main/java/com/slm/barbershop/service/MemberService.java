@@ -52,10 +52,6 @@ public class MemberService extends ServiceImpl<MemberMapper, Member> {
         memberMapper.deleteById(id);
     }
 
-    public Member getById(Long shopId, Long id) {
-        return getByIdAndShopId(shopId, id);
-    }
-
     public List<Member> listByShopId(Long shopId) {
         return memberMapper.selectList(
                 new LambdaQueryWrapper<Member>()
@@ -74,7 +70,7 @@ public class MemberService extends ServiceImpl<MemberMapper, Member> {
         return memberMapper.matchAcrossShops(phone.trim(), name.trim());
     }
 
-    private Member getByIdAndShopId(Long shopId, Long id) {
+    public Member getByIdAndShopId(Long shopId, Long id) {
         return memberMapper.selectOne(
                 new LambdaQueryWrapper<Member>()
                         .eq(Member::getShopId, shopId)

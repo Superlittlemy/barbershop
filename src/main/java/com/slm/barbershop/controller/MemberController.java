@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -51,7 +52,7 @@ public class MemberController {
 
     @Operation(summary = "创建会员")
     @PostMapping
-    public ApiResponse<MemberResponse> create(@RequestBody MemberRequest request) {
+    public ApiResponse<MemberResponse> create(@RequestBody @Valid MemberRequest request) {
         Member member = memberService.create(request.getShopId(), request);
         return ApiResponse.ok(memberConverter.toResponse(member));
     }
@@ -76,7 +77,7 @@ public class MemberController {
     @Parameter(name = "id", description = "会员ID", in = ParameterIn.PATH)
     @GetMapping("/{id}")
     public ApiResponse<MemberResponse> getById(@PathVariable Long id, @RequestParam Long shopId) {
-        Member member = memberService.getById(shopId, id);
+        Member member = memberService.getByIdAndShopId(shopId, id);
         return ApiResponse.ok(memberConverter.toResponse(member));
     }
 
@@ -99,8 +100,11 @@ public class MemberController {
     @Parameter(name = "id", description = "会员ID", in = ParameterIn.PATH)
     @PostMapping("/{id}/consume")
     public ApiResponse<MemberTransactionResponse> consume(@PathVariable Long id, @RequestBody MemberTransactionRequest request) {
-        MemberTransaction transaction = transactionService.consume(id, request.getAmount(), request.getRemark(), request.getIdempotencyKey());
-        return ApiResponse.ok(transactionConverter.toResponse(transaction));
+        MemberTransaction transaction = transactionService.consume(id, request.getAmount(), request.getRemark(), request.getItems(), request.getIdempotencyKey());
+        // 回填 items 字段(根据 id 查询明细)
+        MemberTransactionResponse response = transactionConverter.toResponse(transaction);
+        response.setItems(transactionService.listItemsByTransactionId(transaction.getId()));
+        return ApiResponse.ok(response);
     }
 
     @Operation(summary = "查询余额")
@@ -117,8 +121,7 @@ public class MemberController {
     @GetMapping("/{id}/transactions")
     public ApiResponse<List<MemberTransactionResponse>> transactions(@PathVariable Long id) {
         assertMemberSelf(id);
-        List<MemberTransaction> transactions = transactionService.listByMemberId(id);
-        return ApiResponse.ok(transactionConverter.toResponseList(transactions));
+        return ApiResponse.ok(transactionService.listByMemberId(id));
     }
 
     // ====== 新增：会员门户相关接口 ======

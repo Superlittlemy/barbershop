@@ -85,25 +85,6 @@ public class FileService extends ServiceImpl<FileMetadataMapper, FileMetadata> {
         }
     }
 
-    public FileResponse getById(Long id) {
-        FileMetadata entity = this.lambdaQuery().eq(FileMetadata::getId, id).one();
-        if (entity == null) {
-            throw new BizException(HttpStatus.NOT_FOUND, "文件不存在");
-        }
-        return toResponse(entity);
-    }
-
-    public void delete(Long id, Long userId) {
-        FileMetadata entity = this.lambdaQuery().eq(FileMetadata::getId, id).one();
-        if (entity == null) {
-            throw new BizException(HttpStatus.NOT_FOUND, "文件不存在");
-        }
-        if (userId != null && entity.getCreatedBy() != null && !entity.getCreatedBy().equals(userId)) {
-            throw new BizException(HttpStatus.FORBIDDEN, "无权删除该文件");
-        }
-        this.removeById(id);
-    }
-
     private String extractExtension(String filename) {
         if (!StringUtils.hasText(filename)) {
             return "";

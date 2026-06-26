@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 会员交易响应
@@ -36,5 +37,8 @@ public class MemberTransactionResponse {
 
     @Schema(description = "创建时间")
     private LocalDateTime createdTime;
+
+    @Schema(description = "消费项目明细(消费时存在,储值为空列表)")
+    private List<TransactionItemResponse> items;
 
 }

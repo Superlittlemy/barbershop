@@ -1,26 +1,19 @@
 package com.slm.barbershop.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 /**
  * 会员交易流水实体
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("member_transaction")
-public class MemberTransaction {
-
-    /**
-     * 主键
-     */
-    @TableId(value = "id", type = IdType.ASSIGN_ID)
-    private Long id;
+public class MemberTransaction extends BaseEntity {
 
     /**
      * 会员ID
@@ -57,10 +50,5 @@ public class MemberTransaction {
      */
     @TableField("idempotency_key")
     private String idempotencyKey;
-
-    /**
-     * 创建时间
-     */
-    private LocalDateTime createdTime;
 
 }
