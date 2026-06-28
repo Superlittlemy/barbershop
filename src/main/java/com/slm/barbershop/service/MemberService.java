@@ -1,6 +1,7 @@
 package com.slm.barbershop.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.slm.barbershop.converter.MemberConverter;
 import com.slm.barbershop.entity.Member;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class MemberService extends ServiceImpl<MemberMapper, Member> {
@@ -33,10 +35,7 @@ public class MemberService extends ServiceImpl<MemberMapper, Member> {
     }
 
     public Member update(Long shopId, Long id, MemberRequest request) {
-        Member member = getByIdAndShopId(shopId, id);
-        if (member == null) {
-            throw new BizException(HttpStatus.NOT_FOUND, "会员不存在");
-        }
+        Member member = this.getByIdAndShopId(shopId, id).orElseThrow(() -> new BizException(HttpStatus.NOT_FOUND, "会员不存在"));
         // 只更新 name / phone，余额由 MemberTransactionService 单独维护
         member.setName(request.getName());
         member.setPhone(request.getPhone());
@@ -44,12 +43,8 @@ public class MemberService extends ServiceImpl<MemberMapper, Member> {
         return member;
     }
 
-    public void delete(Long shopId, Long id) {
-        Member member = getByIdAndShopId(shopId, id);
-        if (member == null) {
-            throw new BizException(HttpStatus.NOT_FOUND, "会员不存在");
-        }
-        memberMapper.deleteById(id);
+    public void delete(Long id) {
+        this.removeById(id);
     }
 
     public List<Member> listByShopId(Long shopId) {
@@ -57,6 +52,10 @@ public class MemberService extends ServiceImpl<MemberMapper, Member> {
                 new LambdaQueryWrapper<Member>()
                         .eq(Member::getShopId, shopId)
         );
+    }
+
+    public IPage<Member> page(IPage<Member> page, Long shopId) {
+        return memberMapper.selectPage(page, new LambdaQueryWrapper<Member>().eq(Member::getShopId, shopId));
     }
 
     /**
@@ -70,12 +69,8 @@ public class MemberService extends ServiceImpl<MemberMapper, Member> {
         return memberMapper.matchAcrossShops(phone.trim(), name.trim());
     }
 
-    public Member getByIdAndShopId(Long shopId, Long id) {
-        return memberMapper.selectOne(
-                new LambdaQueryWrapper<Member>()
-                        .eq(Member::getShopId, shopId)
-                        .eq(Member::getId, id)
-        );
+    public Optional<Member> getByIdAndShopId(Long shopId, Long id) {
+        return this.lambdaQuery().eq(Member::getShopId, shopId).eq(Member::getId, id).oneOpt();
     }
 
 }

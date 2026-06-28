@@ -1,5 +1,6 @@
 package com.slm.barbershop.controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.slm.barbershop.converter.ShopConverter;
 import com.slm.barbershop.entity.Shop;
 import com.slm.barbershop.model.ApiResponse;
@@ -13,8 +14,6 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @Tag(name = "店铺", description = "店铺管理相关接口")
 @RestController
@@ -61,12 +60,12 @@ public class ShopController {
         return ApiResponse.ok(shopConverter.toResponse(shop));
     }
 
-    @Operation(summary = "获取用户店铺列表")
-    @GetMapping("/list")
-    public ApiResponse<List<ShopResponse>> list() {
+    @Operation(summary = "获取用户店铺分页列表")
+    @GetMapping("/page")
+    public ApiResponse<IPage<ShopResponse>> page(IPage<Shop> page) {
         Long userId = UserContext.getUser().getId();
-        List<Shop> shops = shopService.listByUserId(userId);
-        return ApiResponse.ok(shopConverter.toResponseList(shops));
+        return ApiResponse.ok(shopService.page(page, userId)
+                .convert(shopConverter::toResponse));
     }
 
 }

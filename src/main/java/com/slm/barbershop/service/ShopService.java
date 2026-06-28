@@ -1,5 +1,6 @@
 package com.slm.barbershop.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.slm.barbershop.converter.ShopConverter;
 import com.slm.barbershop.entity.Shop;
@@ -9,8 +10,6 @@ import com.slm.barbershop.model.ShopRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class ShopService extends ServiceImpl<ShopMapper, Shop> {
@@ -51,8 +50,8 @@ public class ShopService extends ServiceImpl<ShopMapper, Shop> {
         shopMapper.deleteById(id);
     }
 
-    public List<Shop> listByUserId(Long userId) {
-        return this.lambdaQuery().eq(Shop::getUserId, userId).orderByDesc(Shop::getId).list();
+    public IPage<Shop> page(IPage<Shop> page, Long userId) {
+        return this.lambdaQuery().eq(Shop::getUserId, userId).page(page);
     }
 
 }

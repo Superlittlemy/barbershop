@@ -1,5 +1,6 @@
 package com.slm.barbershop.controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.slm.barbershop.converter.MemberConverter;
 import com.slm.barbershop.converter.MemberTransactionConverter;
 import com.slm.barbershop.entity.Member;
@@ -27,7 +28,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.math.BigDecimal;
 import java.util.List;
 
 @Tag(name = "会员", description = "会员管理相关接口")
@@ -68,8 +68,8 @@ public class MemberController {
     @Operation(summary = "删除会员")
     @Parameter(name = "id", description = "会员ID", in = ParameterIn.PATH)
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> delete(@PathVariable Long id, @RequestParam Long shopId) {
-        memberService.delete(shopId, id);
+    public ApiResponse<Void> delete(@PathVariable Long id) {
+        memberService.delete(id);
         return ApiResponse.ok();
     }
 
@@ -77,10 +77,18 @@ public class MemberController {
     @Parameter(name = "id", description = "会员ID", in = ParameterIn.PATH)
     @GetMapping("/{id}")
     public ApiResponse<MemberResponse> getById(@PathVariable Long id, @RequestParam Long shopId) {
-        Member member = memberService.getByIdAndShopId(shopId, id);
+        Member member = memberService.getByIdAndShopId(shopId, id).orElseThrow(() -> new BizException(HttpStatus.NOT_FOUND, "会员不存在"));
         return ApiResponse.ok(memberConverter.toResponse(member));
     }
 
+    @Operation(summary = "获取店铺会员列表")
+    @GetMapping("/page")
+    public ApiResponse<IPage<MemberResponse>> page(@RequestParam Long shopId, IPage<Member> page) {
+        return ApiResponse.ok(memberService.page(page, shopId)
+                .convert(memberConverter::toResponse));
+    }
+
+    @Deprecated
     @Operation(summary = "获取店铺会员列表")
     @GetMapping("/list")
     public ApiResponse<List<MemberResponse>> list(@RequestParam Long shopId) {
@@ -105,15 +113,6 @@ public class MemberController {
         MemberTransactionResponse response = transactionConverter.toResponse(transaction);
         response.setItems(transactionService.listItemsByTransactionId(transaction.getId()));
         return ApiResponse.ok(response);
-    }
-
-    @Operation(summary = "查询余额")
-    @Parameter(name = "id", description = "会员ID", in = ParameterIn.PATH)
-    @GetMapping("/{id}/balance")
-    public ApiResponse<BigDecimal> getBalance(@PathVariable Long id) {
-        assertMemberSelf(id);
-        BigDecimal balance = transactionService.getBalance(id);
-        return ApiResponse.ok(balance);
     }
 
     @Operation(summary = "交易流水")

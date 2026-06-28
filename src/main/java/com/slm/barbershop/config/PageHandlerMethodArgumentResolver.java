@@ -29,9 +29,9 @@ import java.util.stream.Stream;
 @Slf4j
 public class PageHandlerMethodArgumentResolver implements HandlerMethodArgumentResolver {
 
-    private static final String PAGE_PARAM = "current";
+    private static final String PAGE_PARAM = "page";
     private static final long PAGE_DEFAULT = 0;
-    private static final String SIZE_PARAM = "pageSize";
+    private static final String SIZE_PARAM = "size";
     private static final long SIZE_DEFAULT = 10;
     private static final String SORT_PARAM = "sort";
     public static final String ORDER_ASC = "asc";

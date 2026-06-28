@@ -1,6 +1,9 @@
 package com.slm.barbershop.controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.slm.barbershop.converter.ServiceItemConverter;
 import com.slm.barbershop.entity.ServiceItem;
+import com.slm.barbershop.exception.BizException;
 import com.slm.barbershop.model.ApiResponse;
 import com.slm.barbershop.model.ServiceItemRequest;
 import com.slm.barbershop.model.ServiceItemResponse;
@@ -10,9 +13,10 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import javax.validation.Valid;
 
 @Tag(name = "服务项", description = "消费项目管理相关接口")
 @RestController
@@ -22,52 +26,49 @@ public class ServiceItemController {
     @Autowired
     private ServiceItemService itemService;
 
+    @Autowired
+    private ServiceItemConverter itemConverter;
+
     @Operation(summary = "创建消费项目")
     @PostMapping
-    public ApiResponse<ServiceItemResponse> create(@RequestBody ServiceItemRequest request) {
+    public ApiResponse<ServiceItemResponse> create(@RequestBody @Valid ServiceItemRequest request) {
         ServiceItem item = itemService.create(request);
-        return ApiResponse.ok(itemService.listByShopId(item.getShopId(), null, true).stream()
-                .filter(r -> r.getId().equals(item.getId()))
-                .findFirst()
-                .orElse(null));
+        return ApiResponse.ok(itemConverter.toResponse(item));
     }
 
     @Operation(summary = "更新消费项目")
     @Parameter(name = "id", description = "项目ID", in = ParameterIn.PATH)
     @PutMapping("/{id}")
-    public ApiResponse<ServiceItemResponse> update(@PathVariable Long id,
-                                                   @RequestBody ServiceItemRequest request) {
+    public ApiResponse<Void> update(@PathVariable Long id,
+                                   @RequestBody ServiceItemRequest request) {
         itemService.update(id, request);
-        return ApiResponse.ok(itemService.listByShopId(request.getShopId(), null, true).stream()
-                .filter(r -> r.getId().equals(id))
-                .findFirst()
-                .orElse(null));
+        return ApiResponse.ok();
     }
 
     @Operation(summary = "删除消费项目")
     @Parameter(name = "id", description = "项目ID", in = ParameterIn.PATH)
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> delete(@PathVariable Long id, @RequestParam Long shopId) {
-        itemService.delete(shopId, id);
+    public ApiResponse<Void> delete(@PathVariable Long id) {
+        itemService.removeById(id);
         return ApiResponse.ok();
     }
 
     @Operation(summary = "获取消费项目详情")
     @Parameter(name = "id", description = "项目ID", in = ParameterIn.PATH)
     @GetMapping("/{id}")
-    public ApiResponse<ServiceItemResponse> getById(@PathVariable Long id, @RequestParam Long shopId) {
-        return ApiResponse.ok(itemService.listByShopId(shopId, null, true).stream()
-                .filter(r -> r.getId().equals(id))
-                .findFirst()
-                .orElse(null));
+    public ApiResponse<ServiceItemResponse> getById(@PathVariable Long id) {
+        ServiceItem serviceItem = itemService.getOptById(id).orElseThrow(() -> new BizException(HttpStatus.NOT_FOUND, "消费项目不存在"));
+        return ApiResponse.ok(itemConverter.toResponse(serviceItem));
     }
 
-    @Operation(summary = "列出店铺消费项目")
-    @GetMapping("/list")
-    public ApiResponse<List<ServiceItemResponse>> list(@RequestParam Long shopId,
-                                                       @RequestParam(required = false) Long categoryId,
-                                                       @RequestParam(defaultValue = "false") boolean includeOff) {
-        return ApiResponse.ok(itemService.listByShopId(shopId, categoryId, includeOff));
+    @Operation(summary = "店铺消费项目分页")
+    @GetMapping("/page")
+    public ApiResponse<IPage<ServiceItemResponse>> page(@RequestParam Long shopId,
+                                                        @RequestParam(required = false) Long categoryId,
+                                                        @RequestParam(defaultValue = "false") boolean includeOff,
+                                                        IPage<ServiceItem> page) {
+        return ApiResponse.ok(itemService.page(page, shopId, categoryId, includeOff)
+                .convert(itemConverter::toResponse));
     }
 
 }
