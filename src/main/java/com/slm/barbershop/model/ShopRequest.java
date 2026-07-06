@@ -22,4 +22,7 @@ public class ShopRequest {
     @Schema(description = "联系电话")
     private String phone;
 
+    @Schema(description = "营业时间")
+    private String businessHours;
+
 }

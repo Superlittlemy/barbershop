@@ -27,6 +27,9 @@ public class ShopResponse {
     @Schema(description = "联系电话")
     private String phone;
 
+    @Schema(description = "营业时间")
+    private String businessHours;
+
     @Schema(description = "所属用户ID")
     private Long userId;
 

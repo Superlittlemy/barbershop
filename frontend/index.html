@@ -877,6 +877,10 @@
                         <label class="input-label">联系电话</label>
                         <input type="tel" id="shopPhone" name="phone" class="input" placeholder="座机或手机号">
                     </div>
+                    <div class="input-group">
+                        <label class="input-label">营业时间</label>
+                        <input type="text" id="shopBusinessHours" name="businessHours" class="input" placeholder="例如：09:00-22:00" maxlength="100">
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn" onclick="closeShopModal()">取消</button>
@@ -1379,7 +1383,8 @@
                 name: document.getElementById('shopName'),
                 logo: document.getElementById('shopLogo'),
                 address: document.getElementById('shopAddress'),
-                phone: document.getElementById('shopPhone')
+                phone: document.getElementById('shopPhone'),
+                businessHours: document.getElementById('shopBusinessHours')
             };
             const shop = shopId != null
                 ? shops.find(s => String(s.id) === String(shopId))
@@ -1390,6 +1395,7 @@
             fields.logo.value = (shop && shop.logo) || '';
             fields.address.value = (shop && shop.address) || '';
             fields.phone.value = (shop && shop.phone) || '';
+            fields.businessHours.value = (shop && shop.businessHours) || '';
             logoSavedUrl = (shop && shop.logo) || null;
             setLogoUploaderState(logoSavedUrl, logoSavedUrl ? 'saved' : 'none');
             document.getElementById('shopModal').classList.add('active');
@@ -1632,6 +1638,10 @@
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                                 ${escapeHtml(s.address || '未填写地址')}
                             </div>
+                            <div class="shop-card-meta">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                ${escapeHtml(s.businessHours || '未填写营业时间')}
+                            </div>
                         </div>
                     </div>
                     <div class="shop-card-stats">
@@ -1720,6 +1730,10 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                         ${escapeHtml(shop.phone || '未填写电话')}
                     </div>
+                    <div class="shop-detail-line">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        ${escapeHtml(shop.businessHours || '未填写营业时间')}
+                    </div>
                 </div>`;
         }
 
@@ -1754,7 +1768,8 @@
                 name: form.name.value.trim(),
                 logo: form.logo.value.trim(),
                 address: form.address.value.trim(),
-                phone: form.phone.value.trim()
+                phone: form.phone.value.trim(),
+                businessHours: form.businessHours.value.trim()
             };
             if (!data.name) { showToast('请输入店铺名称', 'error'); return; }
             const btn = document.getElementById('shopSubmitBtn');
