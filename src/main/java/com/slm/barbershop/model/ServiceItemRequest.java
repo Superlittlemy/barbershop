@@ -17,7 +17,6 @@ public class ServiceItemRequest {
     @Schema(description = "所属店铺ID")
     private Long shopId;
 
-    @NotNull(message = "所属分类ID不能为空")
     @Schema(description = "所属分类ID(可空)")
     private Long categoryId;
 

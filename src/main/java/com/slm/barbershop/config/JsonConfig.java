@@ -1,5 +1,6 @@
 package com.slm.barbershop.config;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -32,6 +33,9 @@ public class JsonConfig {
                 new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(LOCAL_DATE_TIME_FORMAT)));
         mapper.registerModule(module);
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        // 反序列化时忽略未知字段,防止前端遗留字段(如已废弃的 status)被 Jackson 严格模式拦截
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
         // Long 类型全局序列化为 String，防止前端精度丢失
         SimpleModule longToStringModule = new SimpleModule();
