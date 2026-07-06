@@ -31,4 +31,7 @@ public class ServiceItemRequest {
     @Schema(description = "项目描述")
     private String description;
 
+    @Schema(description = "状态:0.下架 1.上架(可选,不传保持原值)")
+    private Integer status;
+
 }

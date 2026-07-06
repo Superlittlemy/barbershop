@@ -5,9 +5,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.slm.barbershop.converter.ServiceItemConverter;
 import com.slm.barbershop.entity.ServiceItem;
+import com.slm.barbershop.exception.BizException;
 import com.slm.barbershop.mapper.ServiceItemMapper;
 import com.slm.barbershop.model.ServiceItemRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
