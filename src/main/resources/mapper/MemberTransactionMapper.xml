@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.slm.barbershop.mapper.MemberTransactionMapper">
+
+    <resultMap id="ShopTransactionRecentVO" type="com.slm.barbershop.model.ShopTransactionRecentVO">
+        <id property="id" column="id" />
+        <result property="memberId" column="member_id" />
+        <result property="memberName" column="member_name" />
+        <result property="type" column="type" />
+        <result property="amount" column="amount" />
+        <result property="createdTime" column="created_time" />
+    </resultMap>
+
+    <select id="listRecentByShopId" resultMap="ShopTransactionRecentVO">
+        SELECT t.id,
+               t.member_id,
+               m.name   AS member_name,
+               t.type,
+               t.amount,
+               t.created_time
+        FROM member_transaction t
+        INNER JOIN member m ON m.id = t.member_id AND m.is_deleted = 0
+        WHERE t.is_deleted = 0
+          AND m.shop_id = #{shopId}
+        ORDER BY t.created_time DESC, t.id DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

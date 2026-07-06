@@ -771,31 +771,12 @@
 
             <div data-activity-pane="shop-detail" hidden>
                 <div class="activity-card">
-                    <div class="activity-header">店铺操作</div>
-                    <div class="activity-list">
-                        <button class="activity-item" style="background: transparent; border: none; cursor: pointer; text-align: left; font-family: inherit; width: 100%;" data-shop-action="edit" onclick="shopDetailAction('edit')">
-                            <div class="activity-dot" style="background: var(--info, #4A6FA5);"></div>
-                            <div class="activity-content">
-                                <strong>编辑店铺信息</strong>
-                                <div class="activity-time">→</div>
-                            </div>
-                        </button>
-                        <button class="activity-item" style="background: transparent; border: none; cursor: pointer; text-align: left; font-family: inherit; width: 100%; color: var(--error);" data-shop-action="delete" onclick="shopDetailAction('delete')">
-                            <div class="activity-dot" style="background: var(--error);"></div>
-                            <div class="activity-content">
-                                <strong>删除店铺</strong>
-                                <div class="activity-time">不可恢复</div>
-                            </div>
-                        </button>
-                    </div>
-                </div>
-                <div class="activity-card">
-                    <div class="activity-header">提示</div>
-                    <div class="activity-list">
+                    <div class="activity-header">最新动态</div>
+                    <div class="activity-list" id="shopActivityList">
                         <div class="activity-item">
                             <div class="activity-dot"></div>
                             <div class="activity-content">
-                                点击会员可在会员管理中查看交易明细
+                                <strong>加载中...</strong>
                                 <div class="activity-time">—</div>
                             </div>
                         </div>
@@ -1712,6 +1693,22 @@
             document.getElementById('kpiShopMembers').textContent = members.length;
             document.getElementById('kpiShopStored').textContent = `¥${total.toFixed(2)}`;
             document.getElementById('kpiShopAvg').textContent = members.length > 0 ? `¥${(total / members.length).toFixed(2)}` : '¥0.00';
+
+            // 加载右侧"最新动态"(该店铺最近 8 条交易记录)
+            loadShopRecentTransactions(shopId);
+        }
+
+        async function loadShopRecentTransactions(shopId) {
+            try {
+                const res = await apiCall(`/shop/${encodeURIComponent(shopId)}/transactions/recent?limit=8`);
+                if (res.code === 20000) {
+                    renderShopActivity(res.data || []);
+                } else {
+                    renderShopActivity([]);
+                }
+            } catch (e) {
+                renderShopActivity([]);
+            }
         }
 
         function renderShopDetailBanner(shop) {
@@ -2010,6 +2007,28 @@
                         <div class="activity-dot" style="background: ${isStore ? 'var(--success)' : 'var(--error)'};"></div>
                         <div class="activity-content">
                             <strong>${isStore ? '储值' : '消费'}</strong> ¥${parseFloat(t.amount).toFixed(2)}
+                            <div class="activity-time">${formatTime(t.createdTime)}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderShopActivity(txs) {
+            const el = document.getElementById('shopActivityList');
+            if (!el) return;
+            if (!txs || txs.length === 0) {
+                el.innerHTML = '<div class="activity-item"><div class="activity-dot"></div><div class="activity-content"><strong>暂无交易动态</strong><div class="activity-time">—</div></div></div>';
+                return;
+            }
+            el.innerHTML = txs.slice(0, 8).map(t => {
+                const isStore = (t.type || '').toUpperCase() === 'STORE';
+                const name = escapeHtml(t.memberName || '匿名会员');
+                return `
+                    <div class="activity-item">
+                        <div class="activity-dot" style="background: ${isStore ? 'var(--success)' : 'var(--error)'};"></div>
+                        <div class="activity-content">
+                            <strong>${name}</strong> · ${isStore ? '储值' : '消费'} ¥${parseFloat(t.amount).toFixed(2)}
                             <div class="activity-time">${formatTime(t.createdTime)}</div>
                         </div>
                     </div>

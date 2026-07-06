@@ -18,6 +18,7 @@ import com.slm.barbershop.mapper.MemberTransactionMapper;
 import com.slm.barbershop.mapper.ServiceItemMapper;
 import com.slm.barbershop.model.MemberTransactionPageVO;
 import com.slm.barbershop.model.MemberTransactionResponse;
+import com.slm.barbershop.model.ShopTransactionRecentVO;
 import com.slm.barbershop.model.TransactionItemRequest;
 import com.slm.barbershop.model.TransactionItemResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -273,6 +274,15 @@ public class MemberTransactionService extends ServiceImpl<MemberTransactionMappe
                         .orderByDesc(MemberTransaction::getCreatedTime)
         );
         return toResponseListWithItems(records);
+    }
+
+    /**
+     * 按店铺查询最近 N 条交易记录(用于店铺详情页右侧"最新动态")。
+     * limit 上限 50,避免一次拉太多。
+     */
+    public List<ShopTransactionRecentVO> listRecentByShopId(Long shopId, int limit) {
+        int safeLimit = Math.min(Math.max(limit, 1), 50);
+        return transactionMapper.listRecentByShopId(shopId, safeLimit);
     }
 
     /**
