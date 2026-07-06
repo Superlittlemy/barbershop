@@ -1068,7 +1068,7 @@
                         <label class="input-label">项目描述（可选）</label>
                         <input type="text" id="serviceItemDescription" name="description" class="input" placeholder="例如：含洗剪吹" maxlength="500">
                     </div>
-                    <div class="input-group">
+                    <div class="input-group" id="serviceItemStatusGroup">
                         <label class="input-label">状态</label>
                         <select id="serviceItemStatus" name="status" class="input">
                             <option value="1">上架</option>
@@ -1547,9 +1547,9 @@
         /* ----- Overview ----- */
         async function loadAll() {
             if (!currentUser) return;
-            const shopsRes = await apiCall('/shop/list');
+            const shopsRes = await apiCall('/shop/page?page=1&size=999');
             if (shopsRes.code !== 20000) return;
-            shops = shopsRes.data || [];
+            shops = (shopsRes.data && shopsRes.data.records) || [];
             shopsLoaded = true;
             document.getElementById('kpiShops').textContent = shops.length;
             document.getElementById('shopCount').textContent = shops.length;
@@ -1566,9 +1566,9 @@
             let totalTx = 0;
             shopStats.clear();
             for (const shop of shops) {
-                const res = await apiCall(`/member/list?shopId=${shop.id}`);
+                const res = await apiCall(`/member/page?shopId=${shop.id}&page=1&size=999`);
                 if (res.code === 20000) {
-                    const members = res.data || [];
+                    const members = (res.data && res.data.records) || [];
                     const balance = members.reduce((s, m) => s + parseFloat(m.balance || 0), 0);
                     shopStats.set(shop.id, { memberCount: members.length, totalBalance: balance });
                     totalMembers += members.length;
@@ -1692,12 +1692,12 @@
             document.getElementById('kpiShopStored').textContent = '¥—';
             document.getElementById('kpiShopAvg').textContent = '¥—';
 
-            const res = await apiCall(`/member/list?shopId=${encodeURIComponent(shopId)}`);
+            const res = await apiCall(`/member/page?shopId=${encodeURIComponent(shopId)}&page=1&size=999`);
             if (res.code !== 20000) {
                 renderShopMembers([]);
                 return;
             }
-            const members = res.data || [];
+            const members = (res.data && res.data.records) || [];
             const total = members.reduce((s, m) => s + parseFloat(m.balance || 0), 0);
             document.getElementById('kpiShopMembers').textContent = members.length;
             document.getElementById('kpiShopStored').textContent = `¥${total.toFixed(2)}`;
@@ -1849,9 +1849,9 @@
 
         async function loadMembers(shopId) {
             try {
-                const data = await apiCall(`/member/list?shopId=${shopId}`);
+                const data = await apiCall(`/member/page?shopId=${shopId}&page=1&size=999`);
                 if (data.code === 20000) {
-                    memberState.list = data.data || [];
+                    memberState.list = (data.data && data.data.records) || [];
                     renderMembersView();
                 }
             } catch (e) { showToast('加载会员失败', 'error'); }
@@ -2067,7 +2067,7 @@
         async function deleteMember(id) {
             if (!confirm('确定要删除该会员吗？相关交易记录也会删除。')) return;
             try {
-                const res = await apiCall(`/member/${id}?shopId=${memberState.shopId}`, 'DELETE');
+                const res = await apiCall(`/member/${id}`, 'DELETE');
                 if (res.code === 20000) {
                     showToast('已删除', 'success');
                     loadMembers(memberState.shopId);
@@ -2159,11 +2159,11 @@
                 return;
             }
             const [catRes, itemRes] = await Promise.all([
-                apiCall(`/service-category/list?shopId=${encodeURIComponent(shopId)}&includeOff=false`),
-                apiCall(`/service-item/list?shopId=${encodeURIComponent(shopId)}&includeOff=false`),
+                apiCall(`/service-category/page?shopId=${encodeURIComponent(shopId)}&includeOff=false&page=1&size=999`),
+                apiCall(`/service-item/page?shopId=${encodeURIComponent(shopId)}&includeOff=false&page=1&size=999`),
             ]);
-            pickerState.categories = (catRes.code === 20000 && catRes.data) ? catRes.data : [];
-            pickerState.items = (itemRes.code === 20000 && itemRes.data) ? itemRes.data : [];
+            pickerState.categories = (catRes.code === 20000 && catRes.data && catRes.data.records) ? catRes.data.records : [];
+            pickerState.items = (itemRes.code === 20000 && itemRes.data && itemRes.data.records) ? itemRes.data.records : [];
             pickerState.loaded = true;
         }
 
@@ -2463,12 +2463,12 @@
             const sid = serviceState.shopId;
             const el = document.getElementById('shopCategoryChips');
             if (!sid) { el.innerHTML = '<span class="sidebar-empty">请先进入店铺</span>'; return; }
-            const res = await apiCall(`/service-category/list?shopId=${encodeURIComponent(sid)}&includeOff=false`);
+            const res = await apiCall(`/service-category/page?shopId=${encodeURIComponent(sid)}&includeOff=false&page=1&size=999`);
             if (res.code !== 20000) {
                 el.innerHTML = '<span class="sidebar-empty">加载分类失败</span>';
                 return;
             }
-            serviceState.categories = res.data || [];
+            serviceState.categories = (res.data && res.data.records) || [];
             renderServiceCategoryChips();
         }
 
@@ -2514,14 +2514,14 @@
                 </div>`;
             if (!sid) { el.innerHTML = loadingHeader + '<div class="consume-item-empty">请先进入店铺</div>'; return; }
             el.innerHTML = loadingHeader + '<div class="consume-item-empty">加载中...</div>';
-            const params = new URLSearchParams({ shopId: sid, includeOff: 'true' });
+            const params = new URLSearchParams({ shopId: sid, includeOff: 'true', page: '1', size: '999' });
             if (serviceState.filterCategoryId) params.set('categoryId', serviceState.filterCategoryId);
-            const res = await apiCall(`/service-item/list?${params.toString()}`);
+            const res = await apiCall(`/service-item/page?${params.toString()}`);
             if (res.code !== 20000) {
                 el.innerHTML = loadingHeader + '<div class="consume-item-empty">加载失败</div>';
                 return;
             }
-            serviceState.items = res.data || [];
+            serviceState.items = (res.data && res.data.records) || [];
             const countEl = document.getElementById('shopItemCount');
             if (countEl) countEl.textContent = serviceState.items.length;
             renderServiceItems();
@@ -2622,7 +2622,7 @@
         async function deleteServiceCategory(id) {
             if (!confirm('确定要删除该分类吗?')) return;
             try {
-                const res = await apiCall(`/service-category/${id}?shopId=${serviceState.shopId}`, 'DELETE');
+                const res = await apiCall(`/service-category/${id}`, 'DELETE');
                 if (res.code === 20000) {
                     showToast('已删除', 'success');
                     if (String(serviceState.filterCategoryId) === String(id)) serviceState.filterCategoryId = null;
@@ -2646,7 +2646,6 @@
             if (!serviceState.shopId) { showToast('请先进入店铺', 'error'); return; }
             const title = document.getElementById('serviceItemModalTitle');
             document.getElementById('serviceItemShopId').value = serviceState.shopId;
-            populateServiceItemCategorySelect(null);
             if (itemId) {
                 const it = serviceState.items.find(x => String(x.id) === String(itemId));
                 title.textContent = '编辑项目';
@@ -2656,6 +2655,8 @@
                 document.getElementById('serviceItemDescription').value = it ? (it.description || '') : '';
                 document.getElementById('serviceItemStatus').value = it ? String(it.status != null ? it.status : 1) : '1';
                 populateServiceItemCategorySelect(it ? it.categoryId : null);
+                // 编辑时显示状态(后端支持修改,改动随 PUT 提交)
+                document.getElementById('serviceItemStatusGroup').style.display = '';
             } else {
                 title.textContent = '新增项目';
                 document.getElementById('serviceItemId').value = '';
@@ -2663,6 +2664,10 @@
                 document.getElementById('serviceItemPrice').value = '';
                 document.getElementById('serviceItemDescription').value = '';
                 document.getElementById('serviceItemStatus').value = '1';
+                // 默认带入当前选中的分类 tab(若已选),否则为「不分类」
+                populateServiceItemCategorySelect(serviceState.filterCategoryId);
+                // 新增项目隐藏状态选择(后端默认上架,无需选择)
+                document.getElementById('serviceItemStatusGroup').style.display = 'none';
             }
             document.getElementById('serviceItemModal').classList.add('active');
         }
@@ -2676,7 +2681,7 @@
                 name: document.getElementById('serviceItemName').value.trim(),
                 price: parseFloat(document.getElementById('serviceItemPrice').value || '0'),
                 description: document.getElementById('serviceItemDescription').value.trim(),
-                status: parseInt(document.getElementById('serviceItemStatus').value || '1', 10),
+                status: parseInt(document.getElementById('serviceItemStatus').value, 10),
             };
             if (!data.name) { showToast('请填写项目名称', 'error'); return; }
             if (!data.price || data.price < 0) { showToast('请填写有效单价', 'error'); return; }
@@ -2697,7 +2702,7 @@
         async function deleteServiceItem(id) {
             if (!confirm('确定要删除该项目吗?')) return;
             try {
-                const res = await apiCall(`/service-item/${id}?shopId=${serviceState.shopId}`, 'DELETE');
+                const res = await apiCall(`/service-item/${id}`, 'DELETE');
                 if (res.code === 20000) {
                     showToast('已删除', 'success');
                     await loadServiceItems();
