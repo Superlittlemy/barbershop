@@ -178,6 +178,7 @@
         .input-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
         .input-group[hidden] { display: none; }
         .input-label { font-size: 11px; font-weight: 500; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.08em; }
+        .input-label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
         .input { width: 100%; height: 36px; padding: 0 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 13px; color: var(--text); transition: all 0.15s; }
         .input:focus { outline: none; border-color: var(--border-strong); }
         .input::placeholder { color: var(--text-tertiary); }
@@ -936,7 +937,10 @@
                         <strong id="txCurrentBalance" style="font-size: 16px; color: var(--text);">¥0.00</strong>
                     </div>
                     <div class="input-group" id="txItemsGroup" hidden>
-                        <label class="input-label">选择服务项目</label>
+                        <div class="input-label-row">
+                            <span class="input-label">选择服务项目</span>
+                            <button type="button" class="btn btn-sm" onclick="openServiceItemPicker()">+ 添加项目</button>
+                        </div>
                         <div class="consume-item-list" id="txItemList">
                             <div class="consume-item-empty">该店铺暂无服务项目</div>
                         </div>
@@ -2156,6 +2160,9 @@
             const amountGroup = document.getElementById('txAmountGroup');
             const amountInput = document.getElementById('txAmount');
 
+            // 弹窗宽度按 type 切换:储值只需输入金额,用 .modal 默认 460px 窄弹窗;
+            // 消费有项目选择/数量调整,保留 .modal-wide 720px
+            const modalEl = document.getElementById('txModal').querySelector('.modal');
             if (type === 'consume') {
                 itemsGroup.hidden = false;
                 amountGroup.hidden = false;
@@ -2170,6 +2177,7 @@
                 pickerState.loaded = false;
                 const searchEl = document.getElementById('pickerSearch');
                 if (searchEl) searchEl.value = '';
+                modalEl.classList.add('modal-wide');
                 renderConsumeSelected();         // 渲染空态
                 recomputeConsumeTotal();         // 合计置零并禁用提交
             } else {
@@ -2177,6 +2185,7 @@
                 amountGroup.hidden = false;
                 amountInput.readOnly = false;
                 amountInput.required = true;
+                modalEl.classList.remove('modal-wide');
             }
             document.getElementById('txModal').classList.add('active');
         }
@@ -2299,11 +2308,11 @@
         // ====== Consume selected items (compact row) ======
         function renderConsumeEmpty() {
             const list = document.getElementById('txItemList');
+            // 「+ 添加项目」按钮已上移到「选择服务项目」标签右侧,这里只渲染空态
             list.innerHTML = `
                 <div class="consume-selected-empty">
-                    <div>暂无服务项目，点击下方按钮添加</div>
-                </div>
-                <div class="add-service-bar"><button type="button" class="btn-add-service" onclick="openServiceItemPicker()">+ 添加项目</button></div>`;
+                    <div>暂无服务项目，点击上方按钮添加</div>
+                </div>`;
             document.getElementById('txAmount').value = '';
         }
 
@@ -2313,6 +2322,7 @@
                 renderConsumeEmpty();
                 return;
             }
+            // 「+ 添加项目」按钮已上移到「选择服务项目」标签右侧,这里只渲染已选项
             list.innerHTML = '<div class="consume-selected-list">' +
                 Array.from(pickerState.selected.values()).map(it => {
                     const id = escapeHtml(String(it.id));
@@ -2328,8 +2338,7 @@
                         <div class="cs-subtotal" data-role="subtotal">¥${(it.price * it.quantity).toFixed(2)}</div>
                         <button type="button" class="cs-remove" data-role="remove" title="移除">✕</button>
                     </div>`;
-                }).join('') + '</div>' +
-                '<div class="add-service-bar"><button type="button" class="btn-add-service" onclick="openServiceItemPicker()">+ 添加项目</button></div>';
+                }).join('') + '</div>';
             bindConsumeSelectedEvents();
         }
 
