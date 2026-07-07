@@ -903,11 +903,11 @@
                     </div>
                     <div class="input-group">
                         <label class="input-label">会员姓名</label>
-                        <input type="text" id="memberName" name="name" class="input" placeholder="姓名" required>
+                        <input type="text" id="memberName" name="name" class="input" placeholder="姓名(选填)">
                     </div>
                     <div class="input-group">
                         <label class="input-label">手机号</label>
-                        <input type="tel" id="memberPhone" name="phone" class="input" placeholder="11 位手机号">
+                        <input type="tel" id="memberPhone" name="phone" class="input" placeholder="11 位手机号" required maxlength="11">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -2065,20 +2065,26 @@
             const modal = document.getElementById('memberModal');
             const form = document.getElementById('memberForm');
             const title = document.getElementById('memberModalTitle');
+            const shopSelect = document.getElementById('memberShop');
             form.reset();
             if (memberId) {
+                // 编辑:可改店铺(支持把会员从 A 店转到 B 店)
+                shopSelect.disabled = false;
                 const m = memberState.list.find(x => String(x.id) === String(memberId));
                 if (m) {
                     title.textContent = '编辑会员';
                     document.getElementById('memberId').value = m.id;
-                    document.getElementById('memberShop').value = m.shopId || '';
+                    shopSelect.value = m.shopId || '';
                     document.getElementById('memberName').value = m.name || '';
                     document.getElementById('memberPhone').value = m.phone || '';
                 }
             } else {
+                // 新增:店铺锁定为当前所在店铺,不允许修改
+                // 当前页面本身就是从某个店铺的会员管理进来的,会员必然属于该店铺
                 title.textContent = '新增会员';
                 document.getElementById('memberId').value = '';
-                document.getElementById('memberShop').value = memberState.shopId || '';
+                shopSelect.value = memberState.shopId || '';
+                shopSelect.disabled = true;
             }
             modal.classList.add('active');
         }
@@ -2099,7 +2105,7 @@
                 name: form.name.value.trim(),
                 phone: form.phone.value.trim()
             };
-            if (!data.shopId || !data.name) { showToast('请填写店铺和姓名', 'error'); return; }
+            if (!data.shopId || !data.phone) { showToast('请填写店铺和手机号', 'error'); return; }
             const btn = document.getElementById('memberSubmitBtn');
             btn.disabled = true; btn.textContent = '保存中...';
             try {
