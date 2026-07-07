@@ -12,11 +12,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @Tag(name = "服务项分类", description = "消费项目分类管理相关接口")
 @RestController
@@ -68,6 +70,24 @@ public class ServiceCategoryController {
                                                             IPage<ServiceCategory> page) {
         return ApiResponse.ok(categoryService.page(page, shopId, includeOff)
                 .convert(categoryConverter::toResponse));
+    }
+
+    @Operation(summary = "批量重排店铺分类(前端拖动分类后调用)")
+    @PostMapping("/reorder")
+    public ApiResponse<Void> reorder(@RequestBody @Valid ReorderRequest request) {
+        categoryService.reorder(request.getShopId(), request.getOrderedIds());
+        return ApiResponse.ok();
+    }
+
+    /**
+     * 重排请求体
+     */
+    @Data
+    public static class ReorderRequest {
+        @Parameter(description = "店铺ID", required = true)
+        private Long shopId;
+        @Parameter(description = "按目标顺序排列的分类ID列表", required = true)
+        private List<Long> orderedIds;
     }
 
 }

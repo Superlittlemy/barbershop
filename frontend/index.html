@@ -349,13 +349,25 @@
         .category-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px 4px 12px; border: 1px solid var(--border); border-radius: 16px; font-size: 12px; cursor: pointer; color: var(--text-secondary); background: var(--surface); transition: all 0.15s; }
         .category-chip:hover { border-color: var(--border-strong); color: var(--text); }
         .category-chip.active { background: var(--accent-light); color: var(--accent-hover); border-color: var(--accent); font-weight: 500; }
+        .category-chip.disabled { color: var(--text-tertiary); background: var(--surface-hover, transparent); border-style: dashed; opacity: .65; }
+        .category-chip.disabled .category-chip-label { text-decoration: line-through; text-decoration-color: var(--text-tertiary); }
         .category-chip-add { padding: 4px 12px; border: 1px dashed var(--border); border-radius: 16px; font-size: 12px; cursor: pointer; color: var(--text-tertiary); background: transparent; transition: all 0.15s; }
         .category-chip-add:hover { border-color: var(--border-strong); color: var(--text); }
         .category-chip-actions { display: inline-flex; gap: 2px; margin-left: 2px; }
         .category-chip-actions button { width: 22px; height: 22px; padding: 0; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: none; border-radius: 50%; color: var(--text-tertiary); cursor: pointer; transition: all 0.15s; }
         .category-chip-actions button:hover { background: var(--surface-hover); color: var(--text); }
-        .category-chip-actions button.danger:hover { background: var(--error-light); color: var(--error); }
-        .category-chip-actions svg { width: 12px; height: 12px; }
+        .category-chip-actions button.danger:hover { background: var(--error-light); color: var(--error); } 
+        .category-chip-actions svg { width: 12px; height: 12px; }                                           
+
+        /* ----- Category chip drag handle & DnD states ----- */
+        .category-chip-grip { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; color: var(--text-tertiary); cursor: grab; flex-shrink: 0; margin-left: -4px; opacity: 0; transition: opacity .15s ease; }
+        .category-chip:hover .category-chip-grip { opacity: 1; }
+        .category-chip-grip:active { cursor: grabbing; }
+        .category-chip-grip svg { width: 12px; height: 12px; }
+        .category-chip[draggable="true"] { cursor: default; }
+        .category-chip.dragging { opacity: .35; box-shadow: 0 4px 12px rgba(0,0,0,.18); cursor: grabbing; }
+
+
 
         /* Items toolbar */
         .items-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
@@ -1000,15 +1012,14 @@
                         <input type="text" id="serviceCategoryName" name="name" class="input" placeholder="例如：基础护理" maxlength="50" required>
                     </div>
                     <div class="input-group">
-                        <label class="input-label">排序号（数字越小越靠前）</label>
-                        <input type="number" id="serviceCategorySortNo" name="sortNo" class="input" placeholder="0" value="0">
-                    </div>
-                    <div class="input-group">
                         <label class="input-label">状态</label>
                         <select id="serviceCategoryStatus" name="status" class="input">
                             <option value="1">启用</option>
                             <option value="0">停用</option>
                         </select>
+                    </div>
+                    <div class="input-group">
+                        <div class="input-hint">排序号由系统自动管理,可在分类列表上拖动调整顺序</div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1488,14 +1499,25 @@
             if (token) opts.headers['Authorization'] = `Bearer ${token}`;
             if (body) opts.body = JSON.stringify(body);
             const r = await fetch(`${API_BASE}${endpoint}`, opts);
-            const data = await r.json();
-            if (data && data.message === '无效token') {
-                localStorage.removeItem('token');
-                localStorage.removeItem('member');
-                currentUser = null;
-                shopsLoaded = false;
-                applyAuth();
+            // 401 一律视为登录过期:清理态、跳首页、首屏自动弹登录框
+            // 防重入:多个并发 401 只处理一次
+            if (r.status === 401) {
+                if (!window.__authExpiredHandled) {
+                    window.__authExpiredHandled = true;
+                    sessionStorage.setItem('authExpired', '1');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('member');
+                    currentUser = null;
+                    shopsLoaded = false;
+                    // 用 location.replace(pathname) 而非 location.reload() —— 关键!
+                    // reload 会保留 URL hash,如果当前在 #shop/123/items 这类子页,
+                    // reload 后 init -> switchView -> loadShopItemsView -> 又发 fetch -> 又 401 -> 死循环
+                    // 跳到裸 pathname 让 currentView 走默认 'overview',该分支不发 fetch
+                    setTimeout(() => location.replace(location.pathname), 50);
+                }
+                return { code: 401, message: '登录已过期', data: null };
             }
+            const data = await r.json();
             return data;
         }
 
@@ -2497,7 +2519,8 @@
             const sid = serviceState.shopId;
             const el = document.getElementById('shopCategoryChips');
             if (!sid) { el.innerHTML = '<span class="sidebar-empty">请先进入店铺</span>'; return; }
-            const res = await apiCall(`/service-category/page?shopId=${encodeURIComponent(sid)}&includeOff=false&page=1&size=999`);
+            // 分类管理视图需要展示已停用的分类,便于用户回顾/重新启用
+            const res = await apiCall(`/service-category/page?shopId=${encodeURIComponent(sid)}&includeOff=true&page=1&size=999`);
             if (res.code !== 20000) {
                 el.innerHTML = '<span class="sidebar-empty">加载分类失败</span>';
                 return;
@@ -2511,21 +2534,158 @@
             const active = serviceState.filterCategoryId;
             const editIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
             const trashIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+            const gripIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="6" r="1.2"/><circle cx="9" cy="12" r="1.2"/><circle cx="9" cy="18" r="1.2"/><circle cx="15" cy="6" r="1.2"/><circle cx="15" cy="12" r="1.2"/><circle cx="15" cy="18" r="1.2"/></svg>';
             const chips = [`<span class="category-chip${active == null ? ' active' : ''}" onclick="setServiceItemCategoryFilter(null)">全部</span>`];
             serviceState.categories.forEach(c => {
                 const id = escapeHtml(String(c.id));
                 const name = escapeHtml(c.name || '');
+                const isOff = Number(c.status) === 0;
+                const classes = ['category-chip'];
+                if (String(active) === String(c.id)) classes.push('active');
+                if (isOff) classes.push('disabled');
                 chips.push(`
-                    <span class="category-chip${String(active) === String(c.id) ? ' active' : ''}" data-cat-id="${id}">
+                    <span class="${classes.join(' ')}" data-cat-id="${id}" draggable="true"${isOff ? ' title="已停用 - 点击可筛选该分类下服务项,可在编辑中重新启用"' : ''}>
+                        <span class="category-chip-grip" draggable="true" title="按住拖动调整顺序">${gripIcon}</span>
                         <span class="category-chip-label" onclick="setServiceItemCategoryFilter('${id}')">${name}</span>
                         <span class="category-chip-actions" onclick="event.stopPropagation();">
-                            <button type="button" title="编辑分类" onclick="openServiceCategoryModal('${id}')">${editIcon}</button>
-                            <button type="button" class="danger" title="删除分类" onclick="deleteServiceCategory('${id}')">${trashIcon}</button>
+                            <button type="button" draggable="false" title="编辑分类" onclick="openServiceCategoryModal('${id}')">${editIcon}</button>
+                            <button type="button" draggable="false" class="danger" title="删除分类" onclick="deleteServiceCategory('${id}')">${trashIcon}</button>
                         </span>
                     </span>
                 `);
             });
             el.innerHTML = chips.join('');
+            bindCategoryChipDragEvents();
+        }
+
+        /**
+         * 给分类 chip 绑定原生 HTML5 拖拽事件。
+         * 设计:拖动时实时移动 source chip —— chip 跟着鼠标走,「中间高亮」
+         * 视觉直接来自 chip 自身的移动位置,不再用 chip 上下边线
+         * drop 时直接读 DOM 顺序得到 newOrder,不靠 splice 计算
+         */
+        function bindCategoryChipDragEvents() {
+            debugger
+            const el = document.getElementById('shopCategoryChips');
+            if (!el) return;
+            const chips = el.querySelectorAll('.category-chip[data-cat-id]');
+            chips.forEach(chip => {
+                chip.addEventListener('dragstart', onCategoryChipDragStart);
+                chip.addEventListener('dragend', onCategoryChipDragEnd);
+            });
+            // container 上监听 dragover/drop,统一处理「拖到任意位置」的情况
+            el.addEventListener('dragover', onCategoryContainerDragOver);
+            el.addEventListener('drop', onCategoryContainerDrop);
+        }
+
+        let catDragState = null;
+
+        function onCategoryChipDragStart(e) {
+            const id = e.currentTarget.dataset.catId;
+            catDragState = {
+                sourceChip: e.currentTarget,
+                sourceId: String(id),
+                dropped: false,
+            };
+            e.currentTarget.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            // 必须 setData 才能在 Firefox 中触发 drop
+            try { e.dataTransfer.setData('text/plain', id); } catch (_) {}
+        }
+
+        function onCategoryChipDragEnd(e) {
+            if (e.currentTarget && e.currentTarget.classList) {
+                e.currentTarget.classList.remove('dragging');
+            }
+            // 拖到外部松手时(没触发 drop),需要 reload 恢复
+            if (catDragState && !catDragState.dropped) {
+                loadServiceCategories();
+            }
+            catDragState = null;
+        }
+
+        /**
+         * container 上的 dragover —— 找到鼠标下的目标 chip,实时移动 source chip
+         */
+        function onCategoryContainerDragOver(e) {
+            if (!catDragState || !catDragState.sourceChip) return;
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+
+            const source = catDragState.sourceChip;
+            // 找鼠标下的分类 chip(跳过 source 自己、跳过「全部」chip)
+            const els = document.elementsFromPoint(e.clientX, e.clientY);
+            const target = els.find(el =>
+                el !== source &&
+                el.classList &&
+                el.classList.contains('category-chip') &&
+                el.dataset &&
+                el.dataset.catId
+            );
+            if (!target) return;
+
+            const rect = target.getBoundingClientRect();
+            const before = (e.clientY - rect.top) < rect.height / 2;
+            // 实时移动 source chip —— 半透明的 chip 跟着鼠标走 = 视觉上的「中间高亮」
+            if (before) {
+                if (target.previousSibling !== source) target.parentNode.insertBefore(source, target);
+            } else {
+                if (target.nextSibling !== source) target.parentNode.insertBefore(source, target.nextSibling);
+            }
+        }
+
+        /**
+         * container 上的 drop —— 读当前 DOM 顺序 = newOrder
+         */
+        function onCategoryContainerDrop(e) {
+            debugger
+            if (!catDragState) return;
+            e.preventDefault();
+            catDragState.dropped = true;
+
+            const container = document.getElementById('shopCategoryChips');
+            // DOM 顺序 = source chip 在拖动过程中已被实时重排 = 最终顺序
+            const ordered = Array.from(container.querySelectorAll('.category-chip[data-cat-id]'))
+                .map(el => String(el.dataset.catId));
+            // 拖动前的 state 顺序(还没被改)
+            const original = serviceState.categories.map(c => String(c.id));
+
+            // [DEBUG] 临时调试日志,验证 drop 真的算出新顺序、HTTP body 真的发了新数组
+            console.log('[DnD-Debug] original:', original);
+            console.log('[DnD-Debug] ordered :', ordered);
+            console.log('[DnD-Debug] will-POST:', JSON.stringify({ shopId: serviceState.shopId, orderedIds: ordered }));
+
+            const changed = ordered.length === original.length && ordered.some((id, i) => id !== original[i]);
+            if (!changed) return;
+
+            applyCategoryOrderLocally(ordered);
+            saveCategoryOrder(ordered.slice());
+        }
+
+        function applyCategoryOrderLocally(orderedIds) {
+            const map = new Map(serviceState.categories.map(c => [String(c.id), c]));
+            serviceState.categories = orderedIds.map(id => map.get(id)).filter(Boolean);
+            renderServiceCategoryChips();
+        }
+
+        async function saveCategoryOrder(orderedIds) {
+            try {
+                const res = await apiCall('/service-category/reorder', 'POST', {
+                    shopId: serviceState.shopId,
+                    orderedIds,
+                });
+                if (res.code === 20000) {
+                    showToast('排序已保存', 'success');
+                    // 用后端返回的最终顺序刷新本地 state(可选,当前接口不返回)
+                    loadServiceCategories();
+                } else {
+                    showToast('排序保存失败', 'error');
+                    loadServiceCategories(); // 回滚
+                }
+            } catch (err) {
+                showToast('排序保存失败', 'error');
+                loadServiceCategories(); // 回滚
+            }
         }
 
         function setServiceItemCategoryFilter(categoryId) {
@@ -2608,7 +2768,6 @@
             const title = document.getElementById('serviceCategoryModalTitle');
             const idEl = document.getElementById('serviceCategoryId');
             const nameEl = document.getElementById('serviceCategoryName');
-            const sortEl = document.getElementById('serviceCategorySortNo');
             const statusEl = document.getElementById('serviceCategoryStatus');
             document.getElementById('serviceCategoryShopId').value = serviceState.shopId;
             if (categoryId) {
@@ -2616,13 +2775,11 @@
                 title.textContent = '编辑分类';
                 idEl.value = cat ? cat.id : '';
                 nameEl.value = cat ? (cat.name || '') : '';
-                sortEl.value = cat && cat.sortNo != null ? cat.sortNo : 0;
                 statusEl.value = cat ? String(cat.status != null ? cat.status : 1) : '1';
             } else {
                 title.textContent = '新增分类';
                 idEl.value = '';
                 nameEl.value = '';
-                sortEl.value = '0';
                 statusEl.value = '1';
             }
             document.getElementById('serviceCategoryModal').classList.add('active');
@@ -2634,7 +2791,6 @@
             const data = {
                 shopId: document.getElementById('serviceCategoryShopId').value,
                 name: document.getElementById('serviceCategoryName').value.trim(),
-                sortNo: parseInt(document.getElementById('serviceCategorySortNo').value || '0', 10) || 0,
                 status: parseInt(document.getElementById('serviceCategoryStatus').value || '1', 10),
             };
             if (!data.name) { showToast('请填写分类名称', 'error'); return; }
@@ -2792,6 +2948,14 @@
         initLogoUploader();
         initSidebarToggle();
         applyAuth();
+        // 如果是被 401 踢回首页的:提示 + 自动弹登录框
+        if (sessionStorage.getItem('authExpired') === '1') {
+            sessionStorage.removeItem('authExpired');
+            setTimeout(() => {
+                showToast('登录已过期,请重新登录', 'error');
+                openModal();
+            }, 100);
+        }
         if (currentUser) loadAll();
     </script>
 </body>

@@ -67,8 +67,8 @@ public class ServiceItemController {
                                                         @RequestParam(required = false) Long categoryId,
                                                         @RequestParam(defaultValue = "false") boolean includeOff,
                                                         IPage<ServiceItem> page) {
-        return ApiResponse.ok(itemService.page(page, shopId, categoryId, includeOff)
-                .convert(itemConverter::toResponse));
+        // 列表已包含 categoryName 填充,controller 不再二次 convert
+        return ApiResponse.ok(itemService.page(page, shopId, categoryId, includeOff));
     }
 
 }

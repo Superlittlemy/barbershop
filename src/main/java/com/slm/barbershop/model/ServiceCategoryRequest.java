@@ -21,8 +21,10 @@ public class ServiceCategoryRequest {
     @Schema(description = "分类名称")
     private String name;
 
-    @NotNull(message = "排序号不能为空")
-    @Schema(description = "排序号")
+    /**
+     * 排序号(由后端自动生成,前端不传)
+     */
+    @Schema(description = "排序号(后端自动生成,前端无需传)")
     private Integer sortNo;
 
     @NotNull(message = "状态不能为空")

@@ -2,18 +2,29 @@ package com.slm.barbershop.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.slm.barbershop.converter.ServiceCategoryConverter;
 import com.slm.barbershop.entity.ServiceCategory;
+import com.slm.barbershop.exception.BizException;
 import com.slm.barbershop.mapper.ServiceCategoryMapper;
 import com.slm.barbershop.model.ServiceCategoryRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class ServiceCategoryService extends ServiceImpl<ServiceCategoryMapper, ServiceCategory> {
+
+    /**
+     * 排序号步长:每次递增 10,留出空隙便于将来插入单条分类而不需重排整张表。
+     */
+    private static final int SORT_NO_STEP = 10;
 
     @Autowired
     private ServiceCategoryMapper categoryMapper;
@@ -23,6 +34,8 @@ public class ServiceCategoryService extends ServiceImpl<ServiceCategoryMapper, S
 
     public ServiceCategory create(ServiceCategoryRequest request) {
         ServiceCategory category = categoryConverter.toEntity(request);
+        // 自动生成 sortNo = 当前店铺最大 sortNo + 步长(无记录则为步长)
+        category.setSortNo(nextSortNo(category.getShopId()));
         categoryMapper.insert(category);
         return category;
     }
@@ -43,9 +56,57 @@ public class ServiceCategoryService extends ServiceImpl<ServiceCategoryMapper, S
      * includeOff=false 时仅返回 status=1 的分类。
      */
     public IPage<ServiceCategory> page(IPage<ServiceCategory> page, Long shopId, boolean includeOff) {
+        // add(0, ...) 把 sort_no 排到 Resolver 默认 created_time DESC 之前 —— 显式控制优先级
+        // created_time DESC 作为兜底:老数据 sort_no=0 时,按创建时间倒序排(新数据在前),稳定且符合直觉
+        page.orders().add(0, OrderItem.asc("sort_no"));
         return categoryMapper.selectPage(page, new LambdaQueryWrapper<ServiceCategory>()
                 .eq(ServiceCategory::getShopId, shopId)
                 .eq(!includeOff, ServiceCategory::getStatus, 1));
+    }
+
+    /**
+     * 计算下一个可用 sortNo。
+     */
+    private int nextSortNo(Long shopId) {
+        ServiceCategory max = this.lambdaQuery()
+                .eq(ServiceCategory::getShopId, shopId)
+                .orderByDesc(ServiceCategory::getSortNo)
+                .last("LIMIT 1")
+                .one();
+        int currentMax = max == null || max.getSortNo() == null ? 0 : max.getSortNo();
+        return currentMax + SORT_NO_STEP;
+    }
+
+    /**
+     * 按新顺序批量重排某店铺的所有分类。
+     * orderedIds 中的每个 id 必须属于该店铺,否则抛 400。
+     * 按位置依次赋 sortNo = (i+1) * 步长,保证顺序确定、留出插入空隙。
+     */
+    public void reorder(Long shopId, List<Long> orderedIds) {
+        if (shopId == null) {
+            throw new BizException(HttpStatus.BAD_REQUEST, "店铺ID不能为空");
+        }
+        if (orderedIds == null || orderedIds.isEmpty()) {
+            return;
+        }
+        // 去重
+        Set<Long> unique = new HashSet<>(orderedIds);
+        if (unique.size() != orderedIds.size()) {
+            throw new BizException(HttpStatus.BAD_REQUEST, "排序ID列表存在重复");
+        }
+        // 校验所有 id 都属于该店铺
+        Long matched = categoryMapper.selectCount(new LambdaQueryWrapper<ServiceCategory>()
+                .eq(ServiceCategory::getShopId, shopId)
+                .in(ServiceCategory::getId, orderedIds));
+        if (matched == null || matched.intValue() != orderedIds.size()) {
+            throw new BizException(HttpStatus.BAD_REQUEST, "排序ID列表包含非本店铺的分类");
+        }
+        for (int i = 0; i < orderedIds.size(); i++) {
+            ServiceCategory patch = new ServiceCategory();
+            patch.setId(orderedIds.get(i));
+            patch.setSortNo((i + 1) * SORT_NO_STEP);
+            categoryMapper.updateById(patch);
+        }
     }
 
 }
