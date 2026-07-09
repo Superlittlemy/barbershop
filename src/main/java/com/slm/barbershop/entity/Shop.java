@@ -33,11 +33,6 @@ public class Shop extends BaseEntity {
     private String phone;
 
     /**
-     * 营业时间
-     */
-    private String businessHours;
-
-    /**
      * 所属用户ID
      */
     private Long userId;
