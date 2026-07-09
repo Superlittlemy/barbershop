@@ -451,7 +451,7 @@
         .bill-summary-card .bsc-label { font-size: 12px; color: var(--text-tertiary); margin-bottom: 4px; }
         .bill-summary-card .bsc-amount { font-size: 18px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
         .bill-summary-card .bsc-count { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; font-variant-numeric: tabular-nums; }
-        .bill-filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
+        .bill-filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; justify-content: flex-start; }
         .bill-filter-bar .input { height: 30px; padding: 0 10px; font-size: 12px; }
         .bill-filter-bar select.input { background: var(--surface); }
         .bill-list { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); overflow: hidden; }
@@ -3175,8 +3175,7 @@
                 memberId: null,
                 customerName: '',
                 customerPhone: '',
-                startTime: '',
-                endTime: '',
+                date: '',
                 includeCancelled: false
             },
             records: [],
@@ -3207,12 +3206,10 @@
                     <div class="bill-summary-card"><div class="bsc-label">今日金额</div><div class="bsc-amount" id="billTodayAmount">¥0.00</div><div class="bsc-count" id="billTodayCount">0 笔</div></div>
                     <div class="bill-summary-card"><div class="bsc-label">本月金额</div><div class="bsc-amount" id="billMonthAmount">¥0.00</div><div class="bsc-count" id="billMonthCount">0 笔</div></div>
                     <div class="bill-summary-card"><div class="bsc-label">会员划账</div><div class="bsc-amount" id="billChannelAmount-MEMBER">¥0.00</div><div class="bsc-count" id="billChannelCount-MEMBER">0 笔</div></div>
-                    <div class="bill-summary-card"><div class="bsc-label">线下</div><div class="bsc-amount" id="billChannelAmount-OFFLINE">¥0.00</div><div class="bsc-count" id="billChannelCount-OFFLINE">0 笔</div></div>
-                    <div class="bill-summary-card"><div class="bsc-label">微信</div><div class="bsc-amount" id="billChannelAmount-WECHAT">¥0.00</div><div class="bsc-count" id="billChannelCount-WECHAT">0 笔</div></div>
-                    <div class="bill-summary-card"><div class="bsc-label">支付宝</div><div class="bsc-amount" id="billChannelAmount-ALIPAY">¥0.00</div><div class="bsc-count" id="billChannelCount-ALIPAY">0 笔</div></div>
+                    <div class="bill-summary-card"><div class="bsc-label">散户消费</div><div class="bsc-amount" id="billWalkInAmount">¥0.00</div><div class="bsc-count" id="billWalkInCount">0 笔</div></div>
                 </div>
                 <div class="bill-filter-bar">
-                    <select class="input" id="billFilterChannel">
+                        <select class="input" id="billFilterChannel" style="width: auto;">
                         <option value="">全部支付方式</option>
                         <option value="MEMBER">会员划账</option>
                         <option value="OFFLINE">线下</option>
@@ -3221,8 +3218,7 @@
                     </select>
                     <input type="text" class="input" id="billFilterCustomerName" placeholder="客户姓名" style="width:120px;">
                     <input type="text" class="input" id="billFilterCustomerPhone" placeholder="客户手机号" style="width:140px;">
-                    <input type="datetime-local" class="input" id="billFilterStartTime" style="width:170px;">
-                    <input type="datetime-local" class="input" id="billFilterEndTime" style="width:170px;">
+                    <input type="date" class="input" id="billFilterDate" style="width:150px;">
                     <label class="pay-channel-chip"><input type="checkbox" id="billFilterIncludeCancelled"> 含已作废</label>
                     <button class="btn" onclick="applyBillFilter()">筛选</button>
                     <button class="btn" onclick="resetBillFilter()">重置</button>
@@ -3251,10 +3247,8 @@
             if (cn) cn.value = billState.query.customerName || '';
             const cp = document.getElementById('billFilterCustomerPhone');
             if (cp) cp.value = billState.query.customerPhone || '';
-            const st = document.getElementById('billFilterStartTime');
-            if (st) st.value = billState.query.startTime || '';
-            const et = document.getElementById('billFilterEndTime');
-            if (et) et.value = billState.query.endTime || '';
+            const dt = document.getElementById('billFilterDate');
+            if (dt) dt.value = billState.query.date || '';
             const ic = document.getElementById('billFilterIncludeCancelled');
             if (ic) ic.checked = !!billState.query.includeCancelled;
         }
@@ -3265,20 +3259,29 @@
                 if (res.code !== 20000) return;
                 const vo = res.data || {};
                 billState.summary = vo;
-                document.getElementById('billTodayAmount').textContent = `¥${(vo.todayAmount || 0).toFixed ? (vo.todayAmount).toFixed(2) : '0.00'}`;
+                document.getElementById('billTodayAmount').textContent = `¥${(Number(vo.todayAmount) || 0).toFixed(2)}`;
                 document.getElementById('billTodayCount').textContent = `${vo.todayCount || 0} 笔`;
-                document.getElementById('billMonthAmount').textContent = `¥${(vo.monthAmount || 0).toFixed ? (vo.monthAmount).toFixed(2) : '0.00'}`;
+                document.getElementById('billMonthAmount').textContent = `¥${(Number(vo.monthAmount) || 0).toFixed(2)}`;
                 document.getElementById('billMonthCount').textContent = `${vo.monthCount || 0} 笔`;
                 const byAmt = vo.byChannelAmount || {};
                 const byCnt = vo.byChannelCount || {};
-                ['MEMBER', 'OFFLINE', 'WECHAT', 'ALIPAY'].forEach(ch => {
-                    const a = byAmt[ch] != null ? Number(byAmt[ch]).toFixed(2) : '0.00';
-                    const c = byCnt[ch] != null ? byCnt[ch] : 0;
-                    const elA = document.getElementById(`billChannelAmount-${ch}`);
-                    const elC = document.getElementById(`billChannelCount-${ch}`);
-                    if (elA) elA.textContent = `¥${a}`;
-                    if (elC) elC.textContent = `${c} 笔`;
+                // 会员划账
+                const memAmt = Number(byAmt['MEMBER'] || 0);
+                const memCnt = Number(byCnt['MEMBER'] || 0);
+                const elMemA = document.getElementById('billChannelAmount-MEMBER');
+                const elMemC = document.getElementById('billChannelCount-MEMBER');
+                if (elMemA) elMemA.textContent = `¥${memAmt.toFixed(2)}`;
+                if (elMemC) elMemC.textContent = `${memCnt} 笔`;
+                // 散户消费 = OFFLINE + WECHAT + ALIPAY
+                let walkAmt = 0, walkCnt = 0;
+                ['OFFLINE', 'WECHAT', 'ALIPAY'].forEach(ch => {
+                    walkAmt += Number(byAmt[ch] || 0);
+                    walkCnt += Number(byCnt[ch] || 0);
                 });
+                const elWA = document.getElementById('billWalkInAmount');
+                const elWC = document.getElementById('billWalkInCount');
+                if (elWA) elWA.textContent = `¥${walkAmt.toFixed(2)}`;
+                if (elWC) elWC.textContent = `${walkCnt} 笔`;
             } catch (e) { /* ignore */ }
         }
 
@@ -3292,8 +3295,11 @@
             if (q.memberId) params.set('memberId', String(q.memberId));
             if (q.customerName) params.set('customerName', q.customerName);
             if (q.customerPhone) params.set('customerPhone', q.customerPhone);
-            if (q.startTime) params.set('startTime', q.startTime);
-            if (q.endTime) params.set('endTime', q.endTime);
+            if (q.date) {
+                // 单日筛选:startTime=00:00:00 endTime=23:59:59
+                params.set('startTime', q.date + ' 00:00:00');
+                params.set('endTime', q.date + ' 23:59:59');
+            }
             if (q.includeCancelled) params.set('includeCancelled', 'true');
             const res = await apiCall(`/bill/page?${params.toString()}`);
             const body = document.getElementById('billListBody');
@@ -3373,10 +3379,7 @@
             billState.query.payChannel = document.getElementById('billFilterChannel').value || '';
             billState.query.customerName = document.getElementById('billFilterCustomerName').value.trim();
             billState.query.customerPhone = document.getElementById('billFilterCustomerPhone').value.trim();
-            const st = document.getElementById('billFilterStartTime').value;
-            const et = document.getElementById('billFilterEndTime').value;
-            billState.query.startTime = st ? st.replace('T', ' ') + ':00' : '';
-            billState.query.endTime = et ? et.replace('T', ' ') + ':00' : '';
+            billState.query.date = document.getElementById('billFilterDate').value || '';
             billState.query.includeCancelled = document.getElementById('billFilterIncludeCancelled').checked;
             billState.page = 1;
             loadBillList(billState.shopId);
@@ -3388,8 +3391,7 @@
                 memberId: null,
                 customerName: '',
                 customerPhone: '',
-                startTime: '',
-                endTime: '',
+                date: '',
                 includeCancelled: false
             };
             billState.page = 1;
