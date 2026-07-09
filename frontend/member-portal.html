@@ -91,6 +91,19 @@
       .tx-empty { text-align: center; padding: 40px 20px; color: #8e8e93; font-size: 14px; }
       .load-more-btn { width: 100%; padding: 12px; background: #f5f5f7; color: #1a1a1a; border: none; border-radius: 10px; font-size: 14px; cursor: pointer; margin-top: 16px; }
       .load-more-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+      /* Booking steps */
+      .booking-section { margin-bottom: 18px; }
+      .booking-label { display: block; font-size: 13px; color: #8e8e93; margin-bottom: 8px; }
+      .booking-input, .booking-select, .booking-textarea {
+          width: 100%; padding: 12px 14px; border: 1px solid #e5e5e5; border-radius: 10px; font-size: 14px;
+          background: #fff; color: #1a1a1a; outline: none; transition: border 0.2s;
+      }
+      .booking-input:focus, .booking-select:focus, .booking-textarea:focus { border-color: #667eea; }
+      .booking-textarea { min-height: 60px; resize: none; font-family: inherit; }
+      .booking-slot-empty { font-size: 13px; color: #8e8e93; padding: 10px 0; }
+      .booking-slot.slot-disabled { background: #f5f5f5; color: #c7c7cc; cursor: not-allowed; }
+      .booking-error { color: #e74c3c; font-size: 13px; margin-top: 8px; min-height: 18px; }
   </style>
 </head>
 <body>
@@ -137,9 +150,9 @@
       <span class="menu-text">消费记录</span>
       <span class="menu-arrow">›</span>
     </div>
-    <div class="menu-item">
-      <div class="menu-icon">🎁</div>
-      <span class="menu-text">优惠券</span>
+    <div class="menu-item" onclick="openModal()">
+      <div class="menu-icon">📅</div>
+      <span class="menu-text">立即预约</span>
       <span class="menu-arrow">›</span>
     </div>
     <div class="menu-item" onclick="onLogout()">
@@ -150,8 +163,8 @@
   </div>
 
   <!-- Book Button -->
-  <!-- TODO 预约理发功能 -->
-<!--  <button class="book-btn" onclick="openModal()">📅 立即预约理发</button>-->
+  <!-- 保留为快捷入口(主入口为菜单项「立即预约」) -->
+  <button class="book-btn" onclick="openModal()">📅 立即预约理发</button>
 
   <!-- Footer -->
   <div class="footer">
@@ -164,22 +177,32 @@
 <div class="modal" id="bookingModal">
   <div class="modal-content">
     <div class="modal-header">
-      <span class="modal-title">选择预约时间</span>
+      <span class="modal-title">立即预约</span>
       <div class="modal-close" onclick="closeModal()">✕</div>
     </div>
     <div class="modal-body">
-      <div class="time-grid">
-        <div class="time-slot">09:00</div>
-        <div class="time-slot">10:00</div>
-        <div class="time-slot">11:00</div>
-        <div class="time-slot selected">14:00</div>
-        <div class="time-slot">15:00</div>
-        <div class="time-slot">16:00</div>
-        <div class="time-slot">17:00</div>
-        <div class="time-slot">18:00</div>
-        <div class="time-slot">19:00</div>
+      <div class="booking-section">
+        <label class="booking-label" for="bookingDate">1. 选择日期(未来 7 天内)</label>
+        <input type="date" id="bookingDate" class="booking-input" onchange="onBookingDateChange(this.value)">
       </div>
-      <button class="confirm-book" onclick="confirmBooking()">确认预约</button>
+      <div class="booking-section">
+        <label class="booking-label">2. 选择时段(1 小时间隔)</label>
+        <div id="bookingSlots" class="time-grid">
+          <div class="booking-slot-empty">请先选择日期</div>
+        </div>
+      </div>
+      <div class="booking-section">
+        <label class="booking-label" for="bookingItem">3. 选择服务项目</label>
+        <select id="bookingItem" class="booking-select">
+          <option value="">加载中...</option>
+        </select>
+      </div>
+      <div class="booking-section">
+        <label class="booking-label" for="bookingRemark">4. 备注(可选)</label>
+        <textarea id="bookingRemark" class="booking-textarea" maxlength="200" placeholder="如有特殊需求请说明"></textarea>
+      </div>
+      <div id="bookingError" class="booking-error"></div>
+      <button id="bookingSubmit" class="confirm-book" onclick="confirmBooking()">确认预约</button>
     </div>
   </div>
 </div>
@@ -475,10 +498,141 @@
         loadTxPage(txPage, true);
     }
 
-    // ====== 预约 Modal（保留原有占位逻辑） ======
-    function openModal() { document.getElementById('bookingModal').classList.add('active'); }
-    function closeModal() { document.getElementById('bookingModal').classList.remove('active'); }
-    function confirmBooking() { alert('预约成功！'); closeModal(); }
+    // ====== 预约 Modal ======
+    // 流程:打开 → 初始化日期(今天起 7 天) → 选日期后拉取可用时段 → 拉取服务项目 → 提交 POST
+    const bookingState = {
+        date: '',          // yyyy-MM-dd
+        slots: [],         // 字符串数组 ["09:00", ...]
+        selectedSlot: '',  // 选中的 HH:mm
+        items: [],         // 服务项目数组(下拉用)
+        loading: false,
+    };
+
+    function todayStr(offsetDays) {
+        const d = new Date();
+        d.setDate(d.getDate() + (offsetDays || 0));
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return y + '-' + m + '-' + day;
+    }
+
+    function initBookingForm() {
+        const dateInput = document.getElementById('bookingDate');
+        // min = 今天,max = 今天 + 6(7 天可选窗口)
+        dateInput.min = todayStr(0);
+        dateInput.max = todayStr(6);
+        if (!dateInput.value) dateInput.value = todayStr(0);
+        bookingState.date = dateInput.value;
+        // 服务项目异步加载(只加载一次)
+        if (bookingState.items.length === 0) loadServiceItemsForBooking();
+        // 拉取时段
+        loadAvailableSlots();
+    }
+
+    function openModal() {
+        document.getElementById('bookingModal').classList.add('active');
+        document.getElementById('bookingError').textContent = '';
+        bookingState.selectedSlot = '';
+        initBookingForm();
+    }
+
+    function closeModal() {
+        document.getElementById('bookingModal').classList.remove('active');
+    }
+
+    async function loadAvailableSlots() {
+        const wrap = document.getElementById('bookingSlots');
+        wrap.innerHTML = '<div class="booking-slot-empty">加载中...</div>';
+        bookingState.slots = [];
+        bookingState.selectedSlot = '';
+        const shopId = localStorage.getItem(SHOP_KEY);
+        if (!shopId) { wrap.innerHTML = '<div class="booking-slot-empty">请先登录</div>'; return; }
+        try {
+            const slots = await apiCall('/appointment/available-slots?shopId=' + encodeURIComponent(shopId) + '&date=' + encodeURIComponent(bookingState.date), 'GET');
+            bookingState.slots = Array.isArray(slots) ? slots : [];
+            renderBookingSlots();
+        } catch (e) {
+            wrap.innerHTML = '<div class="booking-slot-empty">' + (e.message || '加载时段失败') + '</div>';
+        }
+    }
+
+    function renderBookingSlots() {
+        const wrap = document.getElementById('bookingSlots');
+        if (!bookingState.slots || bookingState.slots.length === 0) {
+            wrap.innerHTML = '<div class="booking-slot-empty">该日期暂无可预约时段(店铺未营业或时段已被占用)</div>';
+            return;
+        }
+        wrap.innerHTML = bookingState.slots.map(s =>
+            '<div class="time-slot booking-slot" data-slot="' + s + '" onclick="onBookingSlotClick(this)">' + s + '</div>'
+        ).join('');
+    }
+
+    function onBookingSlotClick(el) {
+        document.querySelectorAll('#bookingSlots .booking-slot').forEach(s => s.classList.remove('selected'));
+        el.classList.add('selected');
+        bookingState.selectedSlot = el.dataset.slot;
+    }
+
+    async function loadServiceItemsForBooking() {
+        const sel = document.getElementById('bookingItem');
+        sel.innerHTML = '<option value="">加载中...</option>';
+        const shopId = localStorage.getItem(SHOP_KEY);
+        if (!shopId) { sel.innerHTML = '<option value="">请先登录</option>'; return; }
+        try {
+            const data = await apiCall('/service-item/page?shopId=' + encodeURIComponent(shopId) + '&includeOff=false&page=1&size=999', 'GET');
+            const list = (data && data.records) || [];
+            bookingState.items = list;
+            if (list.length === 0) {
+                sel.innerHTML = '<option value="">该店铺暂无可预约项目</option>';
+                return;
+            }
+            sel.innerHTML = '<option value="">请选择服务项目</option>' + list.map(it => {
+                const price = fmtMoney(it.price);
+                return '<option value="' + it.id + '">' + escapeHtml(it.name) + '  ¥' + price + '</option>';
+            }).join('');
+        } catch (e) {
+            sel.innerHTML = '<option value="">加载失败</option>';
+        }
+    }
+
+    function onBookingDateChange(v) {
+        bookingState.date = v;
+        loadAvailableSlots();
+    }
+
+    function escapeHtml(str) {
+        if (str == null) return '';
+        return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    async function confirmBooking() {
+        const errEl = document.getElementById('bookingError');
+        errEl.textContent = '';
+        if (bookingState.loading) return;
+        const shopId = localStorage.getItem(SHOP_KEY);
+        const serviceItemId = document.getElementById('bookingItem').value;
+        const date = document.getElementById('bookingDate').value;
+        const slot = bookingState.selectedSlot;
+        const remark = document.getElementById('bookingRemark').value.trim();
+        if (!shopId) { errEl.textContent = '请先登录'; return; }
+        if (!date) { errEl.textContent = '请选择日期'; return; }
+        if (!slot) { errEl.textContent = '请选择时段'; return; }
+        if (!serviceItemId) { errEl.textContent = '请选择服务项目'; return; }
+        const btn = document.getElementById('bookingSubmit');
+        bookingState.loading = true;
+        btn.disabled = true; btn.textContent = '提交中...';
+        try {
+            await apiCall('/appointment', 'POST', { shopId: Number(shopId), serviceItemId: Number(serviceItemId), appointmentDate: date, startTime: slot, remark: remark || null });
+            alert('预约成功！');
+            closeModal();
+        } catch (e) {
+            errEl.textContent = e.message || '预约失败';
+        } finally {
+            bookingState.loading = false;
+            btn.disabled = false; btn.textContent = '确认预约';
+        }
+    }
 
     // ====== 初始化 ======
     document.querySelectorAll('.time-slot').forEach(slot => {

@@ -585,6 +585,7 @@
                     <a class="sub-nav-item" data-tab="info" href="#shop/PLACEHOLDER">店铺信息</a>
                     <a class="sub-nav-item" data-tab="members" href="#shop/PLACEHOLDER/members">会员管理</a>
                     <a class="sub-nav-item" data-tab="items" href="#shop/PLACEHOLDER/items">服务项目</a>
+                    <a class="sub-nav-item" data-tab="appointments" href="#shop/PLACEHOLDER/appointments">预约管理</a>
                 </div>
                 <div class="shop-detail-banner" id="shopDetailBanner"></div>
                 <div class="kpi-grid">
@@ -616,6 +617,7 @@
                     <a class="sub-nav-item" data-tab="info" href="#shop/PLACEHOLDER">店铺信息</a>
                     <a class="sub-nav-item" data-tab="members" href="#shop/PLACEHOLDER/members">会员管理</a>
                     <a class="sub-nav-item" data-tab="items" href="#shop/PLACEHOLDER/items">服务项目</a>
+                    <a class="sub-nav-item" data-tab="appointments" href="#shop/PLACEHOLDER/appointments">预约管理</a>
                 </div>
                 <div id="shopMembersContent">
                     <!-- rendered by renderMembersView() -->
@@ -627,6 +629,7 @@
                     <a class="sub-nav-item" data-tab="info" href="#shop/PLACEHOLDER">店铺信息</a>
                     <a class="sub-nav-item" data-tab="members" href="#shop/PLACEHOLDER/members">会员管理</a>
                     <a class="sub-nav-item" data-tab="items" href="#shop/PLACEHOLDER/items">服务项目</a>
+                    <a class="sub-nav-item" data-tab="appointments" href="#shop/PLACEHOLDER/appointments">预约管理</a>
                 </div>
                 <div class="items-toolbar">
                     <div class="items-toolbar-left">
@@ -647,6 +650,20 @@
                 </div>
                 <div class="section-card" id="shopServiceItemCard">
                     <div class="service-item-list" id="shopServiceItemList">
+                        <div class="consume-item-empty">加载中...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div data-view-pane="shop-appointments" hidden class="fade-in">
+                <div class="sub-nav" id="shopAppointmentsTabs">
+                    <a class="sub-nav-item" data-tab="info" href="#shop/PLACEHOLDER">店铺信息</a>
+                    <a class="sub-nav-item" data-tab="members" href="#shop/PLACEHOLDER/members">会员管理</a>
+                    <a class="sub-nav-item" data-tab="items" href="#shop/PLACEHOLDER/items">服务项目</a>
+                    <a class="sub-nav-item" data-tab="appointments" href="#shop/PLACEHOLDER/appointments">预约管理</a>
+                </div>
+                <div class="section-card" id="shopAppointmentsCard">
+                    <div class="service-item-list" id="shopAppointmentsList">
                         <div class="consume-item-empty">加载中...</div>
                     </div>
                 </div>
@@ -1122,11 +1139,13 @@
         function currentView() {
             const hash = (location.hash || '').replace('#', '').split('?')[0];
             if (hash.startsWith('shop/')) {
-                // shop/{id}            → shop-detail
-                // shop/{id}/members    → shop-members
-                // shop/{id}/items      → shop-items
+                // shop/{id}                → shop-detail
+                // shop/{id}/members        → shop-members
+                // shop/{id}/items          → shop-items
+                // shop/{id}/appointments   → shop-appointments
                 if (hash.split('/').length >= 3 && hash.endsWith('/members')) return 'shop-members';
                 if (hash.split('/').length >= 3 && hash.endsWith('/items'))   return 'shop-items';
+                if (hash.split('/').length >= 3 && hash.endsWith('/appointments')) return 'shop-appointments';
                 return 'shop-detail';
             }
             if (hash === 'shops') return 'shops';
@@ -1140,23 +1159,24 @@
             return id ? decodeURIComponent(id) : null;
         }
         function switchView(view) {
-            if (!['overview', 'shops', 'shop-detail', 'shop-members', 'shop-items'].includes(view)) view = 'overview';
+            if (!['overview', 'shops', 'shop-detail', 'shop-members', 'shop-items', 'shop-appointments'].includes(view)) view = 'overview';
             const queryIdx = location.hash.indexOf('?');
             const query = queryIdx >= 0 ? location.hash.slice(queryIdx) : '';
-            if (view !== 'shop-detail' && view !== 'shop-members' && view !== 'shop-items' && location.hash !== '#' + view + query) {
+            if (!['shop-detail', 'shop-members', 'shop-items', 'shop-appointments'].includes(view) && location.hash !== '#' + view + query) {
                 history.replaceState(null, '', '#' + view + query);
             }
             document.querySelectorAll('[data-view-pane]').forEach(p => p.hidden = p.dataset.viewPane !== view);
             document.querySelectorAll('[data-activity-pane]').forEach(p => p.hidden = p.dataset.activityPane !== view);
-            const navTarget = (view === 'shop-detail' || view === 'shop-members' || view === 'shop-items') ? 'shops' : view;
+            const navTarget = ['shop-detail', 'shop-members', 'shop-items', 'shop-appointments'].includes(view) ? 'shops' : view;
             document.querySelectorAll('.sidebar-item[data-nav]').forEach(b => b.classList.toggle('active', b.dataset.nav === navTarget));
-            document.querySelectorAll('[data-show-on-shops]').forEach(el => el.hidden = !(view === 'shops' || view === 'shop-detail' || view === 'shop-members' || view === 'shop-items'));
+            document.querySelectorAll('[data-show-on-shops]').forEach(el => el.hidden = !(view === 'shops' || ['shop-detail', 'shop-members', 'shop-items', 'shop-appointments'].includes(view)));
             // 同步店铺详情页 Tabs 激活态
-            document.querySelectorAll('#shopDetailTabs .sub-nav-item, #shopMembersTabs .sub-nav-item, #shopItemsTabs .sub-nav-item')
+            document.querySelectorAll('#shopDetailTabs .sub-nav-item, #shopMembersTabs .sub-nav-item, #shopItemsTabs .sub-nav-item, #shopAppointmentsTabs .sub-nav-item')
                 .forEach(a => a.classList.toggle('active',
-                    (a.dataset.tab === 'info'    && view === 'shop-detail') ||
-                    (a.dataset.tab === 'members' && view === 'shop-members') ||
-                    (a.dataset.tab === 'items'   && view === 'shop-items')));
+                    (a.dataset.tab === 'info'          && view === 'shop-detail') ||
+                    (a.dataset.tab === 'members'       && view === 'shop-members') ||
+                    (a.dataset.tab === 'items'         && view === 'shop-items') ||
+                    (a.dataset.tab === 'appointments'  && view === 'shop-appointments')));
             const title = document.getElementById('pageTitle');
             const sub = document.getElementById('pageSubtitle');
             if (view === 'shops') {
@@ -1204,6 +1224,19 @@
                 } else {
                     location.hash = '#shops';
                 }
+            } else if (view === 'shop-appointments') {
+                const shopId = getShopIdFromHash();
+                if (shopId) {
+                    const shop = shops.find(s => String(s.id) === String(shopId));
+                    title.textContent = shop ? shop.name : '店铺详情';
+                    sub.textContent = '查看本店会员预约';
+                    renderPageActions('shop-appointments', shopId);
+                    bindShopTabsHref(shopId);
+                    if (currentUser && !shopsLoaded) return;
+                    renderAppointmentsView(shopId);
+                } else {
+                    location.hash = '#shops';
+                }
             } else {
                 title.textContent = '概览';
                 sub.textContent = currentUser ? `欢迎回来，${currentUser.memberName || currentUser.username || ''}` : '欢迎回来';
@@ -1238,6 +1271,12 @@
                     新增会员
                 </button>`;
             } else if (view === 'shop-items') {
+                el.innerHTML = `<a class="btn" href="#shops">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    返回店铺管理
+                </a>`;
+            } else if (view === 'shop-appointments') {
+                // 预约由会员端发起,店家后台只读,故只有"返回"按钮
                 el.innerHTML = `<a class="btn" href="#shops">
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
                     返回店铺管理
@@ -1771,14 +1810,17 @@
             const infoHref = '#shop/' + sid;
             const membersHref = '#shop/' + sid + '/members';
             const itemsHref = '#shop/' + sid + '/items';
-            // CSS 多选择器: A, B, C 表示"匹配 A 或 B 或 C";这里要分别取三个 sub-nav 容器下的子元素,
-            // 因此每个 data-tab 都要写三段独立 selector
-            const infoSel = '#shopDetailTabs .sub-nav-item[data-tab="info"], #shopMembersTabs .sub-nav-item[data-tab="info"], #shopItemsTabs .sub-nav-item[data-tab="info"]';
-            const membersSel = '#shopDetailTabs .sub-nav-item[data-tab="members"], #shopMembersTabs .sub-nav-item[data-tab="members"], #shopItemsTabs .sub-nav-item[data-tab="members"]';
-            const itemsSel = '#shopDetailTabs .sub-nav-item[data-tab="items"], #shopMembersTabs .sub-nav-item[data-tab="items"], #shopItemsTabs .sub-nav-item[data-tab="items"]';
+            const appointmentsHref = '#shop/' + sid + '/appointments';
+            // CSS 多选择器: A, B, C 表示"匹配 A 或 B 或 C";这里要分别取四个 sub-nav 容器下的子元素,
+            // 因此每个 data-tab 都要写四段独立 selector
+            const infoSel = '#shopDetailTabs .sub-nav-item[data-tab="info"], #shopMembersTabs .sub-nav-item[data-tab="info"], #shopItemsTabs .sub-nav-item[data-tab="info"], #shopAppointmentsTabs .sub-nav-item[data-tab="info"]';
+            const membersSel = '#shopDetailTabs .sub-nav-item[data-tab="members"], #shopMembersTabs .sub-nav-item[data-tab="members"], #shopItemsTabs .sub-nav-item[data-tab="members"], #shopAppointmentsTabs .sub-nav-item[data-tab="members"]';
+            const itemsSel = '#shopDetailTabs .sub-nav-item[data-tab="items"], #shopMembersTabs .sub-nav-item[data-tab="items"], #shopItemsTabs .sub-nav-item[data-tab="items"], #shopAppointmentsTabs .sub-nav-item[data-tab="items"]';
+            const apptSel = '#shopDetailTabs .sub-nav-item[data-tab="appointments"], #shopMembersTabs .sub-nav-item[data-tab="appointments"], #shopItemsTabs .sub-nav-item[data-tab="appointments"], #shopAppointmentsTabs .sub-nav-item[data-tab="appointments"]';
             document.querySelectorAll(infoSel).forEach(a => a.href = infoHref);
             document.querySelectorAll(membersSel).forEach(a => a.href = membersHref);
             document.querySelectorAll(itemsSel).forEach(a => a.href = itemsHref);
+            document.querySelectorAll(apptSel).forEach(a => a.href = appointmentsHref);
         }
 
         /* ----- Shop CRUD ----- */
@@ -2524,10 +2566,109 @@
 
         async function loadShopItemsView(shopId) {
             serviceState.shopId = String(shopId);
-            // 同步三个 sub-nav 容器的 href(避免刷新时停留在 PLACEHOLDER)
+            // 同步四个 sub-nav 容器的 href(避免刷新时停留在 PLACEHOLDER)
             bindShopTabsHref(shopId);
             await loadServiceCategories();
             await loadServiceItems();
+        }
+
+        /* =====================================================
+         *  预约管理（店铺详情 Tab「预约管理」）
+         *  列表只读,无新增按钮(预约由会员端发起);按日期/关键词过滤
+         * ===================================================== */
+        const appointmentState = {
+            shopId: null,
+            date: '',        // yyyy-MM-dd,空 = 不按日期过滤
+            keyword: '',     // 会员姓名/服务项目名模糊匹配
+        };
+
+        async function renderAppointmentsView(shopId) {
+            appointmentState.shopId = String(shopId);
+            renderAppointmentFilters();
+            await loadAppointments();
+        }
+
+        function renderAppointmentFilters() {
+            const card = document.getElementById('shopAppointmentsCard');
+            // 工具栏(filter 区域)用 serviceState.items 之外的简化模式:日期输入 + 关键词输入 + 查询按钮
+            if (!card) return;
+            // 仅在第一次渲染时插入工具栏
+            if (document.getElementById('appointmentToolbar')) return;
+            const toolbar = document.createElement('div');
+            toolbar.id = 'appointmentToolbar';
+            toolbar.className = 'items-toolbar';
+            toolbar.innerHTML = `
+                <div class="items-toolbar-left" style="display: flex; gap: 12px; align-items: center;">
+                    <label style="font-size: 12px; color: var(--text-secondary);">日期</label>
+                    <input type="date" id="appointmentDateFilter" class="input" style="max-width: 180px;"
+                           value="${escapeHtml(appointmentState.date)}" onchange="onAppointmentDateChange(this.value)">
+                    <input type="search" id="appointmentKeywordFilter" class="input" style="max-width: 220px;"
+                           placeholder="会员姓名/服务项目"
+                           value="${escapeHtml(appointmentState.keyword)}"
+                           onkeydown="if(event.key==='Enter'){onAppointmentKeywordChange(this.value)}">
+                </div>`;
+            card.insertBefore(toolbar, card.firstChild);
+        }
+
+        function onAppointmentDateChange(v) {
+            appointmentState.date = v || '';
+            loadAppointments();
+        }
+        function onAppointmentKeywordChange(v) {
+            appointmentState.keyword = v || '';
+            loadAppointments();
+        }
+
+        async function loadAppointments() {
+            const sid = appointmentState.shopId;
+            const el = document.getElementById('shopAppointmentsList');
+            const header = `
+                <div class="service-item-header">
+                    <div>会员</div>
+                    <div>服务项目</div>
+                    <div>预约日期</div>
+                    <div class="service-item-header-cell-price">时段</div>
+                    <div>备注</div>
+                </div>`;
+            if (!sid) {
+                el.innerHTML = header + '<div class="consume-item-empty">请先进入店铺</div>';
+                return;
+            }
+            el.innerHTML = header + '<div class="consume-item-empty">加载中...</div>';
+            const params = new URLSearchParams({ shopId: sid, page: '1', size: '999' });
+            if (appointmentState.date) params.set('date', appointmentState.date);
+            if (appointmentState.keyword) params.set('keyword', appointmentState.keyword);
+            const res = await apiCall(`/appointment/page?${params.toString()}`);
+            if (res.code !== 20000) {
+                el.innerHTML = header + '<div class="consume-item-empty">加载失败:' + escapeHtml(res.message || '') + '</div>';
+                return;
+            }
+            const records = (res.data && res.data.records) || [];
+            if (records.length === 0) {
+                el.innerHTML = header + '<div class="consume-item-empty">暂无预约记录</div>';
+                return;
+            }
+            el.innerHTML = header + records.map(renderAppointmentRow).join('');
+        }
+
+        function renderAppointmentRow(r) {
+            const member = r.memberName ? escapeHtml(r.memberName) : '<span style="color: var(--text-tertiary);">—</span>';
+            const item = r.serviceItemName ? escapeHtml(r.serviceItemName) : '<span style="color: var(--text-tertiary);">—</span>';
+            const date = r.appointmentDate ? escapeHtml(String(r.appointmentDate)) : '—';
+            const time = (r.startTime && r.endTime)
+                ? `${escapeHtml(String(r.startTime).slice(0, 5))} ~ ${escapeHtml(String(r.endTime).slice(0, 5))}`
+                : '—';
+            const remarkHtml = r.remark
+                ? `<div class="service-item-row-desc" title="${escapeHtml(r.remark)}">${escapeHtml(r.remark)}</div>`
+                : `<div class="service-item-row-desc" style="color: var(--text-tertiary);">—</div>`;
+            return `
+                <div class="service-item-row">
+                    <div class="service-item-row-name">${member}</div>
+                    <div>${item}</div>
+                    <div>${date}</div>
+                    <div class="service-item-row-price">${time}</div>
+                    ${remarkHtml}
+                </div>`;
         }
 
         async function loadServiceCategories() {
