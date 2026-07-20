@@ -1162,8 +1162,9 @@
         </div>
     </div>
 
-    <!-- Service Item Picker Modal (consume flow) -->
-    <div class="modal-overlay" id="serviceItemPickerModal">
+    <!-- Service Item Picker Modal (consume flow + bill create flow) -->
+    <!-- z-index 提升到 210,确保在 billCreateModal(200)之上,避免被账单弹窗遮住 -->
+    <div class="modal-overlay" id="serviceItemPickerModal" style="z-index: 210;">
         <div class="modal modal-wide">
             <div class="modal-header">
                 <div class="modal-title">添加服务项目</div>
@@ -1199,13 +1200,12 @@
                 <div class="input-group">
                     <label class="input-label">支付方式 <span style="color:#ef4444;">*</span></label>
                     <div class="pay-channel-group" id="billPayChannelGroup">
-                        <label class="pay-channel-chip"><input type="radio" name="billPayChannel" value="MEMBER"> 会员划账</label>
                         <label class="pay-channel-chip"><input type="radio" name="billPayChannel" value="OFFLINE" checked> 线下</label>
                         <label class="pay-channel-chip"><input type="radio" name="billPayChannel" value="WECHAT"> 微信</label>
                         <label class="pay-channel-chip"><input type="radio" name="billPayChannel" value="ALIPAY"> 支付宝</label>
                     </div>
                 </div>
-                <div id="billMemberPickerRow" class="input-group" style="display:none;">
+                <div id="billMemberPickerRow" class="input-group" style="display:none;" hidden>
                     <label class="input-label">会员 <span style="color:#ef4444;">*</span></label>
                     <div class="member-picker-row">
                         <input type="text" id="billMemberKeyword" class="input" placeholder="按手机号或姓名搜索" autocomplete="off">
@@ -1214,24 +1214,19 @@
                     <div id="billMemberResult" class="member-picker-result"></div>
                     <div id="billMemberSelected" class="member-picker-selected" style="display:none;"></div>
                 </div>
-                <div id="billCustomerRow" class="input-row">
-                    <div class="input-group">
-                        <label class="input-label">客户姓名 <span style="color:#ef4444;" id="billCustomerNameRequired">*</span></label>
-                        <input type="text" id="billCustomerName" class="input" maxlength="50" placeholder="非会员时必填">
-                    </div>
-                    <div class="input-group">
-                        <label class="input-label">客户手机号</label>
-                        <input type="text" id="billCustomerPhone" class="input" maxlength="20" placeholder="可选">
-                    </div>
-                </div>
+                <div id="billCustomerRow" hidden></div>
                 <div class="input-group">
-                    <label class="input-label">服务项目 <span style="color:#ef4444;">*</span></label>
-                    <button type="button" class="btn btn-block" onclick="openServiceItemPickerForBill()">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        选择服务项目
-                    </button>
-                    <div class="consume-selected-list" id="billSelectedItems">
-                        <div class="consume-item-empty">尚未选择服务项目</div>
+                    <div class="input-label-row">
+                        <label class="input-label">服务项目 <span style="color:#ef4444;">*</span></label>
+                        <button type="button" class="btn btn-sm" onclick="openServiceItemPickerForBill()">
+                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            添加项目
+                        </button>
+                    </div>
+                    <div id="billSelectedItems" class="consume-selected-list">
+                        <div class="consume-selected-empty">
+                            <div>暂无服务项目，点击上方按钮添加</div>
+                        </div>
                     </div>
                 </div>
                 <div class="input-group">
@@ -2406,6 +2401,12 @@
 
         function closeServiceItemPicker() {
             document.getElementById('serviceItemPickerModal').classList.remove('active');
+            // 账单弹窗打开时:刷新其已选项目区(因 picker 加入按钮只刷新了消费弹窗的列表)
+            const billModal = document.getElementById('billCreateModal');
+            if (billModal && billModal.classList.contains('active')) {
+                if (typeof renderBillSelectedItems === 'function') renderBillSelectedItems();
+                if (typeof recomputeBillTotal === 'function') recomputeBillTotal();
+            }
         }
 
         async function loadPickerData() {
@@ -2769,7 +2770,6 @@
          * drop 时直接读 DOM 顺序得到 newOrder,不靠 splice 计算
          */
         function bindCategoryChipDragEvents() {
-            debugger
             const el = document.getElementById('shopCategoryChips');
             if (!el) return;
             const chips = el.querySelectorAll('.category-chip[data-cat-id]');
@@ -2842,7 +2842,6 @@
          * container 上的 drop —— 读当前 DOM 顺序 = newOrder
          */
         function onCategoryContainerDrop(e) {
-            debugger
             if (!catDragState) return;
             e.preventDefault();
             catDragState.dropped = true;
@@ -3406,23 +3405,22 @@
             // 重置状态
             billCreateState.shopId = shopId;
             billCreateState.idempotencyKey = (crypto && crypto.randomUUID) ? crypto.randomUUID() : ('bk-' + Date.now() + '-' + Math.random().toString(36).slice(2));
-            billCreateState.member = null;
-            billCreateState.customerName = '';
-            billCreateState.customerPhone = '';
             billCreateState.payChannel = 'OFFLINE';
             billCreateState.remark = '';
+            // 复用的 pickerState 需要重置(并指向本店铺);避免与会员消费弹窗的状态串台
+            pickerState.shopId = shopId;
+            pickerState.activeCatId = '';
+            pickerState.keyword = '';
             pickerState.selected.clear();
-            document.getElementById('billCustomerName').value = '';
-            document.getElementById('billCustomerPhone').value = '';
+            pickerState.items = [];
+            pickerState.categories = [];
+            pickerState.loaded = false;
+            const pickerSearchEl = document.getElementById('pickerSearch');
+            if (pickerSearchEl) pickerSearchEl.value = '';
             document.getElementById('billRemark').value = '';
-            document.getElementById('billMemberKeyword').value = '';
-            document.getElementById('billMemberResult').innerHTML = '';
-            document.getElementById('billMemberSelected').style.display = 'none';
-            document.getElementById('billMemberSelected').innerHTML = '';
             // 默认 OFFLINE
             const radios = document.querySelectorAll('input[name="billPayChannel"]');
             radios.forEach(r => r.checked = (r.value === 'OFFLINE'));
-            updateBillPayChannelUI();
             renderBillSelectedItems();
             recomputeBillTotal();
             document.getElementById('billCreateModal').classList.add('active');
@@ -3438,17 +3436,8 @@
         document.querySelectorAll('input[name="billPayChannel"]').forEach(r => {
             r.addEventListener('change', () => {
                 billCreateState.payChannel = r.value;
-                updateBillPayChannelUI();
             });
         });
-
-        function updateBillPayChannelUI() {
-            const isMember = billCreateState.payChannel === 'MEMBER';
-            document.getElementById('billMemberPickerRow').style.display = isMember ? '' : 'none';
-            document.getElementById('billCustomerNameRequired').style.display = isMember ? 'none' : '';
-            // MEMBER 时客户姓名不强制;非 MEMBER 时必填
-            document.getElementById('billCustomerName').required = !isMember;
-        }
 
         async function searchBillMember() {
             const shopId = billCreateState.shopId;
@@ -3502,78 +3491,75 @@
             const el = document.getElementById('billSelectedItems');
             if (!el) return;
             if (pickerState.selected.size === 0) {
-                el.innerHTML = '<div class="consume-item-empty">尚未选择服务项目</div>';
+                el.innerHTML = `
+                    <div class="consume-selected-empty">
+                        <div>暂无服务项目，点击上方按钮添加</div>
+                    </div>`;
                 return;
             }
-            const rows = Array.from(pickerState.selected.values()).map((it, idx) => {
-                const subtotal = (it.price * it.quantity).toFixed(2);
-                return `
-                    <div class="ci-selected-row">
+            // 样式与会员消费的 ci-selected-row 完全一致:¥ + 单价输入、数量加减、小计、删除
+            el.innerHTML = '<div class="consume-selected-list">' +
+                Array.from(pickerState.selected.values()).map(it => {
+                    const id = escapeHtml(String(it.id));
+                    return `
+                    <div class="ci-selected-row" data-sel-id="${id}">
                         <div class="cs-name" title="${escapeHtml(it.name)}">${escapeHtml(it.name)}</div>
-                        <div class="cs-price">
-                            <input type="text" inputmode="decimal" value="${it.price.toFixed(2)}" data-role="price" data-idx="${idx}">
-                        </div>
+                        <div class="cs-price">¥<input type="text" inputmode="decimal" class="cs-price-input" data-role="price" value="${it.price.toFixed(2)}"></div>
                         <div class="cs-qty">
-                            <button type="button" data-role="dec" data-idx="${idx}">−</button>
-                            <input type="text" inputmode="numeric" value="${it.quantity}" data-role="qty" data-idx="${idx}">
-                            <button type="button" data-role="inc" data-idx="${idx}">+</button>
+                            <button type="button" data-role="dec">−</button>
+                            <input type="text" inputmode="numeric" data-role="qty" value="${it.quantity}">
+                            <button type="button" data-role="inc">+</button>
                         </div>
-                        <div class="cs-subtotal" data-role="subtotal" data-idx="${idx}">¥${subtotal}</div>
-                        <button type="button" class="cs-remove" data-role="remove" data-idx="${idx}">×</button>
+                        <div class="cs-subtotal" data-role="subtotal">¥${(it.price * it.quantity).toFixed(2)}</div>
+                        <button type="button" class="cs-remove" data-role="remove" title="移除">✕</button>
                     </div>`;
-            }).join('');
-            el.innerHTML = rows;
-            // 绑定事件
-            el.querySelectorAll('[data-role="price"]').forEach(inp => {
-                inp.addEventListener('input', () => {
-                    const idx = Number(inp.dataset.idx);
-                    const it = Array.from(pickerState.selected.values())[idx];
-                    if (!it) return;
-                    const raw = inp.value.trim();
-                    if (!/^\\d+(\\.\\d{0,2})?$/.test(raw)) { inp.classList.add('input-error'); recomputeBillTotal(); return; }
-                    inp.classList.remove('input-error');
-                    it.price = Math.round(parseFloat(raw) * 100) / 100;
-                    el.querySelector(`[data-role="subtotal"][data-idx="${idx}"]`).textContent = `¥${(it.price * it.quantity).toFixed(2)}`;
+                }).join('') + '</div>';
+            bindBillSelectedEvents();
+        }
+
+        function bindBillSelectedEvents() {
+            const el = document.getElementById('billSelectedItems');
+            el.querySelectorAll('.ci-selected-row').forEach(row => {
+                const id = String(row.dataset.selId);
+                const it = pickerState.selected.get(id);
+                if (!it) return;
+                const priceInput = row.querySelector('[data-role="price"]');
+                const qtyInput = row.querySelector('[data-role="qty"]');
+                priceInput.addEventListener('input', () => {
+                    const raw = priceInput.value.trim();
+                    if (!/^\d+(\.\d{0,2})?$/.test(raw)) {
+                        priceInput.classList.add('input-error');
+                        return;
+                    }
+                    const v = parseFloat(raw);
+                    priceInput.classList.remove('input-error');
+                    it.price = Math.round(v * 100) / 100;
+                    row.querySelector('[data-role="subtotal"]').textContent = `¥${(it.price * it.quantity).toFixed(2)}`;
                     recomputeBillTotal();
                 });
-            });
-            el.querySelectorAll('[data-role="qty"]').forEach(inp => {
-                inp.addEventListener('input', () => {
-                    const idx = Number(inp.dataset.idx);
-                    const it = Array.from(pickerState.selected.values())[idx];
-                    if (!it) return;
-                    const raw = inp.value.trim();
-                    if (!/^\\d+$/.test(raw)) { inp.classList.add('input-error'); recomputeBillTotal(); return; }
-                    let v = parseInt(raw, 10); if (v < 1) v = 1; if (v > 999) v = 999;
-                    inp.classList.remove('input-error');
+                qtyInput.addEventListener('input', () => {
+                    const raw = qtyInput.value.trim();
+                    if (!/^\d+$/.test(raw)) {
+                        qtyInput.classList.add('input-error');
+                        return;
+                    }
+                    let v = parseInt(raw, 10);
+                    if (v < 1) v = 1;
+                    if (v > 999) v = 999;
+                    qtyInput.classList.remove('input-error');
                     it.quantity = v;
-                    if (String(v) !== raw) inp.value = v;
-                    el.querySelector(`[data-role="subtotal"][data-idx="${idx}"]`).textContent = `¥${(it.price * it.quantity).toFixed(2)}`;
+                    if (String(v) !== raw) qtyInput.value = v;
+                    row.querySelector('[data-role="subtotal"]').textContent = `¥${(it.price * it.quantity).toFixed(2)}`;
                     recomputeBillTotal();
                 });
-            });
-            el.querySelectorAll('[data-role="dec"]').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const idx = Number(btn.dataset.idx);
-                    const it = Array.from(pickerState.selected.values())[idx];
-                    if (!it) return;
-                    if (it.quantity > 1) { it.quantity--; renderBillSelectedItems(); recomputeBillTotal(); }
+                row.querySelector('[data-role="dec"]').addEventListener('click', () => {
+                    if (it.quantity > 1) { it.quantity--; qtyInput.value = it.quantity; qtyInput.dispatchEvent(new Event('input')); }
                 });
-            });
-            el.querySelectorAll('[data-role="inc"]').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const idx = Number(btn.dataset.idx);
-                    const it = Array.from(pickerState.selected.values())[idx];
-                    if (!it) return;
-                    if (it.quantity < 999) { it.quantity++; renderBillSelectedItems(); recomputeBillTotal(); }
+                row.querySelector('[data-role="inc"]').addEventListener('click', () => {
+                    if (it.quantity < 999) { it.quantity++; qtyInput.value = it.quantity; qtyInput.dispatchEvent(new Event('input')); }
                 });
-            });
-            el.querySelectorAll('[data-role="remove"]').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const idx = Number(btn.dataset.idx);
-                    const it = Array.from(pickerState.selected.values())[idx];
-                    if (!it) return;
-                    pickerState.selected.delete(String(it.id));
+                row.querySelector('[data-role="remove"]').addEventListener('click', () => {
+                    pickerState.selected.delete(id);
                     renderBillSelectedItems();
                     recomputeBillTotal();
                 });
@@ -3596,24 +3582,13 @@
                 quantity: it.quantity,
                 unitPrice: Number(it.price.toFixed(2))
             }));
-            const channel = billCreateState.payChannel;
             const body = {
                 shopId: String(shopId),
-                payChannel: channel,
+                payChannel: billCreateState.payChannel,
                 remark: document.getElementById('billRemark').value.trim(),
                 idempotencyKey: billCreateState.idempotencyKey,
                 items
             };
-            if (channel === 'MEMBER') {
-                if (!billCreateState.member) { showToast('请选择会员', 'error'); return; }
-                body.memberId = String(billCreateState.member.id);
-            } else {
-                const cn = document.getElementById('billCustomerName').value.trim();
-                if (!cn) { showToast('请填写客户姓名', 'error'); return; }
-                body.customerName = cn;
-                const cp = document.getElementById('billCustomerPhone').value.trim();
-                if (cp) body.customerPhone = cp;
-            }
             const btn = document.getElementById('billSubmitBtn');
             btn.disabled = true; btn.textContent = '提交中...';
             try {

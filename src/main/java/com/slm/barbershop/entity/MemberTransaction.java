@@ -51,4 +51,10 @@ public class MemberTransaction extends BaseEntity {
     @TableField("idempotency_key")
     private String idempotencyKey;
 
+    /**
+     * 关联账单ID(消费时指向 bill.id,储值为 NULL)
+     */
+    @TableField("bill_id")
+    private Long billId;
+
 }
