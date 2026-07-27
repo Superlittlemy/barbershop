@@ -455,18 +455,22 @@
         .bill-filter-bar .input { height: 30px; padding: 0 10px; font-size: 12px; }
         .bill-filter-bar select.input { background: var(--surface); }
         .bill-list { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); overflow: hidden; }
-        .bill-list-header, .bill-list-row { display: grid; grid-template-columns: 150px 100px 1fr 110px 110px 110px 130px; align-items: center; gap: 10px; padding: 10px 14px; font-size: 13px; }
+        .bill-list-header, .bill-list-row { display: grid; grid-template-columns: 140px 90px 90px 130px 150px 110px 130px; align-items: center; gap: 10px; padding: 10px 14px; font-size: 13px; }
         .bill-list-header { background: var(--surface-alt); color: var(--text-tertiary); font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
         .bill-list-row { border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
         .bill-list-row:last-child { border-bottom: none; }
         .bill-list-row:hover { background: var(--surface-alt); }
         .bill-list-row.is-cancelled { opacity: 0.55; }
         .bill-list-row .bl-customer { color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .bill-list-row .bl-customer.is-member { color: var(--text-tertiary); }
         .bill-list-row .bl-channel { font-size: 11px; padding: 2px 8px; border-radius: 999px; display: inline-block; }
         .bill-list-row .bl-channel.MEMBER  { background: #ecfeff; color: #0e7490; }
         .bill-list-row .bl-channel.OFFLINE { background: #fef3c7; color: #92400e; }
         .bill-list-row .bl-channel.WECHAT  { background: #dcfce7; color: #166534; }
         .bill-list-row .bl-channel.ALIPAY  { background: #e0e7ff; color: #3730a3; }
+        .bill-list-row .bl-type { font-size: 10px; padding: 1px 6px; border-radius: 999px; display: inline-block; margin-left: 4px; }
+        .bill-list-row .bl-type.CONSUME { background: #fef3c7; color: #92400e; }
+        .bill-list-row .bl-type.STORE   { background: #ede9fe; color: #5b21b6; }
         .bill-list-row .bl-amount { text-align: right; font-weight: 500; font-variant-numeric: tabular-nums; }
         .bill-list-row .bl-time { color: var(--text-tertiary); font-size: 12px; }
         .bill-list-row .bl-status-cancelled { color: var(--error); font-size: 11px; padding: 1px 6px; border: 1px solid var(--error); border-radius: 4px; }
@@ -1200,7 +1204,7 @@
                 <div class="input-group">
                     <label class="input-label">支付方式 <span style="color:#ef4444;">*</span></label>
                     <div class="pay-channel-group" id="billPayChannelGroup">
-                        <label class="pay-channel-chip"><input type="radio" name="billPayChannel" value="OFFLINE" checked> 线下</label>
+                        <label class="pay-channel-chip"><input type="radio" name="billPayChannel" value="OFFLINE" checked> 现金</label>
                         <label class="pay-channel-chip"><input type="radio" name="billPayChannel" value="WECHAT"> 微信</label>
                         <label class="pay-channel-chip"><input type="radio" name="billPayChannel" value="ALIPAY"> 支付宝</label>
                     </div>
@@ -2390,7 +2394,10 @@
             const modal = document.getElementById('serviceItemPickerModal');
             modal.classList.add('active');
             // 每次打开都重新拉取,保证状态最新
-            pickerState.shopId = memberState.shopId;
+            // 优先级: 已设置好的 pickerState.shopId(账单场景) > memberState.shopId(消费场景)
+            if (!pickerState.shopId) {
+                pickerState.shopId = memberState.shopId;
+            }
             pickerState.loaded = false;
             await loadPickerData();
             renderPickerTabs();
@@ -3170,6 +3177,7 @@
             total: 0,
             hasMore: false,
             query: {
+                type: '',
                 payChannel: '',
                 memberId: null,
                 customerName: '',
@@ -3208,10 +3216,15 @@
                     <div class="bill-summary-card"><div class="bsc-label">散户消费</div><div class="bsc-amount" id="billWalkInAmount">¥0.00</div><div class="bsc-count" id="billWalkInCount">0 笔</div></div>
                 </div>
                 <div class="bill-filter-bar">
+                        <select class="input" id="billFilterType" style="width: auto;">
+                        <option value="">全部类型</option>
+                        <option value="CONSUME">消费</option>
+                        <option value="STORE">储值</option>
+                    </select>
                         <select class="input" id="billFilterChannel" style="width: auto;">
                         <option value="">全部支付方式</option>
                         <option value="MEMBER">会员划账</option>
-                        <option value="OFFLINE">线下</option>
+                        <option value="OFFLINE">现金</option>
                         <option value="WECHAT">微信</option>
                         <option value="ALIPAY">支付宝</option>
                     </select>
@@ -3225,8 +3238,8 @@
                 <div class="bill-list">
                     <div class="bill-list-header">
                         <div>客户</div>
+                        <div style="text-align:center;">类型</div>
                         <div>支付方式</div>
-                        <div>服务项目</div>
                         <div style="text-align:right;">金额</div>
                         <div>创建时间</div>
                         <div>状态</div>
@@ -3240,6 +3253,8 @@
         }
 
         function bindBillFilterEvents() {
+            const tp = document.getElementById('billFilterType');
+            if (tp) tp.value = billState.query.type || '';
             const ch = document.getElementById('billFilterChannel');
             if (ch) ch.value = billState.query.payChannel || '';
             const cn = document.getElementById('billFilterCustomerName');
@@ -3290,6 +3305,7 @@
             params.set('shopId', String(shopId));
             params.set('page', String(billState.page));
             params.set('size', String(billState.size));
+            if (q.type) params.set('type', q.type);
             if (q.payChannel) params.set('payChannel', q.payChannel);
             if (q.memberId) params.set('memberId', String(q.memberId));
             if (q.customerName) params.set('customerName', q.customerName);
@@ -3325,31 +3341,36 @@
                 return;
             }
             const html = billState.records.map(b => {
-                const customer = b.memberId
-                    ? `<span style="color:var(--text-tertiary);">会员 #${b.memberId}</span>`
-                    : escapeHtml(b.customerName || '散客');
-                const items = (b.items || []).map(it => `${escapeHtml(it.itemName)} × ${it.quantity}`).join('、') || '—';
-                const channelLabel = { MEMBER: '会员', OFFLINE: '线下', WECHAT: '微信', ALIPAY: '支付宝' }[b.payChannel] || b.payChannel;
+                // customer 纯字符串 + single-escapeHtml;颜色由 .is-member CSS class 控制
+                const customerText = b.memberId
+                    ? (b.customerName || ('会员 #' + b.memberId))
+                    : (b.customerName || '散客');
+                const customerSafe = escapeHtml(customerText);
+                const channelLabel = { MEMBER: '会员', OFFLINE: '现金', WECHAT: '微信', ALIPAY: '支付宝' }[b.payChannel] || b.payChannel;
+                const typeLabel = b.type === 'STORE' ? '<span class="bl-type STORE">储值</span>' : '<span class="bl-type CONSUME">消费</span>';
                 const cancelledTag = b.isCancelled === 1
                     ? '<span class="bl-status-cancelled">已作废</span>'
                     : '<span style="color:var(--text-tertiary);font-size:11px;">正常</span>';
+                // billId 用 HTML 实体 &quot; 包围(JSON.stringify 字面 "在属性值里会提前截断)
+                const billIdAttr = `&quot;${escapeHtml(String(b.id))}&quot;`;
+                // 作废按钮加 event.preventDefault(),避免行是 <a>/<button> 时被外层吞掉;
+                // 同时把行改为 <div>,整行不再触发详情跳转,只通过"查看"按钮进入详情
                 const cancelBtn = b.isCancelled === 1
                     ? ''
-                    : `<button class="btn btn-danger" onclick="event.stopPropagation();promptCancelBill(${b.id})">作废</button>`;
-                const itemsShort = items.length > 50 ? items.slice(0, 50) + '…' : items;
+                    : `<button type="button" class="btn btn-danger" onclick="event.stopPropagation();event.preventDefault();promptCancelBill(${billIdAttr})">作废</button>`;
                 return `
-                    <a class="bill-list-row ${b.isCancelled === 1 ? 'is-cancelled' : ''}" href="#bill/${b.id}" onclick="event.preventDefault();openBillDetail(${b.id})">
-                        <div class="bl-customer" title="${customer}">${customer}</div>
+                    <div class="bill-list-row ${b.isCancelled === 1 ? 'is-cancelled' : ''}">
+                        <div class="bl-customer${b.memberId ? ' is-member' : ''}" title="${customerSafe}">${customerSafe}</div>
+                        <div style="text-align:center;">${typeLabel}</div>
                         <div><span class="bl-channel ${b.payChannel}">${channelLabel}</span></div>
-                        <div class="bl-customer" title="${escapeHtml(items)}">${itemsShort}</div>
                         <div class="bl-amount">¥${(Number(b.totalAmount) || 0).toFixed(2)}</div>
                         <div class="bl-time">${escapeHtml(b.createdTime || '')}</div>
                         <div>${cancelledTag}</div>
                         <div class="bl-actions">
-                            <button class="btn" onclick="event.stopPropagation();event.preventDefault();openBillDetail(${b.id})">查看</button>
+                            <button type="button" class="btn" onclick="event.stopPropagation();event.preventDefault();openBillDetail(${billIdAttr})">查看</button>
                             ${cancelBtn}
                         </div>
-                    </a>`;
+                    </div>`;
             }).join('');
             body.innerHTML = html;
         }
@@ -3375,6 +3396,7 @@
         }
 
         function applyBillFilter() {
+            billState.query.type = document.getElementById('billFilterType').value || '';
             billState.query.payChannel = document.getElementById('billFilterChannel').value || '';
             billState.query.customerName = document.getElementById('billFilterCustomerName').value.trim();
             billState.query.customerPhone = document.getElementById('billFilterCustomerPhone').value.trim();
@@ -3386,6 +3408,7 @@
 
         function resetBillFilter() {
             billState.query = {
+                type: '',
                 payChannel: '',
                 memberId: null,
                 customerName: '',
@@ -3628,10 +3651,13 @@
         function renderBillDetail() {
             const b = currentDetailBill;
             if (!b) return;
-            const channelLabel = { MEMBER: '会员划账', OFFLINE: '线下', WECHAT: '微信', ALIPAY: '支付宝' }[b.payChannel] || b.payChannel;
+            const channelLabel = { MEMBER: '会员划账', OFFLINE: '现金', WECHAT: '微信', ALIPAY: '支付宝' }[b.payChannel] || b.payChannel;
+            const typeLabel = b.type === 'STORE' ? '储值' : '消费';
+            // 会员账单优先用 customerName 快照(姓名),非会员才用 customerName/customerPhone 字段
             const customer = b.memberId
-                ? `会员 #${b.memberId}`
+                ? (b.customerName ? `会员 ${b.customerName}` : `会员 #${b.memberId}`)
                 : (b.customerName || '散客') + (b.customerPhone ? ' / ' + b.customerPhone : '');
+            const customerSafe = escapeHtml(customer);
             const itemsHtml = (b.items || []).map(it => `
                 <div class="bill-detail-item-row">
                     <div class="bdi-name" title="${escapeHtml(it.itemName)}">${escapeHtml(it.itemName)}</div>
@@ -3648,7 +3674,8 @@
             document.getElementById('billDetailBody').innerHTML = `
                 <div class="bill-detail-info">
                     <div class="bdi-row"><span class="bdi-label">账单ID</span><span class="bdi-value">#${b.id}</span></div>
-                    <div class="bdi-row"><span class="bdi-label">客户</span><span class="bdi-value">${escapeHtml(customer)}</span></div>
+                    <div class="bdi-row"><span class="bdi-label">类型</span><span class="bdi-value">${escapeHtml(typeLabel)}</span></div>
+                    <div class="bdi-row"><span class="bdi-label">客户</span><span class="bdi-value">${customerSafe}</span></div>
                     <div class="bdi-row"><span class="bdi-label">支付方式</span><span class="bdi-value">${escapeHtml(channelLabel)}</span></div>
                     <div class="bdi-row"><span class="bdi-label">金额</span><span class="bdi-value" style="font-size:18px;">¥${(Number(b.totalAmount) || 0).toFixed(2)}</span></div>
                     <div class="bdi-row"><span class="bdi-label">备注</span><span class="bdi-value">${escapeHtml(b.remark || '—')}</span></div>

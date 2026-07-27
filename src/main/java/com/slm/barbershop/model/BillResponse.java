@@ -32,6 +32,9 @@ public class BillResponse {
     @Schema(description = "支付方式")
     private String payChannel;
 
+    @Schema(description = "账单类型:CONSUME-消费 STORE-储值")
+    private String type;
+
     @Schema(description = "账单总金额")
     private BigDecimal totalAmount;
 

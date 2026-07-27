@@ -15,6 +15,9 @@ public class BillQuery {
     @Schema(description = "支付方式过滤")
     private String payChannel;
 
+    @Schema(description = "账单类型过滤:CONSUME-消费 / STORE-储值")
+    private String type;
+
     @Schema(description = "会员ID过滤")
     private Long memberId;
 

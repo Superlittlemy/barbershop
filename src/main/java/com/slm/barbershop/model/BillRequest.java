@@ -11,6 +11,9 @@ import java.util.List;
 
 /**
  * 账单创建请求
+ * <p>
+ * 非会员场景不再要求客户姓名/手机号(由"客户"列展示会员姓名快照即可),
+ * 故创建入参不再包含 customerName / customerPhone 字段。
  */
 @Data
 @Schema(description = "账单创建请求")
@@ -23,17 +26,12 @@ public class BillRequest {
     @Schema(description = "会员ID(支付方式为 MEMBER 时必填)")
     private Long memberId;
 
-    @Size(max = 50)
-    @Schema(description = "客户姓名(非会员时必填)")
-    private String customerName;
-
-    @Size(max = 20)
-    @Schema(description = "客户手机号(非会员可选)")
-    private String customerPhone;
-
     @NotBlank
     @Schema(description = "支付方式:MEMBER / OFFLINE / WECHAT / ALIPAY", requiredMode = Schema.RequiredMode.REQUIRED)
     private String payChannel;
+
+    @Schema(description = "账单类型:CONSUME(消费,默认) / STORE(储值)")
+    private String type;
 
     @Schema(description = "备注")
     private String remark;

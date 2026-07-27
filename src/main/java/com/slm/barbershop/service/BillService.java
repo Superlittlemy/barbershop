@@ -10,6 +10,7 @@ import com.slm.barbershop.entity.BillItem;
 import com.slm.barbershop.entity.Member;
 import com.slm.barbershop.entity.ServiceItem;
 import com.slm.barbershop.enums.BillPayChannel;
+import com.slm.barbershop.enums.BillType;
 import com.slm.barbershop.exception.BizException;
 import com.slm.barbershop.lock.DistributedLock;
 import com.slm.barbershop.mapper.BillItemMapper;
@@ -99,22 +100,17 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
             throw new BizException(HttpStatus.BAD_REQUEST, "支付方式无效:" + request.getPayChannel());
         }
 
+        // 账单类型(默认 CONSUME;会员储值自动同步时由 MemberTransactionService 显式传 STORE)
+        BillType billType = BillType.of(request.getType());
+        if (billType == null) {
+            billType = BillType.CONSUME;
+        }
+
         // 客户信息
-        String customerName = request.getCustomerName();
-        String customerPhone = request.getCustomerPhone();
+        // 非会员场景不再要求客户姓名/手机号,Bill.customerName/phone 仅作为会员姓名快照使用(由 MemberTransactionService 在写入账单时回填)
         if (channel == BillPayChannel.MEMBER) {
             if (request.getMemberId() == null) {
                 throw new BizException(HttpStatus.BAD_REQUEST, "会员划账时 memberId 必填");
-            }
-        } else {
-            if (!StringUtils.hasText(customerName)) {
-                throw new BizException(HttpStatus.BAD_REQUEST, "非会员场景客户姓名必填");
-            }
-            if (customerName.length() > 50) {
-                throw new BizException(HttpStatus.BAD_REQUEST, "客户姓名长度不能超过50");
-            }
-            if (StringUtils.hasText(customerPhone) && customerPhone.length() > 20) {
-                throw new BizException(HttpStatus.BAD_REQUEST, "客户手机号长度不能超过20");
             }
         }
 
@@ -131,7 +127,7 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
         }
 
         // 校验项目 + 累计金额
-        if (request.getItems() == null || request.getItems().isEmpty()) {
+        if (billType == BillType.CONSUME && (request.getItems() == null || request.getItems().isEmpty())) {
             throw new BizException(HttpStatus.BAD_REQUEST, "账单必须包含至少一个服务项目");
         }
         Set<Long> itemIds = request.getItems().stream()
@@ -199,9 +195,11 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
         Bill bill = new Bill();
         bill.setShopId(request.getShopId());
         bill.setMemberId(request.getMemberId());
-        bill.setCustomerName(customerName);
-        bill.setCustomerPhone(customerPhone);
+        // 客户姓名/手机号不再由前端传入;会员路径由 MemberTransactionService 在写入账单时回填快照
+        bill.setCustomerName(null);
+        bill.setCustomerPhone(null);
         bill.setPayChannel(channel.name());
+        bill.setType(billType.name());
         bill.setTotalAmount(total);
         bill.setRemark(request.getRemark());
         bill.setIsCancelled(0);
@@ -213,10 +211,12 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
             throw new BizException(HttpStatus.CONFLICT, "重复提交");
         }
 
-        // 写明细
-        for (BillItem bi : persistItems) {
-            bi.setBillId(bill.getId());
-            billItemMapper.insert(bi);
+        // 写明细(只对 CONSUME 写 bill_item;STORE 不带明细)
+        if (billType == BillType.CONSUME) {
+            for (BillItem bi : persistItems) {
+                bi.setBillId(bill.getId());
+                billItemMapper.insert(bi);
+            }
         }
 
         return billConverter.toResponseWithItems(bill, toItemResponseList(persistItems));
@@ -247,7 +247,10 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
         }
 
         BillPayChannel channel = BillPayChannel.of(bill.getPayChannel());
-        if (channel == BillPayChannel.MEMBER) {
+        BillType billType = BillType.of(bill.getType());
+        // STORE 类型账单(会员储值)默认 pay_channel=OFFLINE,作废时需要反向回退(扣减)会员余额
+        boolean isMemberLinked = billType == BillType.STORE || channel == BillPayChannel.MEMBER;
+        if (isMemberLinked) {
             if (bill.getMemberId() == null) {
                 throw new BizException(HttpStatus.BAD_REQUEST, "账单无关联会员,无法回退余额");
             }
@@ -255,7 +258,18 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
             if (member == null) {
                 throw new BizException(HttpStatus.NOT_FOUND, "会员不存在");
             }
-            member.setBalance(member.getBalance().add(bill.getTotalAmount()));
+            BigDecimal balanceAfter;
+            if (billType == BillType.STORE) {
+                // 储值作废:把之前增加的余额扣回去
+                balanceAfter = member.getBalance().subtract(bill.getTotalAmount());
+                if (balanceAfter.compareTo(BigDecimal.ZERO) < 0) {
+                    throw new BizException(HttpStatus.BAD_REQUEST, "作废后会员余额不能为负");
+                }
+            } else {
+                // 消费作废(MEMBER 划账):把之前扣的余额还回去
+                balanceAfter = member.getBalance().add(bill.getTotalAmount());
+            }
+            member.setBalance(balanceAfter);
             int rows = memberMapper.updateById(member);
             if (rows == 0) {
                 throw new OptimisticLockingFailureException(
@@ -293,6 +307,9 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
         if (StringUtils.hasText(query.getPayChannel())) {
             wrapper.eq(Bill::getPayChannel, query.getPayChannel());
         }
+        if (StringUtils.hasText(query.getType())) {
+            wrapper.eq(Bill::getType, query.getType());
+        }
         if (query.getMemberId() != null) {
             wrapper.eq(Bill::getMemberId, query.getMemberId());
         }
@@ -325,6 +342,8 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
         List<BillSummaryRowVO> rows = billMapper.summarizeByShopId(shopId, todayStart, monthStart);
 
         BillSummaryVO vo = new BillSummaryVO();
+        // monthAmount = 本月 1 号 ~ 至今(含今天) 的累计金额
+        // todayAmount 是 monthAmount 的子集,前端展示并列卡片
         Map<String, BigDecimal> byChannelAmount = new LinkedHashMap<>();
         Map<String, Long> byChannelCount = new LinkedHashMap<>();
         // 初始化所有渠道为 0,保证前端展示稳定
@@ -338,18 +357,17 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
         long monthCount = 0L;
         for (BillSummaryRowVO row : rows) {
             String channel = row.getPayChannel();
-            byChannelAmount.put(channel,
-                    byChannelAmount.getOrDefault(channel, BigDecimal.ZERO)
-                            .add(row.getAmount() == null ? BigDecimal.ZERO : row.getAmount()));
-            byChannelCount.put(channel,
-                    byChannelCount.getOrDefault(channel, 0L) + (row.getCount() == null ? 0L : row.getCount()));
-            if ("TODAY".equals(row.getBucket())) {
-                todayAmount = todayAmount.add(row.getAmount() == null ? BigDecimal.ZERO : row.getAmount());
-                todayCount += row.getCount() == null ? 0L : row.getCount();
-            } else if ("MONTH".equals(row.getBucket())) {
-                monthAmount = monthAmount.add(row.getAmount() == null ? BigDecimal.ZERO : row.getAmount());
-                monthCount += row.getCount() == null ? 0L : row.getCount();
-            }
+            BigDecimal todayAmt = row.getTodayAmount() == null ? BigDecimal.ZERO : row.getTodayAmount();
+            long todayCnt = row.getTodayCount() == null ? 0L : row.getTodayCount();
+            BigDecimal monthAmt = row.getMonthAmount() == null ? BigDecimal.ZERO : row.getMonthAmount();
+            long monthCnt = row.getMonthCount() == null ? 0L : row.getMonthCount();
+            // 各支付方式卡片:本月累计口径(与 monthAmount 一致)
+            byChannelAmount.put(channel, monthAmt);
+            byChannelCount.put(channel, monthCnt);
+            todayAmount = todayAmount.add(todayAmt);
+            todayCount += todayCnt;
+            monthAmount = monthAmount.add(monthAmt);
+            monthCount += monthCnt;
         }
         vo.setTodayAmount(todayAmount);
         vo.setTodayCount(todayCount);
@@ -460,6 +478,10 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
         List<BillResponse> responses = new ArrayList<>(bills.size());
         for (Bill b : bills) {
             BillResponse r = billConverter.toResponse(b);
+            // 兜底: 显式把 type 写回,防止 converter 漏掉(已显式 @Mapping,但保险起见再写一次)
+            if (r.getType() == null && b.getType() != null) {
+                r.setType(b.getType());
+            }
             r.setItems(itemsByBillId.getOrDefault(b.getId(), Collections.emptyList()));
             responses.add(r);
         }

@@ -6,21 +6,28 @@ import java.math.BigDecimal;
 
 /**
  * BillMapper.summarizeByShopId 内部行结果:
- * 一个 payChannel 可能产出 TODAY / MONTH 两行(分别聚合)
+ * 一个 pay_channel 一行,同时给出 today / month 两个口径的金额与笔数。
+ * <ul>
+ * <li>todayAmount / todayCount: 今天 00:00:00 之后</li>
+ * <li>monthAmount / monthCount: 本月 1 号 00:00:00 之后(含今天),即"本月累计"</li>
+ * </ul>
  */
 @Data
 public class BillSummaryRowVO {
 
-    /** 桶:TODAY / MONTH;null 表示全期(整体 byChannel) */
-    private String bucket;
-
     /** 支付方式 */
     private String payChannel;
 
-    /** 该桶该渠道的金额 */
-    private BigDecimal amount;
+    /** 该渠道今天的金额 */
+    private BigDecimal todayAmount;
 
-    /** 该桶该渠道的笔数 */
-    private Long count;
+    /** 该渠道今天的笔数 */
+    private Long todayCount;
+
+    /** 该渠道本月累计金额(月初 00:00:00 至今) */
+    private BigDecimal monthAmount;
+
+    /** 该渠道本月累计笔数(月初 00:00:00 至今) */
+    private Long monthCount;
 
 }

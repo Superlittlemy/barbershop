@@ -12,6 +12,7 @@ import com.slm.barbershop.entity.MemberTransaction;
 import com.slm.barbershop.entity.MemberTransactionItem;
 import com.slm.barbershop.entity.ServiceItem;
 import com.slm.barbershop.enums.BillPayChannel;
+import com.slm.barbershop.enums.BillType;
 import com.slm.barbershop.enums.TransactionType;
 import com.slm.barbershop.exception.BizException;
 import com.slm.barbershop.lock.DistributedLock;
@@ -218,13 +219,19 @@ public class MemberTransactionService extends ServiceImpl<MemberTransactionMappe
             throw new BizException(HttpStatus.CONFLICT, "重复提交");
         }
 
-        // 4) 消费场景:同步写 bill(MEMBER)+ bill_item,并把 bill_id 回填到流水
+        // 4) 同步写 bill:
+        //    - 消费: bill(type=CONSUME, pay_channel=MEMBER)+ bill_item
+        //    - 储值: bill(type=STORE, pay_channel=OFFLINE),不带 bill_item
+        //    两者都把 bill_id 回填到 member_transaction,关联账单与流水
         if (type == TransactionType.CONSUME && !persistBillItems.isEmpty()) {
             Bill bill = new Bill();
             bill.setShopId(member.getShopId());
             bill.setMemberId(memberId);
-            // 会员消费场景:customer_name/phone 留空
+            // 会员姓名/手机号快照(便于账单列表"客户"列展示,即使会员改名也不影响历史账单)
+            bill.setCustomerName(member.getName());
+            bill.setCustomerPhone(member.getPhone());
             bill.setPayChannel(BillPayChannel.MEMBER.name());
+            bill.setType(BillType.CONSUME.name());
             bill.setTotalAmount(finalAmount);
             bill.setRemark(remark);
             bill.setIsCancelled(0);
@@ -239,6 +246,29 @@ public class MemberTransactionService extends ServiceImpl<MemberTransactionMappe
                 bi.setBillId(bill.getId());
                 billItemMapper.insert(bi);
             }
+            transaction.setBillId(bill.getId());
+            transactionMapper.updateById(transaction);
+        } else if (type == TransactionType.STORE) {
+            Bill bill = new Bill();
+            bill.setShopId(member.getShopId());
+            bill.setMemberId(memberId);
+            // 储值账单也用会员姓名/手机号快照,便于列表展示
+            bill.setCustomerName(member.getName());
+            bill.setCustomerPhone(member.getPhone());
+            // 储值默认 OFFLINE(用户通过店铺后台手工登记的储值,默认线下收款)
+            bill.setPayChannel(BillPayChannel.OFFLINE.name());
+            bill.setType(BillType.STORE.name());
+            bill.setTotalAmount(finalAmount);
+            bill.setRemark(remark);
+            bill.setIsCancelled(0);
+            // 复用同一幂等键
+            bill.setIdempotencyKey(idempotencyKey);
+            try {
+                billMapper.insert(bill);
+            } catch (DuplicateKeyException e) {
+                throw new BizException(HttpStatus.CONFLICT, "重复提交");
+            }
+            // 储值不带 bill_item(没有服务项目)
             transaction.setBillId(bill.getId());
             transactionMapper.updateById(transaction);
         }

@@ -11,7 +11,7 @@ import lombok.Getter;
 public enum BillPayChannel {
 
     MEMBER("会员划账"),
-    OFFLINE("线下"),
+    OFFLINE("现金"),
     WECHAT("微信"),
     ALIPAY("支付宝");
 

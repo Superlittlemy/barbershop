@@ -48,6 +48,12 @@ public class Bill extends BaseEntity {
     private String payChannel;
 
     /**
+     * 账单类型:CONSUME-消费 STORE-储值
+     */
+    @TableField("type")
+    private String type;
+
+    /**
      * 账单总金额
      */
     @TableField("total_amount")

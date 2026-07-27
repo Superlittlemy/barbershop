@@ -4,33 +4,34 @@
 <mapper namespace="com.slm.barbershop.mapper.BillMapper">
 
     <!-- ========== summarizeByShopId ========== -->
+    <!--
+        一个 pay_channel 一行,同时给出 today / month 两个口径(本月累计=含今天)。
+        monthAmount 含 todayAmount,所以前端展示:
+          - 今日金额 = today_amount 合计
+          - 本月金额 = month_amount 合计  (= 本月累计,含今天)
+          - 各支付方式卡片 = month_amount 合计
+    -->
     <resultMap id="BillSummaryRowVO" type="com.slm.barbershop.model.BillSummaryRowVO">
-        <result property="bucket" column="bucket" />
         <result property="payChannel" column="pay_channel" />
-        <result property="amount" column="amount" />
-        <result property="count" column="cnt" />
+        <result property="todayAmount" column="today_amount" />
+        <result property="todayCount" column="today_count" />
+        <result property="monthAmount" column="month_amount" />
+        <result property="monthCount" column="month_count" />
     </resultMap>
 
     <select id="summarizeByShopId" resultMap="BillSummaryRowVO">
         SELECT
-            CASE
-                WHEN b.created_time &gt;= #{todayStart} THEN 'TODAY'
-                WHEN b.created_time &gt;= #{monthStart} THEN 'MONTH'
-            END AS bucket,
             b.pay_channel,
-            COALESCE(SUM(b.total_amount), 0) AS amount,
-            COUNT(*) AS cnt
+            COALESCE(SUM(CASE WHEN b.created_time &gt;= #{todayStart} THEN b.total_amount ELSE 0 END), 0) AS today_amount,
+            SUM(CASE WHEN b.created_time &gt;= #{todayStart} THEN 1 ELSE 0 END) AS today_count,
+            COALESCE(SUM(CASE WHEN b.created_time &gt;= #{monthStart} THEN b.total_amount ELSE 0 END), 0) AS month_amount,
+            SUM(CASE WHEN b.created_time &gt;= #{monthStart} THEN 1 ELSE 0 END) AS month_count
         FROM bill b
         WHERE b.shop_id = #{shopId}
           AND b.is_cancelled = 0
           AND b.is_deleted = 0
           AND b.created_time &gt;= #{monthStart}
-        GROUP BY
-            CASE
-                WHEN b.created_time &gt;= #{todayStart} THEN 'TODAY'
-                WHEN b.created_time &gt;= #{monthStart} THEN 'MONTH'
-            END,
-            b.pay_channel
+        GROUP BY b.pay_channel
     </select>
 
     <!-- ========== listRecentByShopId ========== -->
