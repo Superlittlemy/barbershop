@@ -9,6 +9,18 @@
         <result property="totalBalance" column="total_balance" />
     </resultMap>
 
+    <resultMap id="ShopStatsVO" type="com.slm.barbershop.model.ShopStatsVO">
+        <result property="id"            column="id" />
+        <result property="name"          column="name" />
+        <result property="logo"          column="logo" />
+        <result property="address"       column="address" />
+        <result property="phone"         column="phone" />
+        <result property="businessHours" column="business_hours" />
+        <result property="createdTime"   column="created_time" />
+        <result property="memberCount"   column="member_count" />
+        <result property="totalBalance"  column="total_balance" />
+    </resultMap>
+
     <select id="selectOverviewBase" resultMap="ShopOverviewStatsVO">
         SELECT COUNT(DISTINCT s.id)        AS shop_count,
                COUNT(m.id)                 AS member_count,
@@ -28,6 +40,35 @@
           AND b.is_cancelled = 0
           AND b.is_deleted = 0
           AND b.created_time >= #{since}
+    </select>
+
+    <select id="countShopStats" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM shop s
+        WHERE s.user_id = #{userId}
+          AND s.is_deleted = 0
+    </select>
+
+    <select id="selectShopStatsPage" resultMap="ShopStatsVO">
+        SELECT
+          s.id,
+          s.name,
+          s.logo,
+          s.address,
+          s.phone,
+          s.business_hours,
+          s.created_time,
+          COUNT(m.id)                  AS member_count,
+          COALESCE(SUM(m.balance), 0)  AS total_balance
+        FROM shop s
+        LEFT JOIN member m
+               ON m.shop_id = s.id
+              AND m.is_deleted = 0
+        WHERE s.user_id = #{userId}
+          AND s.is_deleted = 0
+        GROUP BY s.id
+        ORDER BY s.created_time DESC, s.id DESC
+        LIMIT #{size} OFFSET #{offset}
     </select>
 
 </mapper>

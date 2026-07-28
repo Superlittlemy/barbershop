@@ -8,6 +8,7 @@ import com.slm.barbershop.model.ApiResponse;
 import com.slm.barbershop.model.ShopOverviewStatsVO;
 import com.slm.barbershop.model.ShopRequest;
 import com.slm.barbershop.model.ShopResponse;
+import com.slm.barbershop.model.ShopStatsVO;
 import com.slm.barbershop.model.ShopTransactionRecentVO;
 import com.slm.barbershop.service.MemberTransactionService;
 import com.slm.barbershop.service.ShopService;
@@ -100,6 +101,13 @@ public class ShopController {
     public ApiResponse<ShopOverviewStatsVO> statsOverview() {
         Long userId = UserContext.getUser().getId();
         return ApiResponse.ok(shopService.overviewStats(userId));
+    }
+
+    @Operation(summary = "获取店铺列表（含每店会员聚合：memberCount、totalBalance）")
+    @GetMapping("/stats/list")
+    public ApiResponse<IPage<ShopStatsVO>> statsList(IPage<ShopStatsVO> page) {
+        Long userId = UserContext.getUser().getId();
+        return ApiResponse.ok(shopService.statsPage(page, userId));
     }
 
 }
