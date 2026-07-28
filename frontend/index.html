@@ -426,6 +426,73 @@
         .ci-selected-row .cs-remove:hover { color: var(--error); }
         .input-error { border-color: var(--error) !important; }
 
+        /* Bill-specific */
+        .pay-channel-group { display: flex; gap: 8px; flex-wrap: wrap; }
+        .pay-channel-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--border); border-radius: 999px; cursor: pointer; font-size: 12px; color: var(--text-secondary); background: var(--surface); }
+        .pay-channel-chip input { margin: 0; cursor: pointer; }
+        .pay-channel-chip:has(input:checked) { background: var(--accent-light); color: var(--accent-hover); border-color: var(--accent); font-weight: 500; }
+        .member-picker-row { display: flex; gap: 8px; }
+        .member-picker-row .input { flex: 1; }
+        .member-picker-result { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; max-height: 160px; overflow-y: auto; }
+        .member-picker-row-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); font-size: 13px; cursor: pointer; }
+        .member-picker-row-item:hover { border-color: var(--accent); background: var(--accent-light); }
+        .member-picker-row-item .mpr-balance { color: var(--text-tertiary); font-variant-numeric: tabular-nums; font-size: 12px; }
+        .member-picker-selected { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; margin-top: 6px; border: 1px solid var(--accent); border-radius: 6px; background: var(--accent-light); font-size: 13px; }
+        .member-picker-selected .mps-name { color: var(--accent-hover); font-weight: 500; }
+        .member-picker-selected .mps-balance { color: var(--text-tertiary); font-variant-numeric: tabular-nums; font-size: 12px; }
+        .member-picker-selected .mps-clear { border: none; background: transparent; color: var(--text-tertiary); cursor: pointer; font-size: 16px; padding: 0; line-height: 1; }
+        .member-picker-selected .mps-clear:hover { color: var(--error); }
+        .bill-total-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; margin-top: 12px; background: var(--surface-alt); border-radius: 8px; }
+        .bill-total-label { font-size: 13px; color: var(--text-secondary); }
+        .bill-total-amount { font-size: 18px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+
+        .bill-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+        .bill-summary-card { padding: 14px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+        .bill-summary-card .bsc-label { font-size: 12px; color: var(--text-tertiary); margin-bottom: 4px; }
+        .bill-summary-card .bsc-amount { font-size: 18px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+        .bill-summary-card .bsc-count { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; font-variant-numeric: tabular-nums; }
+        .bill-filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; justify-content: flex-start; }
+        .bill-filter-bar .input { height: 30px; padding: 0 10px; font-size: 12px; }
+        .bill-filter-bar select.input { background: var(--surface); }
+        .bill-list { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); overflow: hidden; }
+        .bill-list-header, .bill-list-row { display: grid; grid-template-columns: 140px 90px 90px 130px 150px 110px 130px; align-items: center; gap: 10px; padding: 10px 14px; font-size: 13px; }
+        .bill-list-header { background: var(--surface-alt); color: var(--text-tertiary); font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+        .bill-list-row { border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
+        .bill-list-row:last-child { border-bottom: none; }
+        .bill-list-row:hover { background: var(--surface-alt); }
+        .bill-list-row.is-cancelled { opacity: 0.55; }
+        .bill-list-row .bl-customer { color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .bill-list-row .bl-customer.is-member { color: var(--text-tertiary); }
+        .bill-list-row .bl-channel { font-size: 11px; padding: 2px 8px; border-radius: 999px; display: inline-block; }
+        .bill-list-row .bl-channel.MEMBER  { background: #ecfeff; color: #0e7490; }
+        .bill-list-row .bl-channel.OFFLINE { background: #fef3c7; color: #92400e; }
+        .bill-list-row .bl-channel.WECHAT  { background: #dcfce7; color: #166534; }
+        .bill-list-row .bl-channel.ALIPAY  { background: #e0e7ff; color: #3730a3; }
+        .bill-list-row .bl-type { font-size: 10px; padding: 1px 6px; border-radius: 999px; display: inline-block; margin-left: 4px; }
+        .bill-list-row .bl-type.CONSUME { background: #fef3c7; color: #92400e; }
+        .bill-list-row .bl-type.STORE   { background: #ede9fe; color: #5b21b6; }
+        .bill-list-row .bl-amount { text-align: right; font-weight: 500; font-variant-numeric: tabular-nums; }
+        .bill-list-row .bl-time { color: var(--text-tertiary); font-size: 12px; }
+        .bill-list-row .bl-status-cancelled { color: var(--error); font-size: 11px; padding: 1px 6px; border: 1px solid var(--error); border-radius: 4px; }
+        .bill-list-row .bl-actions { display: flex; gap: 4px; justify-content: flex-end; }
+        .bill-list-row .bl-actions .btn { padding: 3px 8px; font-size: 11px; }
+        .bill-list-empty { padding: 40px; text-align: center; color: var(--text-tertiary); font-size: 13px; }
+        .bill-detail-info { display: flex; flex-direction: column; gap: 8px; padding: 14px 0; }
+        .bill-detail-info .bdi-row { display: flex; justify-content: space-between; font-size: 13px; }
+        .bill-detail-info .bdi-row .bdi-label { color: var(--text-tertiary); }
+        .bill-detail-info .bdi-row .bdi-value { color: var(--text); font-weight: 500; font-variant-numeric: tabular-nums; }
+        .bill-detail-items { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px; }
+        .bill-detail-items-title { font-size: 12px; color: var(--text-tertiary); margin-bottom: 6px; }
+        .bill-detail-item-row { display: grid; grid-template-columns: 1fr 80px 80px 90px; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+        .bill-detail-item-row:last-child { border-bottom: none; }
+        .bill-detail-item-row .bdi-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .bill-detail-item-row .bdi-qty { text-align: center; font-variant-numeric: tabular-nums; }
+        .bill-detail-item-row .bdi-price { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-tertiary); }
+        .bill-detail-item-row .bdi-subtotal { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
+        .bill-pagination { display: flex; align-items: center; justify-content: flex-end; gap: 6px; padding: 10px 0; }
+        .bill-pagination .btn { padding: 4px 10px; font-size: 12px; }
+        .bill-pagination .bp-info { font-size: 12px; color: var(--text-tertiary); margin-right: 8px; }
+
         /* Add service item button (centered, dark, padded) */
         .add-service-bar { display: flex; justify-content: center; padding: 14px 0 6px; }
         .btn-add-service { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 200px; height: 36px; padding: 0 24px; background: var(--text); color: var(--text-inverse); border: 1px solid var(--text); border-radius: 6px; font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
@@ -585,6 +652,7 @@
                     <a class="sub-nav-item" data-tab="info" href="#shop/PLACEHOLDER">店铺信息</a>
                     <a class="sub-nav-item" data-tab="members" href="#shop/PLACEHOLDER/members">会员管理</a>
                     <a class="sub-nav-item" data-tab="items" href="#shop/PLACEHOLDER/items">服务项目</a>
+                    <a class="sub-nav-item" data-tab="bills" href="#shop/PLACEHOLDER/bills">账单</a>
                 </div>
                 <div class="shop-detail-banner" id="shopDetailBanner"></div>
                 <div class="kpi-grid">
@@ -616,6 +684,7 @@
                     <a class="sub-nav-item" data-tab="info" href="#shop/PLACEHOLDER">店铺信息</a>
                     <a class="sub-nav-item" data-tab="members" href="#shop/PLACEHOLDER/members">会员管理</a>
                     <a class="sub-nav-item" data-tab="items" href="#shop/PLACEHOLDER/items">服务项目</a>
+                    <a class="sub-nav-item" data-tab="bills" href="#shop/PLACEHOLDER/bills">账单</a>
                 </div>
                 <div id="shopMembersContent">
                     <!-- rendered by renderMembersView() -->
@@ -627,6 +696,7 @@
                     <a class="sub-nav-item" data-tab="info" href="#shop/PLACEHOLDER">店铺信息</a>
                     <a class="sub-nav-item" data-tab="members" href="#shop/PLACEHOLDER/members">会员管理</a>
                     <a class="sub-nav-item" data-tab="items" href="#shop/PLACEHOLDER/items">服务项目</a>
+                    <a class="sub-nav-item" data-tab="bills" href="#shop/PLACEHOLDER/bills">账单</a>
                 </div>
                 <div class="items-toolbar">
                     <div class="items-toolbar-left">
@@ -649,6 +719,18 @@
                     <div class="service-item-list" id="shopServiceItemList">
                         <div class="consume-item-empty">加载中...</div>
                     </div>
+                </div>
+            </div>
+
+            <div data-view-pane="shop-bills" hidden class="fade-in">
+                <div class="sub-nav" id="shopBillsTabs">
+                    <a class="sub-nav-item" data-tab="info" href="#shop/PLACEHOLDER">店铺信息</a>
+                    <a class="sub-nav-item" data-tab="members" href="#shop/PLACEHOLDER/members">会员管理</a>
+                    <a class="sub-nav-item" data-tab="items" href="#shop/PLACEHOLDER/items">服务项目</a>
+                    <a class="sub-nav-item" data-tab="bills" href="#shop/PLACEHOLDER/bills">账单</a>
+                </div>
+                <div id="shopBillsContent">
+                    <!-- rendered by renderBillsView() -->
                 </div>
             </div>
         </main>
@@ -1084,8 +1166,9 @@
         </div>
     </div>
 
-    <!-- Service Item Picker Modal (consume flow) -->
-    <div class="modal-overlay" id="serviceItemPickerModal">
+    <!-- Service Item Picker Modal (consume flow + bill create flow) -->
+    <!-- z-index 提升到 210,确保在 billCreateModal(200)之上,避免被账单弹窗遮住 -->
+    <div class="modal-overlay" id="serviceItemPickerModal" style="z-index: 210;">
         <div class="modal modal-wide">
             <div class="modal-header">
                 <div class="modal-title">添加服务项目</div>
@@ -1108,6 +1191,83 @@
         </div>
     </div>
 
+    <!-- Bill Create Modal -->
+    <div class="modal-overlay" id="billCreateModal">
+        <div class="modal modal-wide">
+            <div class="modal-header">
+                <div class="modal-title">新建账单</div>
+                <button class="modal-close" onclick="closeBillCreateModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label class="input-label">支付方式 <span style="color:#ef4444;">*</span></label>
+                    <div class="pay-channel-group" id="billPayChannelGroup">
+                        <label class="pay-channel-chip"><input type="radio" name="billPayChannel" value="OFFLINE" checked> 现金</label>
+                        <label class="pay-channel-chip"><input type="radio" name="billPayChannel" value="WECHAT"> 微信</label>
+                        <label class="pay-channel-chip"><input type="radio" name="billPayChannel" value="ALIPAY"> 支付宝</label>
+                    </div>
+                </div>
+                <div id="billMemberPickerRow" class="input-group" style="display:none;" hidden>
+                    <label class="input-label">会员 <span style="color:#ef4444;">*</span></label>
+                    <div class="member-picker-row">
+                        <input type="text" id="billMemberKeyword" class="input" placeholder="按手机号或姓名搜索" autocomplete="off">
+                        <button type="button" class="btn" onclick="searchBillMember()">搜索</button>
+                    </div>
+                    <div id="billMemberResult" class="member-picker-result"></div>
+                    <div id="billMemberSelected" class="member-picker-selected" style="display:none;"></div>
+                </div>
+                <div id="billCustomerRow" hidden></div>
+                <div class="input-group">
+                    <div class="input-label-row">
+                        <label class="input-label">服务项目 <span style="color:#ef4444;">*</span></label>
+                        <button type="button" class="btn btn-sm" onclick="openServiceItemPickerForBill()">
+                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            添加项目
+                        </button>
+                    </div>
+                    <div id="billSelectedItems" class="consume-selected-list">
+                        <div class="consume-selected-empty">
+                            <div>暂无服务项目，点击上方按钮添加</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">备注</label>
+                    <input type="text" id="billRemark" class="input" maxlength="255" placeholder="可选">
+                </div>
+                <div class="bill-total-bar">
+                    <span class="bill-total-label">合计</span>
+                    <span class="bill-total-amount" id="billTotalAmount">¥0.00</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" onclick="closeBillCreateModal()">取消</button>
+                <button type="button" class="btn btn-primary" id="billSubmitBtn" onclick="submitBill()">提交账单</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bill Detail Modal -->
+    <div class="modal-overlay" id="billDetailModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">账单详情</div>
+                <button class="modal-close" onclick="closeBillDetailModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body" id="billDetailBody">
+                <!-- 渲染详情 -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" onclick="closeBillDetailModal()">关闭</button>
+                <button type="button" class="btn btn-danger" id="billCancelBtn" onclick="cancelCurrentBill()" style="display:none;">作废账单</button>
+            </div>
+        </div>
+    </div>
+
     <div class="toast" id="toast"></div>
 
     <script>
@@ -1125,8 +1285,10 @@
                 // shop/{id}            → shop-detail
                 // shop/{id}/members    → shop-members
                 // shop/{id}/items      → shop-items
+                // shop/{id}/bills      → shop-bills
                 if (hash.split('/').length >= 3 && hash.endsWith('/members')) return 'shop-members';
                 if (hash.split('/').length >= 3 && hash.endsWith('/items'))   return 'shop-items';
+                if (hash.split('/').length >= 3 && hash.endsWith('/bills'))   return 'shop-bills';
                 return 'shop-detail';
             }
             if (hash === 'shops') return 'shops';
@@ -1140,23 +1302,24 @@
             return id ? decodeURIComponent(id) : null;
         }
         function switchView(view) {
-            if (!['overview', 'shops', 'shop-detail', 'shop-members', 'shop-items'].includes(view)) view = 'overview';
+            if (!['overview', 'shops', 'shop-detail', 'shop-members', 'shop-items', 'shop-bills'].includes(view)) view = 'overview';
             const queryIdx = location.hash.indexOf('?');
             const query = queryIdx >= 0 ? location.hash.slice(queryIdx) : '';
-            if (view !== 'shop-detail' && view !== 'shop-members' && view !== 'shop-items' && location.hash !== '#' + view + query) {
+            if (view !== 'shop-detail' && view !== 'shop-members' && view !== 'shop-items' && view !== 'shop-bills' && location.hash !== '#' + view + query) {
                 history.replaceState(null, '', '#' + view + query);
             }
             document.querySelectorAll('[data-view-pane]').forEach(p => p.hidden = p.dataset.viewPane !== view);
             document.querySelectorAll('[data-activity-pane]').forEach(p => p.hidden = p.dataset.activityPane !== view);
-            const navTarget = (view === 'shop-detail' || view === 'shop-members' || view === 'shop-items') ? 'shops' : view;
+            const navTarget = (view === 'shop-detail' || view === 'shop-members' || view === 'shop-items' || view === 'shop-bills') ? 'shops' : view;
             document.querySelectorAll('.sidebar-item[data-nav]').forEach(b => b.classList.toggle('active', b.dataset.nav === navTarget));
-            document.querySelectorAll('[data-show-on-shops]').forEach(el => el.hidden = !(view === 'shops' || view === 'shop-detail' || view === 'shop-members' || view === 'shop-items'));
+            document.querySelectorAll('[data-show-on-shops]').forEach(el => el.hidden = !(view === 'shops' || view === 'shop-detail' || view === 'shop-members' || view === 'shop-items' || view === 'shop-bills'));
             // 同步店铺详情页 Tabs 激活态
-            document.querySelectorAll('#shopDetailTabs .sub-nav-item, #shopMembersTabs .sub-nav-item, #shopItemsTabs .sub-nav-item')
+            document.querySelectorAll('#shopDetailTabs .sub-nav-item, #shopMembersTabs .sub-nav-item, #shopItemsTabs .sub-nav-item, #shopBillsTabs .sub-nav-item')
                 .forEach(a => a.classList.toggle('active',
                     (a.dataset.tab === 'info'    && view === 'shop-detail') ||
                     (a.dataset.tab === 'members' && view === 'shop-members') ||
-                    (a.dataset.tab === 'items'   && view === 'shop-items')));
+                    (a.dataset.tab === 'items'   && view === 'shop-items') ||
+                    (a.dataset.tab === 'bills'   && view === 'shop-bills')));
             const title = document.getElementById('pageTitle');
             const sub = document.getElementById('pageSubtitle');
             if (view === 'shops') {
@@ -1204,6 +1367,19 @@
                 } else {
                     location.hash = '#shops';
                 }
+            } else if (view === 'shop-bills') {
+                const shopId = getShopIdFromHash();
+                if (shopId) {
+                    const shop = shops.find(s => String(s.id) === String(shopId));
+                    title.textContent = shop ? shop.name : '店铺详情';
+                    sub.textContent = '管理本店账单';
+                    renderPageActions('shop-bills', shopId);
+                    bindShopTabsHref(shopId);
+                    if (currentUser && !shopsLoaded) return;
+                    loadShopBillsView(shopId);
+                } else {
+                    location.hash = '#shops';
+                }
             } else {
                 title.textContent = '概览';
                 sub.textContent = currentUser ? `欢迎回来，${currentUser.memberName || currentUser.username || ''}` : '欢迎回来';
@@ -1242,6 +1418,15 @@
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
                     返回店铺管理
                 </a>`;
+            } else if (view === 'shop-bills') {
+                el.innerHTML = `<a class="btn" href="#shops">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    返回店铺管理
+                </a>
+                <button class="btn btn-primary" onclick="openBillCreateModal()">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    新建账单
+                </button>`;
             } else if (view === 'shops') {
                 el.innerHTML = `<button class="btn btn-primary" onclick="openShopModal()">
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1771,14 +1956,17 @@
             const infoHref = '#shop/' + sid;
             const membersHref = '#shop/' + sid + '/members';
             const itemsHref = '#shop/' + sid + '/items';
-            // CSS 多选择器: A, B, C 表示"匹配 A 或 B 或 C";这里要分别取三个 sub-nav 容器下的子元素,
-            // 因此每个 data-tab 都要写三段独立 selector
-            const infoSel = '#shopDetailTabs .sub-nav-item[data-tab="info"], #shopMembersTabs .sub-nav-item[data-tab="info"], #shopItemsTabs .sub-nav-item[data-tab="info"]';
-            const membersSel = '#shopDetailTabs .sub-nav-item[data-tab="members"], #shopMembersTabs .sub-nav-item[data-tab="members"], #shopItemsTabs .sub-nav-item[data-tab="members"]';
-            const itemsSel = '#shopDetailTabs .sub-nav-item[data-tab="items"], #shopMembersTabs .sub-nav-item[data-tab="items"], #shopItemsTabs .sub-nav-item[data-tab="items"]';
+            const billsHref = '#shop/' + sid + '/bills';
+            // CSS 多选择器: A, B, C 表示"匹配 A 或 B 或 C";这里要分别取四个 sub-nav 容器下的子元素,
+            // 因此每个 data-tab 都要写四段独立 selector
+            const infoSel = '#shopDetailTabs .sub-nav-item[data-tab="info"], #shopMembersTabs .sub-nav-item[data-tab="info"], #shopItemsTabs .sub-nav-item[data-tab="info"], #shopBillsTabs .sub-nav-item[data-tab="info"]';
+            const membersSel = '#shopDetailTabs .sub-nav-item[data-tab="members"], #shopMembersTabs .sub-nav-item[data-tab="members"], #shopItemsTabs .sub-nav-item[data-tab="members"], #shopBillsTabs .sub-nav-item[data-tab="members"]';
+            const itemsSel = '#shopDetailTabs .sub-nav-item[data-tab="items"], #shopMembersTabs .sub-nav-item[data-tab="items"], #shopItemsTabs .sub-nav-item[data-tab="items"], #shopBillsTabs .sub-nav-item[data-tab="items"]';
+            const billsSel = '#shopDetailTabs .sub-nav-item[data-tab="bills"], #shopMembersTabs .sub-nav-item[data-tab="bills"], #shopItemsTabs .sub-nav-item[data-tab="bills"], #shopBillsTabs .sub-nav-item[data-tab="bills"]';
             document.querySelectorAll(infoSel).forEach(a => a.href = infoHref);
             document.querySelectorAll(membersSel).forEach(a => a.href = membersHref);
             document.querySelectorAll(itemsSel).forEach(a => a.href = itemsHref);
+            document.querySelectorAll(billsSel).forEach(a => a.href = billsHref);
         }
 
         /* ----- Shop CRUD ----- */
@@ -2206,7 +2394,10 @@
             const modal = document.getElementById('serviceItemPickerModal');
             modal.classList.add('active');
             // 每次打开都重新拉取,保证状态最新
-            pickerState.shopId = memberState.shopId;
+            // 优先级: 已设置好的 pickerState.shopId(账单场景) > memberState.shopId(消费场景)
+            if (!pickerState.shopId) {
+                pickerState.shopId = memberState.shopId;
+            }
             pickerState.loaded = false;
             await loadPickerData();
             renderPickerTabs();
@@ -2217,6 +2408,12 @@
 
         function closeServiceItemPicker() {
             document.getElementById('serviceItemPickerModal').classList.remove('active');
+            // 账单弹窗打开时:刷新其已选项目区(因 picker 加入按钮只刷新了消费弹窗的列表)
+            const billModal = document.getElementById('billCreateModal');
+            if (billModal && billModal.classList.contains('active')) {
+                if (typeof renderBillSelectedItems === 'function') renderBillSelectedItems();
+                if (typeof recomputeBillTotal === 'function') recomputeBillTotal();
+            }
         }
 
         async function loadPickerData() {
@@ -2580,7 +2777,6 @@
          * drop 时直接读 DOM 顺序得到 newOrder,不靠 splice 计算
          */
         function bindCategoryChipDragEvents() {
-            debugger
             const el = document.getElementById('shopCategoryChips');
             if (!el) return;
             const chips = el.querySelectorAll('.category-chip[data-cat-id]');
@@ -2653,7 +2849,6 @@
          * container 上的 drop —— 读当前 DOM 顺序 = newOrder
          */
         function onCategoryContainerDrop(e) {
-            debugger
             if (!catDragState) return;
             e.preventDefault();
             catDragState.dropped = true;
@@ -2972,6 +3167,561 @@
             }, 100);
         }
         if (currentUser) loadAll();
+
+        /* ====== 账单(Bill)模块 ====== */
+        const billState = {
+            shopId: null,
+            summary: null,
+            page: 1,
+            size: 20,
+            total: 0,
+            hasMore: false,
+            query: {
+                type: '',
+                payChannel: '',
+                memberId: null,
+                customerName: '',
+                customerPhone: '',
+                date: '',
+                includeCancelled: false
+            },
+            records: [],
+            loaded: false
+        };
+        const billCreateState = {
+            shopId: null,
+            idempotencyKey: '',
+            member: null,         // { id, name, phone, balance }
+            customerName: '',
+            customerPhone: '',
+            payChannel: 'OFFLINE',
+            remark: ''
+        };
+
+        function loadShopBillsView(shopId) {
+            billState.shopId = shopId;
+            renderBillsView();
+            loadBillSummary(shopId);
+            loadBillList(shopId);
+        }
+
+        function renderBillsView() {
+            const root = document.getElementById('shopBillsContent');
+            if (!root) return;
+            root.innerHTML = `
+                <div class="bill-summary-grid" id="billSummaryGrid">
+                    <div class="bill-summary-card"><div class="bsc-label">今日金额</div><div class="bsc-amount" id="billTodayAmount">¥0.00</div><div class="bsc-count" id="billTodayCount">0 笔</div></div>
+                    <div class="bill-summary-card"><div class="bsc-label">本月金额</div><div class="bsc-amount" id="billMonthAmount">¥0.00</div><div class="bsc-count" id="billMonthCount">0 笔</div></div>
+                    <div class="bill-summary-card"><div class="bsc-label">会员划账</div><div class="bsc-amount" id="billChannelAmount-MEMBER">¥0.00</div><div class="bsc-count" id="billChannelCount-MEMBER">0 笔</div></div>
+                    <div class="bill-summary-card"><div class="bsc-label">散户消费</div><div class="bsc-amount" id="billWalkInAmount">¥0.00</div><div class="bsc-count" id="billWalkInCount">0 笔</div></div>
+                </div>
+                <div class="bill-filter-bar">
+                        <select class="input" id="billFilterType" style="width: auto;">
+                        <option value="">全部类型</option>
+                        <option value="CONSUME">消费</option>
+                        <option value="STORE">储值</option>
+                    </select>
+                        <select class="input" id="billFilterChannel" style="width: auto;">
+                        <option value="">全部支付方式</option>
+                        <option value="MEMBER">会员划账</option>
+                        <option value="OFFLINE">现金</option>
+                        <option value="WECHAT">微信</option>
+                        <option value="ALIPAY">支付宝</option>
+                    </select>
+                    <input type="text" class="input" id="billFilterCustomerName" placeholder="客户姓名" style="width:120px;">
+                    <input type="text" class="input" id="billFilterCustomerPhone" placeholder="客户手机号" style="width:140px;">
+                    <input type="date" class="input" id="billFilterDate" style="width:150px;">
+                    <label clasns="pay-channel-chip"><input type="checkbox" id="billFilterIncludeCancelled"> 含已作废</label>
+                    <button class="btn" onclick="applyBillFilter()">筛选</button>
+                    <button class="btn" onclick="resetBillFilter()">重置</button>
+                </div>
+                <div class="bill-list">
+                    <div class="bill-list-header">
+                        <div>客户</div>
+                        <div style="text-align:center;">类型</div>
+                        <div>支付方式</div>
+                        <div style="text-align:right;">金额</div>
+                        <div>创建时间</div>
+                        <div>状态</div>
+                        <div style="text-align:right;">操作</div>
+                    </div>
+                    <div id="billListBody"><div class="bill-list-empty">加载中...</div></div>
+                </div>
+                <div class="bill-pagination" id="billPagination"></div>
+            `;
+            bindBillFilterEvents();
+        }
+
+        function bindBillFilterEvents() {
+            const tp = document.getElementById('billFilterType');
+            if (tp) tp.value = billState.query.type || '';
+            const ch = document.getElementById('billFilterChannel');
+            if (ch) ch.value = billState.query.payChannel || '';
+            const cn = document.getElementById('billFilterCustomerName');
+            if (cn) cn.value = billState.query.customerName || '';
+            const cp = document.getElementById('billFilterCustomerPhone');
+            if (cp) cp.value = billState.query.customerPhone || '';
+            const dt = document.getElementById('billFilterDate');
+            if (dt) dt.value = billState.query.date || '';
+            const ic = document.getElementById('billFilterIncludeCancelled');
+            if (ic) ic.checked = !!billState.query.includeCancelled;
+        }
+
+        async function loadBillSummary(shopId) {
+            try {
+                const res = await apiCall(`/bill/summary?shopId=${encodeURIComponent(shopId)}`);
+                if (res.code !== 20000) return;
+                const vo = res.data || {};
+                billState.summary = vo;
+                document.getElementById('billTodayAmount').textContent = `¥${(Number(vo.todayAmount) || 0).toFixed(2)}`;
+                document.getElementById('billTodayCount').textContent = `${vo.todayCount || 0} 笔`;
+                document.getElementById('billMonthAmount').textContent = `¥${(Number(vo.monthAmount) || 0).toFixed(2)}`;
+                document.getElementById('billMonthCount').textContent = `${vo.monthCount || 0} 笔`;
+                const byAmt = vo.byChannelAmount || {};
+                const byCnt = vo.byChannelCount || {};
+                // 会员划账
+                const memAmt = Number(byAmt['MEMBER'] || 0);
+                const memCnt = Number(byCnt['MEMBER'] || 0);
+                const elMemA = document.getElementById('billChannelAmount-MEMBER');
+                const elMemC = document.getElementById('billChannelCount-MEMBER');
+                if (elMemA) elMemA.textContent = `¥${memAmt.toFixed(2)}`;
+                if (elMemC) elMemC.textContent = `${memCnt} 笔`;
+                // 散户消费 = OFFLINE + WECHAT + ALIPAY
+                let walkAmt = 0, walkCnt = 0;
+                ['OFFLINE', 'WECHAT', 'ALIPAY'].forEach(ch => {
+                    walkAmt += Number(byAmt[ch] || 0);
+                    walkCnt += Number(byCnt[ch] || 0);
+                });
+                const elWA = document.getElementById('billWalkInAmount');
+                const elWC = document.getElementById('billWalkInCount');
+                if (elWA) elWA.textContent = `¥${walkAmt.toFixed(2)}`;
+                if (elWC) elWC.textContent = `${walkCnt} 笔`;
+            } catch (e) { /* ignore */ }
+        }
+
+        async function loadBillList(shopId) {
+            const q = billState.query;
+            const params = new URLSearchParams();
+            params.set('shopId', String(shopId));
+            params.set('page', String(billState.page));
+            params.set('size', String(billState.size));
+            if (q.type) params.set('type', q.type);
+            if (q.payChannel) params.set('payChannel', q.payChannel);
+            if (q.memberId) params.set('memberId', String(q.memberId));
+            if (q.customerName) params.set('customerName', q.customerName);
+            if (q.customerPhone) params.set('customerPhone', q.customerPhone);
+            if (q.date) {
+                // 单日筛选:startTime=00:00:00 endTime=23:59:59
+                params.set('startTime', q.date + ' 00:00:00');
+                params.set('endTime', q.date + ' 23:59:59');
+            }
+            if (q.includeCancelled) params.set('includeCancelled', 'true');
+            const res = await apiCall(`/bill/page?${params.toString()}`);
+            const body = document.getElementById('billListBody');
+            const pager = document.getElementById('billPagination');
+            if (!body) return;
+            if (res.code !== 20000) {
+                body.innerHTML = `<div class="bill-list-empty">${escapeHtml(res.message || '加载失败')}</div>`;
+                if (pager) pager.innerHTML = '';
+                return;
+            }
+            const vo = res.data || {};
+            billState.records = vo.records || [];
+            billState.total = vo.total || 0;
+            billState.hasMore = !!vo.hasMore;
+            renderBillList();
+            renderBillPager();
+        }
+
+        function renderBillList() {
+            const body = document.getElementById('billListBody');
+            if (!body) return;
+            if (!billState.records.length) {
+                body.innerHTML = '<div class="bill-list-empty">暂无账单</div>';
+                return;
+            }
+            const html = billState.records.map(b => {
+                // customer 纯字符串 + single-escapeHtml;颜色由 .is-member CSS class 控制
+                const customerText = b.memberId
+                    ? (b.customerName || ('会员 #' + b.memberId))
+                    : (b.customerName || '散客');
+                const customerSafe = escapeHtml(customerText);
+                const channelLabel = { MEMBER: '会员', OFFLINE: '现金', WECHAT: '微信', ALIPAY: '支付宝' }[b.payChannel] || b.payChannel;
+                const typeLabel = b.type === 'STORE' ? '<span class="bl-type STORE">储值</span>' : '<span class="bl-type CONSUME">消费</span>';
+                const cancelledTag = b.isCancelled === 1
+                    ? '<span class="bl-status-cancelled">已作废</span>'
+                    : '<span style="color:var(--text-tertiary);font-size:11px;">正常</span>';
+                // billId 用 HTML 实体 &quot; 包围(JSON.stringify 字面 "在属性值里会提前截断)
+                const billIdAttr = `&quot;${escapeHtml(String(b.id))}&quot;`;
+                // 作废按钮加 event.preventDefault(),避免行是 <a>/<button> 时被外层吞掉;
+                // 同时把行改为 <div>,整行不再触发详情跳转,只通过"查看"按钮进入详情
+                const cancelBtn = b.isCancelled === 1
+                    ? ''
+                    : `<button type="button" class="btn btn-danger" onclick="event.stopPropagation();event.preventDefault();promptCancelBill(${billIdAttr})">作废</button>`;
+                return `
+                    <div class="bill-list-row ${b.isCancelled === 1 ? 'is-cancelled' : ''}">
+                        <div class="bl-customer${b.memberId ? ' is-member' : ''}" title="${customerSafe}">${customerSafe}</div>
+                        <div style="text-align:center;">${typeLabel}</div>
+                        <div><span class="bl-channel ${b.payChannel}">${channelLabel}</span></div>
+                        <div class="bl-amount">¥${(Number(b.totalAmount) || 0).toFixed(2)}</div>
+                        <div class="bl-time">${escapeHtml(b.createdTime || '')}</div>
+                        <div>${cancelledTag}</div>
+                        <div class="bl-actions">
+                            <button type="button" class="btn" onclick="event.stopPropagation();event.preventDefault();openBillDetail(${billIdAttr})">查看</button>
+                            ${cancelBtn}
+                        </div>
+                    </div>`;
+            }).join('');
+            body.innerHTML = html;
+        }
+
+        function renderBillPager() {
+            const pager = document.getElementById('billPagination');
+            if (!pager) return;
+            const total = billState.total;
+            const cur = billState.page;
+            const size = billState.size;
+            const hasMore = billState.hasMore;
+            const start = total === 0 ? 0 : (cur - 1) * size + 1;
+            const end = Math.min(total, cur * size);
+            pager.innerHTML = `
+                <span class="bp-info">${total === 0 ? '0' : (start + ' - ' + end)} / ${total}</span>
+                <button class="btn" ${cur <= 1 ? 'disabled' : ''} onclick="changeBillPage(${cur - 1})">上一页</button>
+                <button class="btn" ${!hasMore ? 'disabled' : ''} onclick="changeBillPage(${cur + 1})">下一页</button>`;
+        }
+
+        function changeBillPage(p) {
+            billState.page = p;
+            loadBillList(billState.shopId);
+        }
+
+        function applyBillFilter() {
+            billState.query.type = document.getElementById('billFilterType').value || '';
+            billState.query.payChannel = document.getElementById('billFilterChannel').value || '';
+            billState.query.customerName = document.getElementById('billFilterCustomerName').value.trim();
+            billState.query.customerPhone = document.getElementById('billFilterCustomerPhone').value.trim();
+            billState.query.date = document.getElementById('billFilterDate').value || '';
+            billState.query.includeCancelled = document.getElementById('billFilterIncludeCancelled').checked;
+            billState.page = 1;
+            loadBillList(billState.shopId);
+        }
+
+        function resetBillFilter() {
+            billState.query = {
+                type: '',
+                payChannel: '',
+                memberId: null,
+                customerName: '',
+                customerPhone: '',
+                date: '',
+                includeCancelled: false
+            };
+            billState.page = 1;
+            bindBillFilterEvents();
+            loadBillList(billState.shopId);
+        }
+
+        /* ====== 创建账单弹窗 ====== */
+        function openBillCreateModal() {
+            const shopId = billState.shopId || getShopIdFromHash();
+            if (!shopId) { showToast('缺少店铺信息', 'error'); return; }
+            // 重置状态
+            billCreateState.shopId = shopId;
+            billCreateState.idempotencyKey = (crypto && crypto.randomUUID) ? crypto.randomUUID() : ('bk-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+            billCreateState.payChannel = 'OFFLINE';
+            billCreateState.remark = '';
+            // 复用的 pickerState 需要重置(并指向本店铺);避免与会员消费弹窗的状态串台
+            pickerState.shopId = shopId;
+            pickerState.activeCatId = '';
+            pickerState.keyword = '';
+            pickerState.selected.clear();
+            pickerState.items = [];
+            pickerState.categories = [];
+            pickerState.loaded = false;
+            const pickerSearchEl = document.getElementById('pickerSearch');
+            if (pickerSearchEl) pickerSearchEl.value = '';
+            document.getElementById('billRemark').value = '';
+            // 默认 OFFLINE
+            const radios = document.querySelectorAll('input[name="billPayChannel"]');
+            radios.forEach(r => r.checked = (r.value === 'OFFLINE'));
+            renderBillSelectedItems();
+            recomputeBillTotal();
+            document.getElementById('billCreateModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeBillCreateModal() {
+            document.getElementById('billCreateModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // 监听支付方式变化
+        document.querySelectorAll('input[name="billPayChannel"]').forEach(r => {
+            r.addEventListener('change', () => {
+                billCreateState.payChannel = r.value;
+            });
+        });
+
+        async function searchBillMember() {
+            const shopId = billCreateState.shopId;
+            const kw = document.getElementById('billMemberKeyword').value.trim();
+            if (!kw) { showToast('请输入手机号或姓名', 'error'); return; }
+            const res = await apiCall(`/member/page?shopId=${encodeURIComponent(shopId)}&page=1&size=20&keyword=${encodeURIComponent(kw)}`);
+            const box = document.getElementById('billMemberResult');
+            if (res.code !== 20000) { box.innerHTML = `<div class="bill-list-empty">${escapeHtml(res.message || '搜索失败')}</div>`; return; }
+            const records = (res.data && res.data.records) || [];
+            if (!records.length) { box.innerHTML = '<div class="bill-list-empty">未找到会员</div>'; return; }
+            box.innerHTML = records.map(m => `
+                <div class="member-picker-row-item" onclick="pickBillMember(${m.id}, '${escapeHtml(m.name)}', '${escapeHtml(m.phone || '')}', ${m.balance || 0})">
+                    <div>
+                        <div style="font-weight:500;">${escapeHtml(m.name)} <span style="color:var(--text-tertiary);font-size:12px;">${escapeHtml(m.phone || '')}</span></div>
+                    </div>
+                    <div class="mpr-balance">余额 ¥${(m.balance || 0).toFixed(2)}</div>
+                </div>
+            `).join('');
+        }
+
+        function pickBillMember(id, name, phone, balance) {
+            billCreateState.member = { id, name, phone, balance: Number(balance) || 0 };
+            const sel = document.getElementById('billMemberSelected');
+            sel.innerHTML = `
+                <div>
+                    <div class="mps-name">${escapeHtml(name)} <span style="color:var(--text-tertiary);font-size:12px;">${escapeHtml(phone)}</span></div>
+                </div>
+                <div class="mps-balance">余额 ¥${(Number(balance) || 0).toFixed(2)} <button type="button" class="mps-clear" onclick="clearBillMember()" title="清除">×</button></div>
+            `;
+            sel.style.display = '';
+            document.getElementById('billMemberResult').innerHTML = '';
+        }
+
+        function clearBillMember() {
+            billCreateState.member = null;
+            document.getElementById('billMemberSelected').style.display = 'none';
+            document.getElementById('billMemberSelected').innerHTML = '';
+        }
+
+        // 服务项目选择:复用 pickerModal;选择完成后回填到 billSelectedItems
+        function openServiceItemPickerForBill() {
+            const shopId = billCreateState.shopId;
+            if (!shopId) { showToast('缺少店铺信息', 'error'); return; }
+            pickerState.shopId = shopId;
+            pickerState.loaded = false;
+            openServiceItemPicker();
+            // 复用 picker:在关闭时已选项目即生效;此处仅触发打开
+        }
+
+        function renderBillSelectedItems() {
+            const el = document.getElementById('billSelectedItems');
+            if (!el) return;
+            if (pickerState.selected.size === 0) {
+                el.innerHTML = `
+                    <div class="consume-selected-empty">
+                        <div>暂无服务项目，点击上方按钮添加</div>
+                    </div>`;
+                return;
+            }
+            // 样式与会员消费的 ci-selected-row 完全一致:¥ + 单价输入、数量加减、小计、删除
+            el.innerHTML = '<div class="consume-selected-list">' +
+                Array.from(pickerState.selected.values()).map(it => {
+                    const id = escapeHtml(String(it.id));
+                    return `
+                    <div class="ci-selected-row" data-sel-id="${id}">
+                        <div class="cs-name" title="${escapeHtml(it.name)}">${escapeHtml(it.name)}</div>
+                        <div class="cs-price">¥<input type="text" inputmode="decimal" class="cs-price-input" data-role="price" value="${it.price.toFixed(2)}"></div>
+                        <div class="cs-qty">
+                            <button type="button" data-role="dec">−</button>
+                            <input type="text" inputmode="numeric" data-role="qty" value="${it.quantity}">
+                            <button type="button" data-role="inc">+</button>
+                        </div>
+                        <div class="cs-subtotal" data-role="subtotal">¥${(it.price * it.quantity).toFixed(2)}</div>
+                        <button type="button" class="cs-remove" data-role="remove" title="移除">✕</button>
+                    </div>`;
+                }).join('') + '</div>';
+            bindBillSelectedEvents();
+        }
+
+        function bindBillSelectedEvents() {
+            const el = document.getElementById('billSelectedItems');
+            el.querySelectorAll('.ci-selected-row').forEach(row => {
+                const id = String(row.dataset.selId);
+                const it = pickerState.selected.get(id);
+                if (!it) return;
+                const priceInput = row.querySelector('[data-role="price"]');
+                const qtyInput = row.querySelector('[data-role="qty"]');
+                priceInput.addEventListener('input', () => {
+                    const raw = priceInput.value.trim();
+                    if (!/^\d+(\.\d{0,2})?$/.test(raw)) {
+                        priceInput.classList.add('input-error');
+                        return;
+                    }
+                    const v = parseFloat(raw);
+                    priceInput.classList.remove('input-error');
+                    it.price = Math.round(v * 100) / 100;
+                    row.querySelector('[data-role="subtotal"]').textContent = `¥${(it.price * it.quantity).toFixed(2)}`;
+                    recomputeBillTotal();
+                });
+                qtyInput.addEventListener('input', () => {
+                    const raw = qtyInput.value.trim();
+                    if (!/^\d+$/.test(raw)) {
+                        qtyInput.classList.add('input-error');
+                        return;
+                    }
+                    let v = parseInt(raw, 10);
+                    if (v < 1) v = 1;
+                    if (v > 999) v = 999;
+                    qtyInput.classList.remove('input-error');
+                    it.quantity = v;
+                    if (String(v) !== raw) qtyInput.value = v;
+                    row.querySelector('[data-role="subtotal"]').textContent = `¥${(it.price * it.quantity).toFixed(2)}`;
+                    recomputeBillTotal();
+                });
+                row.querySelector('[data-role="dec"]').addEventListener('click', () => {
+                    if (it.quantity > 1) { it.quantity--; qtyInput.value = it.quantity; qtyInput.dispatchEvent(new Event('input')); }
+                });
+                row.querySelector('[data-role="inc"]').addEventListener('click', () => {
+                    if (it.quantity < 999) { it.quantity++; qtyInput.value = it.quantity; qtyInput.dispatchEvent(new Event('input')); }
+                });
+                row.querySelector('[data-role="remove"]').addEventListener('click', () => {
+                    pickerState.selected.delete(id);
+                    renderBillSelectedItems();
+                    recomputeBillTotal();
+                });
+            });
+        }
+
+        function recomputeBillTotal() {
+            let sum = 0;
+            pickerState.selected.forEach(it => { sum += it.price * it.quantity; });
+            const el = document.getElementById('billTotalAmount');
+            if (el) el.textContent = `¥${sum.toFixed(2)}`;
+        }
+
+        async function submitBill() {
+            const shopId = billCreateState.shopId;
+            if (!shopId) { showToast('缺少店铺信息', 'error'); return; }
+            if (pickerState.selected.size === 0) { showToast('请选择至少一个服务项目', 'error'); return; }
+            const items = Array.from(pickerState.selected.values()).map(it => ({
+                itemId: String(it.id),
+                quantity: it.quantity,
+                unitPrice: Number(it.price.toFixed(2))
+            }));
+            const body = {
+                shopId: String(shopId),
+                payChannel: billCreateState.payChannel,
+                remark: document.getElementById('billRemark').value.trim(),
+                idempotencyKey: billCreateState.idempotencyKey,
+                items
+            };
+            const btn = document.getElementById('billSubmitBtn');
+            btn.disabled = true; btn.textContent = '提交中...';
+            try {
+                const res = await apiCall('/bill', 'POST', body);
+                if (res.code === 20000) {
+                    showToast('账单已创建', 'success');
+                    closeBillCreateModal();
+                    if (billState.shopId) {
+                        await loadBillSummary(billState.shopId);
+                        await loadBillList(billState.shopId);
+                    }
+                } else {
+                    showToast(res.message || '创建失败', 'error');
+                }
+            } catch (e) { showToast('创建失败', 'error'); }
+            btn.disabled = false; btn.textContent = '提交账单';
+        }
+
+        /* ====== 账单详情 ====== */
+        let currentDetailBill = null;
+        async function openBillDetail(billId) {
+            const shopId = billState.shopId || getShopIdFromHash();
+            const res = await apiCall(`/bill/${billId}?shopId=${encodeURIComponent(shopId)}`);
+            if (res.code !== 20000) { showToast(res.message || '加载失败', 'error'); return; }
+            currentDetailBill = res.data;
+            renderBillDetail();
+            document.getElementById('billDetailModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeBillDetailModal() {
+            document.getElementById('billDetailModal').classList.remove('active');
+            document.body.style.overflow = '';
+            currentDetailBill = null;
+        }
+
+        function renderBillDetail() {
+            const b = currentDetailBill;
+            if (!b) return;
+            const channelLabel = { MEMBER: '会员划账', OFFLINE: '现金', WECHAT: '微信', ALIPAY: '支付宝' }[b.payChannel] || b.payChannel;
+            const typeLabel = b.type === 'STORE' ? '储值' : '消费';
+            // 会员账单优先用 customerName 快照(姓名),非会员才用 customerName/customerPhone 字段
+            const customer = b.memberId
+                ? (b.customerName ? `会员 ${b.customerName}` : `会员 #${b.memberId}`)
+                : (b.customerName || '散客') + (b.customerPhone ? ' / ' + b.customerPhone : '');
+            const customerSafe = escapeHtml(customer);
+            const itemsHtml = (b.items || []).map(it => `
+                <div class="bill-detail-item-row">
+                    <div class="bdi-name" title="${escapeHtml(it.itemName)}">${escapeHtml(it.itemName)}</div>
+                    <div class="bdi-qty">× ${it.quantity}</div>
+                    <div class="bdi-price">¥${(Number(it.unitPrice) || 0).toFixed(2)}</div>
+                    <div class="bdi-subtotal">¥${(Number(it.subtotal) || 0).toFixed(2)}</div>
+                </div>
+            `).join('');
+            const cancelledTag = b.isCancelled === 1
+                ? `<div class="bdi-row"><span class="bdi-label">状态</span><span class="bdi-value" style="color:var(--error);">已作废</span></div>
+                   <div class="bdi-row"><span class="bdi-label">作废时间</span><span class="bdi-value">${escapeHtml(b.cancelledTime || '—')}</span></div>
+                   <div class="bdi-row"><span class="bdi-label">作废原因</span><span class="bdi-value">${escapeHtml(b.cancelReason || '—')}</span></div>`
+                : '';
+            document.getElementById('billDetailBody').innerHTML = `
+                <div class="bill-detail-info">
+                    <div class="bdi-row"><span class="bdi-label">账单ID</span><span class="bdi-value">#${b.id}</span></div>
+                    <div class="bdi-row"><span class="bdi-label">类型</span><span class="bdi-value">${escapeHtml(typeLabel)}</span></div>
+                    <div class="bdi-row"><span class="bdi-label">客户</span><span class="bdi-value">${customerSafe}</span></div>
+                    <div class="bdi-row"><span class="bdi-label">支付方式</span><span class="bdi-value">${escapeHtml(channelLabel)}</span></div>
+                    <div class="bdi-row"><span class="bdi-label">金额</span><span class="bdi-value" style="font-size:18px;">¥${(Number(b.totalAmount) || 0).toFixed(2)}</span></div>
+                    <div class="bdi-row"><span class="bdi-label">备注</span><span class="bdi-value">${escapeHtml(b.remark || '—')}</span></div>
+                    <div class="bdi-row"><span class="bdi-label">创建时间</span><span class="bdi-value">${escapeHtml(b.createdTime || '—')}</span></div>
+                    ${cancelledTag}
+                </div>
+                <div class="bill-detail-items">
+                    <div class="bill-detail-items-title">服务项目</div>
+                    ${itemsHtml || '<div style="color:var(--text-tertiary);font-size:12px;padding:6px 0;">无</div>'}
+                </div>
+            `;
+            const cancelBtn = document.getElementById('billCancelBtn');
+            if (cancelBtn) cancelBtn.style.display = b.isCancelled === 1 ? 'none' : '';
+        }
+
+        async function promptCancelBill(billId) {
+            const reason = prompt('请输入作废原因:');
+            if (reason === null) return;
+            if (!reason.trim()) { showToast('作废原因不能为空', 'error'); return; }
+            const shopId = billState.shopId || getShopIdFromHash();
+            const res = await apiCall(`/bill/${billId}/cancel?shopId=${encodeURIComponent(shopId)}`, 'POST', { reason: reason.trim() });
+            if (res.code === 20000) {
+                showToast('已作废', 'success');
+                if (billState.shopId) {
+                    await loadBillSummary(billState.shopId);
+                    await loadBillList(billState.shopId);
+                }
+                if (currentDetailBill && currentDetailBill.id === billId) {
+                    currentDetailBill = res.data;
+                    renderBillDetail();
+                }
+            } else {
+                showToast(res.message || '作废失败', 'error');
+            }
+        }
+
+        async function cancelCurrentBill() {
+            if (!currentDetailBill) return;
+            await promptCancelBill(currentDetailBill.id);
+        }
+
+        // 关闭弹窗:点遮罩
+        const _billCreateModal = document.getElementById('billCreateModal');
+        if (_billCreateModal) _billCreateModal.addEventListener('click', e => { if (e.target.id === 'billCreateModal') closeBillCreateModal(); });
+        const _billDetailModal = document.getElementById('billDetailModal');
+        if (_billDetailModal) _billDetailModal.addEventListener('click', e => { if (e.target.id === 'billDetailModal') closeBillDetailModal(); });
     </script>
 </body>
 </html>

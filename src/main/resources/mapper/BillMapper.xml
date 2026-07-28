@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.slm.barbershop.mapper.BillMapper">
+
+    <!-- ========== summarizeByShopId ========== -->
+    <!--
+        一个 pay_channel 一行,同时给出 today / month 两个口径(本月累计=含今天)。
+        monthAmount 含 todayAmount,所以前端展示:
+          - 今日金额 = today_amount 合计
+          - 本月金额 = month_amount 合计  (= 本月累计,含今天)
+          - 各支付方式卡片 = month_amount 合计
+    -->
+    <resultMap id="BillSummaryRowVO" type="com.slm.barbershop.model.BillSummaryRowVO">
+        <result property="payChannel" column="pay_channel" />
+        <result property="todayAmount" column="today_amount" />
+        <result property="todayCount" column="today_count" />
+        <result property="monthAmount" column="month_amount" />
+        <result property="monthCount" column="month_count" />
+    </resultMap>
+
+    <select id="summarizeByShopId" resultMap="BillSummaryRowVO">
+        SELECT
+            b.pay_channel,
+            COALESCE(SUM(CASE WHEN b.created_time &gt;= #{todayStart} THEN b.total_amount ELSE 0 END), 0) AS today_amount,
+            SUM(CASE WHEN b.created_time &gt;= #{todayStart} THEN 1 ELSE 0 END) AS today_count,
+            COALESCE(SUM(CASE WHEN b.created_time &gt;= #{monthStart} THEN b.total_amount ELSE 0 END), 0) AS month_amount,
+            SUM(CASE WHEN b.created_time &gt;= #{monthStart} THEN 1 ELSE 0 END) AS month_count
+        FROM bill b
+        WHERE b.shop_id = #{shopId}
+          AND b.is_cancelled = 0
+          AND b.is_deleted = 0
+          AND b.created_time &gt;= #{monthStart}
+        GROUP BY b.pay_channel
+    </select>
+
+    <!-- ========== listRecentByShopId ========== -->
+    <resultMap id="ShopBillRecentVO" type="com.slm.barbershop.model.ShopBillRecentVO">
+        <id property="id" column="id" />
+        <result property="payChannel" column="pay_channel" />
+        <result property="totalAmount" column="total_amount" />
+        <result property="customerName" column="customer_name" />
+        <result property="customerPhone" column="customer_phone" />
+        <result property="memberId" column="member_id" />
+        <result property="memberName" column="member_name" />
+        <result property="createdTime" column="created_time" />
+    </resultMap>
+
+    <select id="listRecentByShopId" resultMap="ShopBillRecentVO">
+        SELECT b.id,
+               b.pay_channel,
+               b.total_amount,
+               b.customer_name,
+               b.customer_phone,
+               b.member_id,
+               m.name AS member_name,
+               b.created_time
+        FROM bill b
+        LEFT JOIN member m ON m.id = b.member_id AND m.is_deleted = 0
+        WHERE b.is_deleted = 0
+          AND b.shop_id = #{shopId}
+        ORDER BY b.created_time DESC, b.id DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

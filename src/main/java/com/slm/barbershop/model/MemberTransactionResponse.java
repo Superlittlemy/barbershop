@@ -38,6 +38,9 @@ public class MemberTransactionResponse {
     @Schema(description = "创建时间")
     private LocalDateTime createdTime;
 
+    @Schema(description = "关联交易ID(消费时关联到账单)")
+    private Long billId;
+
     @Schema(description = "消费项目明细(消费时存在,储值为空列表)")
     private List<TransactionItemResponse> items;
 
