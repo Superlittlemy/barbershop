@@ -5,6 +5,7 @@ import com.slm.barbershop.converter.ShopConverter;
 import com.slm.barbershop.entity.Shop;
 import com.slm.barbershop.exception.BizException;
 import com.slm.barbershop.model.ApiResponse;
+import com.slm.barbershop.model.ShopOverviewStatsVO;
 import com.slm.barbershop.model.ShopRequest;
 import com.slm.barbershop.model.ShopResponse;
 import com.slm.barbershop.model.ShopTransactionRecentVO;
@@ -92,6 +93,13 @@ public class ShopController {
             throw new BizException(HttpStatus.FORBIDDEN, "无权限查看此店铺");
         }
         return ApiResponse.ok(memberTransactionService.listRecentByShopId(id, limit));
+    }
+
+    @Operation(summary = "获取概览页 KPI 聚合数据")
+    @GetMapping("/stats/overview")
+    public ApiResponse<ShopOverviewStatsVO> statsOverview() {
+        Long userId = UserContext.getUser().getId();
+        return ApiResponse.ok(shopService.overviewStats(userId));
     }
 
 }
