@@ -1,19 +1,19 @@
 package com.slm.barbershop.utils;
 
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class TraceIdGenerator {
 
-    private static final String CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    private static final char[] CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".toCharArray();
     private static final int LENGTH = 8;
-    private static final Random RANDOM = new Random();
 
     public static String generate() {
-        StringBuilder sb = new StringBuilder(LENGTH);
+        char[] buf = new char[LENGTH];
+        ThreadLocalRandom random = ThreadLocalRandom.current();
         for (int i = 0; i < LENGTH; i++) {
-            sb.append(CHARS.charAt(RANDOM.nextInt(CHARS.length())));
+            buf[i] = CHARS[random.nextInt(CHARS.length)];
         }
-        return sb.toString();
+        return new String(buf);
     }
 
 }

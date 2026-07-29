@@ -66,25 +66,8 @@ public class ShopService extends ServiceImpl<ShopMapper, Shop> {
         LocalDateTime asOf = LocalDateTime.now();
         LocalDateTime since = asOf.minusDays(30);
         ShopOverviewStatsVO stats = shopMapper.selectOverviewBase(userId);
-        if (stats == null) {
-            stats = new ShopOverviewStatsVO();
-            stats.setShopCount(0);
-            stats.setMemberCount(0);
-            stats.setTotalBalance(BigDecimal.ZERO);
-        }
-        if (stats.getShopCount() == null) {
-            stats.setShopCount(0);
-        }
-        if (stats.getMemberCount() == null) {
-            stats.setMemberCount(0);
-        }
-        BigDecimal totalBalance = stats.getTotalBalance() == null
-                ? BigDecimal.ZERO : stats.getTotalBalance();
         BigDecimal recentTxAmount = shopMapper.sumRecentConsumeAmount(userId, since);
-        if (recentTxAmount == null) {
-            recentTxAmount = BigDecimal.ZERO;
-        }
-        stats.setTotalBalance(totalBalance.setScale(2, RoundingMode.HALF_UP));
+        stats.setTotalBalance(stats.getTotalBalance().setScale(2, RoundingMode.HALF_UP));
         stats.setRecentTxAmount(recentTxAmount.setScale(2, RoundingMode.HALF_UP));
         stats.setAsOf(asOf);
         return stats;

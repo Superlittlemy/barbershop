@@ -21,11 +21,6 @@ import java.util.Set;
 @Service
 public class ServiceCategoryService extends ServiceImpl<ServiceCategoryMapper, ServiceCategory> {
 
-    /**
-     * 排序号步长:每次递增 10,留出空隙便于将来插入单条分类而不需重排整张表。
-     */
-    private static final int SORT_NO_STEP = 10;
-
     @Autowired
     private ServiceCategoryMapper categoryMapper;
 
@@ -56,9 +51,8 @@ public class ServiceCategoryService extends ServiceImpl<ServiceCategoryMapper, S
      * includeOff=false 时仅返回 status=1 的分类。
      */
     public IPage<ServiceCategory> page(IPage<ServiceCategory> page, Long shopId, boolean includeOff) {
-        // add(0, ...) 把 sort_no 排到 Resolver 默认 created_time DESC 之前 —— 显式控制优先级
-        // created_time DESC 作为兜底:老数据 sort_no=0 时,按创建时间倒序排(新数据在前),稳定且符合直觉
-        page.orders().add(0, OrderItem.asc("sort_no"));
+        page.orders().clear();
+        page.orders().add(OrderItem.asc("sort_no"));
         return categoryMapper.selectPage(page, new LambdaQueryWrapper<ServiceCategory>()
                 .eq(ServiceCategory::getShopId, shopId)
                 .eq(!includeOff, ServiceCategory::getStatus, 1));
@@ -73,8 +67,7 @@ public class ServiceCategoryService extends ServiceImpl<ServiceCategoryMapper, S
                 .orderByDesc(ServiceCategory::getSortNo)
                 .last("LIMIT 1")
                 .one();
-        int currentMax = max == null || max.getSortNo() == null ? 0 : max.getSortNo();
-        return currentMax + SORT_NO_STEP;
+        return max == null || max.getSortNo() == null ? 0 : max.getSortNo();
     }
 
     /**
@@ -104,7 +97,7 @@ public class ServiceCategoryService extends ServiceImpl<ServiceCategoryMapper, S
         for (int i = 0; i < orderedIds.size(); i++) {
             ServiceCategory patch = new ServiceCategory();
             patch.setId(orderedIds.get(i));
-            patch.setSortNo((i + 1) * SORT_NO_STEP);
+            patch.setSortNo(i + 1);
             categoryMapper.updateById(patch);
         }
     }
