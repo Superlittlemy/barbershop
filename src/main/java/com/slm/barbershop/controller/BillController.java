@@ -1,15 +1,13 @@
 package com.slm.barbershop.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.slm.barbershop.entity.Bill;
 import com.slm.barbershop.entity.Shop;
 import com.slm.barbershop.exception.BizException;
 import com.slm.barbershop.model.ApiResponse;
-import com.slm.barbershop.model.BillPageVO;
 import com.slm.barbershop.model.BillQuery;
 import com.slm.barbershop.model.BillRequest;
 import com.slm.barbershop.model.BillResponse;
 import com.slm.barbershop.model.BillSummaryVO;
+import com.slm.barbershop.model.PageResult;
 import com.slm.barbershop.service.BillService;
 import com.slm.barbershop.service.ShopService;
 import com.slm.barbershop.utils.UserContext;
@@ -44,11 +42,9 @@ public class BillController {
 
     @Operation(summary = "账单分页查询")
     @GetMapping("/page")
-    public ApiResponse<BillPageVO> page(IPage<Bill> page,
-                                        @RequestParam Long shopId,
-                                        BillQuery query) {
-        assertShopAccess(shopId);
-        return ApiResponse.ok(billService.page(shopId, page, query));
+    public ApiResponse<PageResult<BillResponse>> page(BillQuery query) {
+        assertShopAccess(query.getShopId());
+        return ApiResponse.ok(billService.page(query));
     }
 
     @Operation(summary = "账单汇总(今日/本月/各支付方式)")

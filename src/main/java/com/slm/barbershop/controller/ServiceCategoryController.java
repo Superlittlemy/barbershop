@@ -1,10 +1,11 @@
 package com.slm.barbershop.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.slm.barbershop.converter.ServiceCategoryConverter;
 import com.slm.barbershop.entity.ServiceCategory;
 import com.slm.barbershop.exception.BizException;
 import com.slm.barbershop.model.ApiResponse;
+import com.slm.barbershop.model.PageResult;
+import com.slm.barbershop.model.ServiceCategoryQuery;
 import com.slm.barbershop.model.ServiceCategoryRequest;
 import com.slm.barbershop.model.ServiceCategoryResponse;
 import com.slm.barbershop.service.ServiceCategoryService;
@@ -15,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -65,11 +67,8 @@ public class ServiceCategoryController {
 
     @Operation(summary = "店铺分类分页")
     @GetMapping("/page")
-    public ApiResponse<IPage<ServiceCategoryResponse>> page(@RequestParam Long shopId,
-                                                            @RequestParam(defaultValue = "false") boolean includeOff,
-                                                            IPage<ServiceCategory> page) {
-        return ApiResponse.ok(categoryService.page(page, shopId, includeOff)
-                .convert(categoryConverter::toResponse));
+    public ApiResponse<PageResult<ServiceCategoryResponse>> page(@Validated ServiceCategoryQuery query) {
+        return ApiResponse.ok(PageResult.map(categoryService.page(query), categoryConverter::toResponse));
     }
 
     @Operation(summary = "批量重排店铺分类(前端拖动分类后调用)")

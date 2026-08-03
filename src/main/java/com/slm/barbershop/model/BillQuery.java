@@ -1,16 +1,25 @@
 package com.slm.barbershop.model;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.slm.barbershop.entity.Bill;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
 
 /**
  * 账单查询条件(Controller 层入参)
+ * <p>
+ * 继承 {@link com.baomidou.mybatisplus.extension.plugins.pagination.Page}，实现“分页 + 查询”合一。
  */
 @Data
-@Schema(description = "账单查询条件")
-public class BillQuery {
+@EqualsAndHashCode(callSuper = true)
+@Schema(description = "账单查询条件(含分页)")
+public class BillQuery extends Page<Bill> {
+
+    @Schema(description = "店铺ID(用于数据隔离与鉴权)")
+    private Long shopId;
 
     @Schema(description = "支付方式过滤")
     private String payChannel;

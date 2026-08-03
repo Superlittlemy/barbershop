@@ -3,11 +3,13 @@ package com.slm.barbershop.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.slm.barbershop.converter.ServiceCategoryConverter;
 import com.slm.barbershop.entity.ServiceCategory;
 import com.slm.barbershop.exception.BizException;
 import com.slm.barbershop.mapper.ServiceCategoryMapper;
+import com.slm.barbershop.model.ServiceCategoryQuery;
 import com.slm.barbershop.model.ServiceCategoryRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -48,14 +50,17 @@ public class ServiceCategoryService extends ServiceImpl<ServiceCategoryMapper, S
 
     /**
      * 分页查询某店铺的分类
+     * <p>
+     * 业务硬约束：分类必须按 sort_no 升序排序，**不接受前端 sort 参数覆盖**（page.orders.clear()）
      * includeOff=false 时仅返回 status=1 的分类。
      */
-    public IPage<ServiceCategory> page(IPage<ServiceCategory> page, Long shopId, boolean includeOff) {
+    public IPage<ServiceCategory> page(ServiceCategoryQuery query) {
+        Page<ServiceCategory> page = new Page<>(query.getCurrent(), query.getSize());
         page.orders().clear();
         page.orders().add(OrderItem.asc("sort_no"));
         return categoryMapper.selectPage(page, new LambdaQueryWrapper<ServiceCategory>()
-                .eq(ServiceCategory::getShopId, shopId)
-                .eq(!includeOff, ServiceCategory::getStatus, 1));
+                .eq(ServiceCategory::getShopId, query.getShopId())
+                .eq(!query.isIncludeOff(), ServiceCategory::getStatus, 1));
     }
 
     /**

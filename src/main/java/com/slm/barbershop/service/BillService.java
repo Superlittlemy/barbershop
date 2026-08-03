@@ -17,12 +17,12 @@ import com.slm.barbershop.mapper.BillItemMapper;
 import com.slm.barbershop.mapper.BillMapper;
 import com.slm.barbershop.mapper.MemberMapper;
 import com.slm.barbershop.mapper.ServiceItemMapper;
-import com.slm.barbershop.model.BillPageVO;
 import com.slm.barbershop.model.BillQuery;
 import com.slm.barbershop.model.BillRequest;
 import com.slm.barbershop.model.BillResponse;
 import com.slm.barbershop.model.BillSummaryRowVO;
 import com.slm.barbershop.model.BillSummaryVO;
+import com.slm.barbershop.model.PageResult;
 import com.slm.barbershop.model.ShopBillRecentVO;
 import com.slm.barbershop.model.TransactionItemRequest;
 import com.slm.barbershop.model.TransactionItemResponse;
@@ -287,18 +287,15 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
         return toResponseWithItems(bill);
     }
 
-    public BillPageVO page(Long shopId, IPage<Bill> page, BillQuery query) {
-        if (shopId == null) {
-            throw new BizException(HttpStatus.BAD_REQUEST, "shopId 不能为空");
-        }
+    public PageResult<BillResponse> page(BillQuery query) {
         if (query == null) {
             query = new BillQuery();
         }
-        long p = Math.max(page.getCurrent(), 1);
-        long s = Math.min(Math.max(page.getSize(), 1), 100);
+        long p = Math.max(query.getCurrent(), 1);
+        long s = Math.min(Math.max(query.getSize(), 1), 100);
         Page<Bill> mpPage = new Page<>(p, s);
         LambdaQueryWrapper<Bill> wrapper = new LambdaQueryWrapper<Bill>()
-                .eq(Bill::getShopId, shopId)
+                .eq(Bill::getShopId, query.getShopId())
                 .orderByDesc(Bill::getCreatedTime)
                 .orderByDesc(Bill::getId);
         if (!query.includeCancelled()) {
@@ -327,9 +324,7 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
         }
         IPage<Bill> result = billMapper.selectPage(mpPage, wrapper);
         List<BillResponse> records = toResponseListWithItems(result.getRecords());
-        long total = result.getTotal();
-        boolean hasMore = p * s < total;
-        return new BillPageVO(records, total, p, s, hasMore);
+        return PageResult.of(result, records);
     }
 
     public BillSummaryVO summary(Long shopId) {

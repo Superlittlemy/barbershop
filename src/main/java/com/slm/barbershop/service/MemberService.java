@@ -2,12 +2,14 @@ package com.slm.barbershop.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.slm.barbershop.converter.MemberConverter;
 import com.slm.barbershop.entity.Member;
 import com.slm.barbershop.exception.BizException;
 import com.slm.barbershop.mapper.MemberMapper;
 import com.slm.barbershop.model.MemberMatchVO;
+import com.slm.barbershop.model.MemberQuery;
 import com.slm.barbershop.model.MemberRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -74,8 +76,11 @@ public class MemberService extends ServiceImpl<MemberMapper, Member> {
         );
     }
 
-    public IPage<Member> page(IPage<Member> page, Long shopId) {
-        return memberMapper.selectPage(page, new LambdaQueryWrapper<Member>().eq(Member::getShopId, shopId));
+    public IPage<Member> page(MemberQuery query) {
+        Page<Member> page = new Page<>(query.getCurrent(), query.getSize());
+        LambdaQueryWrapper<Member> wrapper = new LambdaQueryWrapper<Member>()
+                .eq(Member::getShopId, query.getShopId());
+        return memberMapper.selectPage(page, wrapper);
     }
 
     /**

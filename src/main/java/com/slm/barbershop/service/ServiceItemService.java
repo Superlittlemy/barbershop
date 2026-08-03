@@ -2,20 +2,23 @@ package com.slm.barbershop.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.slm.barbershop.converter.ServiceItemConverter;
 import com.slm.barbershop.entity.ServiceCategory;
 import com.slm.barbershop.entity.ServiceItem;
-import com.slm.barbershop.exception.BizException;
 import com.slm.barbershop.mapper.ServiceItemMapper;
+import com.slm.barbershop.model.PageResult;
+import com.slm.barbershop.model.ServiceItemQuery;
 import com.slm.barbershop.model.ServiceItemRequest;
 import com.slm.barbershop.model.ServiceItemResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -51,26 +54,33 @@ public class ServiceItemService extends ServiceImpl<ServiceItemMapper, ServiceIt
      * includeOff=false 时仅返回 status=1 的项目;
      * categoryId 非空时按分类筛选。
      */
-    public IPage<ServiceItemResponse> page(IPage<ServiceItem> page, Long shopId, Long categoryId, boolean includeOff) {
-        IPage<ServiceItem> itemPage = itemMapper.selectPage(page, new LambdaQueryWrapper<ServiceItem>()
-                .eq(ServiceItem::getShopId, shopId)
-                .eq(categoryId != null, ServiceItem::getCategoryId, categoryId)
-                .eq(!includeOff, ServiceItem::getStatus, 1));
+    public PageResult<ServiceItemResponse> page(ServiceItemQuery query) {
+        Page<ServiceItem> page = new Page<>(query.getCurrent(), query.getSize());
+        LambdaQueryWrapper<ServiceItem> wrapper = new LambdaQueryWrapper<ServiceItem>()
+                .eq(ServiceItem::getShopId, query.getShopId())
+                .eq(query.getCategoryId() != null, ServiceItem::getCategoryId, query.getCategoryId())
+                .eq(!query.isIncludeOff(), ServiceItem::getStatus, 1);
+        IPage<ServiceItem> itemPage = itemMapper.selectPage(page, wrapper);
+
         // 收集本页所有非空 categoryId,批量查分类名(一次 IN 查询)
         Set<Long> categoryIds = itemPage.getRecords().stream()
                 .map(ServiceItem::getCategoryId)
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
         Map<Long, String> nameMap = categoryIds.isEmpty() ? Collections.emptyMap()
                 : categoryService.listByIds(categoryIds).stream()
                     .collect(Collectors.toMap(ServiceCategory::getId, ServiceCategory::getName));
-        return itemPage.convert(item -> {
-            ServiceItemResponse resp = itemConverter.toResponse(item);
-            if (item.getCategoryId() != null) {
-                resp.setCategoryName(nameMap.get(item.getCategoryId()));
-            }
-            return resp;
-        });
+
+        List<ServiceItemResponse> mapped = itemPage.getRecords().stream()
+                .map(item -> {
+                    ServiceItemResponse resp = itemConverter.toResponse(item);
+                    if (item.getCategoryId() != null) {
+                        resp.setCategoryName(nameMap.get(item.getCategoryId()));
+                    }
+                    return resp;
+                })
+                .collect(Collectors.toList());
+        return PageResult.of(itemPage, mapped);
     }
 
 }

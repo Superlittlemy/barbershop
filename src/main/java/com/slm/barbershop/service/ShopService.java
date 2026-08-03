@@ -1,5 +1,6 @@
 package com.slm.barbershop.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -7,8 +8,11 @@ import com.slm.barbershop.converter.ShopConverter;
 import com.slm.barbershop.entity.Shop;
 import com.slm.barbershop.exception.BizException;
 import com.slm.barbershop.mapper.ShopMapper;
+import com.slm.barbershop.model.PageResult;
 import com.slm.barbershop.model.ShopOverviewStatsVO;
+import com.slm.barbershop.model.ShopQuery;
 import com.slm.barbershop.model.ShopRequest;
+import com.slm.barbershop.model.ShopStatsQuery;
 import com.slm.barbershop.model.ShopStatsVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -58,8 +62,11 @@ public class ShopService extends ServiceImpl<ShopMapper, Shop> {
         shopMapper.deleteById(id);
     }
 
-    public IPage<Shop> page(IPage<Shop> page, Long userId) {
-        return this.lambdaQuery().eq(Shop::getUserId, userId).page(page);
+    public IPage<Shop> page(ShopQuery query, Long userId) {
+        Page<Shop> page = new Page<>(query.getCurrent(), query.getSize());
+        LambdaQueryWrapper<Shop> wrapper = new LambdaQueryWrapper<Shop>()
+                .eq(Shop::getUserId, userId);
+        return shopMapper.selectPage(page, wrapper);
     }
 
     public ShopOverviewStatsVO overviewStats(Long userId) {
@@ -73,12 +80,12 @@ public class ShopService extends ServiceImpl<ShopMapper, Shop> {
         return stats;
     }
 
-    public IPage<ShopStatsVO> statsPage(IPage<ShopStatsVO> page, Long userId) {
+    public PageResult<ShopStatsVO> statsPage(ShopStatsQuery query, Long userId) {
+        long p = Math.max(query.getCurrent(), 1);
+        long s = Math.min(Math.max(query.getSize(), 1), 999);
+        long offset = (p - 1L) * s;
         long total = shopMapper.countShopStats(userId);
-        long current = page.getCurrent() <= 0 ? 1L : page.getCurrent();
-        long size = page.getSize() <= 0 ? 999L : page.getSize();
-        long offset = (current - 1L) * size;
-        List<ShopStatsVO> records = shopMapper.selectShopStatsPage(userId, offset, size);
+        List<ShopStatsVO> records = shopMapper.selectShopStatsPage(userId, offset, s);
         if (records != null) {
             for (ShopStatsVO record : records) {
                 BigDecimal balance = record.getTotalBalance() == null
@@ -89,9 +96,9 @@ public class ShopService extends ServiceImpl<ShopMapper, Shop> {
                 }
             }
         }
-        IPage<ShopStatsVO> result = new Page<>(current, size, total);
+        Page<ShopStatsVO> result = new Page<>(p, s, total);
         result.setRecords(records);
-        return result;
+        return PageResult.of(result);
     }
 
 }

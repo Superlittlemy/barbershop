@@ -1,13 +1,15 @@
 package com.slm.barbershop.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.slm.barbershop.converter.ShopConverter;
 import com.slm.barbershop.entity.Shop;
 import com.slm.barbershop.exception.BizException;
 import com.slm.barbershop.model.ApiResponse;
+import com.slm.barbershop.model.PageResult;
 import com.slm.barbershop.model.ShopOverviewStatsVO;
+import com.slm.barbershop.model.ShopQuery;
 import com.slm.barbershop.model.ShopRequest;
 import com.slm.barbershop.model.ShopResponse;
+import com.slm.barbershop.model.ShopStatsQuery;
 import com.slm.barbershop.model.ShopStatsVO;
 import com.slm.barbershop.model.ShopTransactionRecentVO;
 import com.slm.barbershop.service.MemberTransactionService;
@@ -73,10 +75,9 @@ public class ShopController {
 
     @Operation(summary = "获取用户店铺分页列表")
     @GetMapping("/page")
-    public ApiResponse<IPage<ShopResponse>> page(IPage<Shop> page) {
+    public ApiResponse<PageResult<ShopResponse>> page(ShopQuery query) {
         Long userId = UserContext.getUser().getId();
-        return ApiResponse.ok(shopService.page(page, userId)
-                .convert(shopConverter::toResponse));
+        return ApiResponse.ok(PageResult.map(shopService.page(query, userId), shopConverter::toResponse));
     }
 
     @Operation(summary = "获取店铺最近交易记录(右侧最新动态)")
@@ -105,9 +106,9 @@ public class ShopController {
 
     @Operation(summary = "获取店铺列表（含每店会员聚合：memberCount、totalBalance）")
     @GetMapping("/stats/list")
-    public ApiResponse<IPage<ShopStatsVO>> statsList(IPage<ShopStatsVO> page) {
+    public ApiResponse<PageResult<ShopStatsVO>> statsList(ShopStatsQuery query) {
         Long userId = UserContext.getUser().getId();
-        return ApiResponse.ok(shopService.statsPage(page, userId));
+        return ApiResponse.ok(shopService.statsPage(query, userId));
     }
 
 }

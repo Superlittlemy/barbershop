@@ -22,8 +22,9 @@ import com.slm.barbershop.mapper.MemberMapper;
 import com.slm.barbershop.mapper.MemberTransactionItemMapper;
 import com.slm.barbershop.mapper.MemberTransactionMapper;
 import com.slm.barbershop.mapper.ServiceItemMapper;
-import com.slm.barbershop.model.MemberTransactionPageVO;
+import com.slm.barbershop.model.MemberTransactionQuery;
 import com.slm.barbershop.model.MemberTransactionResponse;
+import com.slm.barbershop.model.PageResult;
 import com.slm.barbershop.model.ShopTransactionRecentVO;
 import com.slm.barbershop.model.TransactionItemRequest;
 import com.slm.barbershop.model.TransactionItemResponse;
@@ -342,23 +343,20 @@ public class MemberTransactionService extends ServiceImpl<MemberTransactionMappe
     }
 
     /**
-     * 分页查询交易流水,按 created_time DESC, id DESC 排序。
+     * 分页查询交易流水,默认按 created_time DESC, id DESC 排序(支持前端 sort 覆盖)。
      * page 从 1 开始,size 默认 20,上限 100。
      */
-    public MemberTransactionPageVO pageByMemberId(Long memberId, long page, long size) {
-        long p = Math.max(page, 1);
-        long s = Math.min(Math.max(size, 1), 100);
+    public PageResult<MemberTransactionResponse> pageByMemberId(Long memberId, MemberTransactionQuery query) {
+        long p = Math.max(query.getCurrent(), 1);
+        long s = Math.min(Math.max(query.getSize(), 1), 100);
         Page<MemberTransaction> mpPage = new Page<>(p, s);
         LambdaQueryWrapper<MemberTransaction> wrapper = new LambdaQueryWrapper<MemberTransaction>()
                 .eq(MemberTransaction::getMemberId, memberId)
                 .orderByDesc(MemberTransaction::getCreatedTime)
                 .orderByDesc(MemberTransaction::getId);
         IPage<MemberTransaction> result = transactionMapper.selectPage(mpPage, wrapper);
-        List<MemberTransaction> records = result.getRecords();
-        long total = result.getTotal();
-        boolean hasMore = p * s < total;
-        List<MemberTransactionResponse> responseList = toResponseListWithItems(records);
-        return new MemberTransactionPageVO(responseList, total, p, s, hasMore);
+        List<MemberTransactionResponse> responseList = toResponseListWithItems(result.getRecords());
+        return PageResult.of(result, responseList);
     }
 
     /**
