@@ -1,6 +1,5 @@
 package com.slm.barbershop.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.slm.barbershop.converter.MemberConverter;
 import com.slm.barbershop.converter.MemberTransactionConverter;
 import com.slm.barbershop.entity.Member;
@@ -10,11 +9,13 @@ import com.slm.barbershop.model.ApiResponse;
 import com.slm.barbershop.model.LoginResponse;
 import com.slm.barbershop.model.MemberLoginRequest;
 import com.slm.barbershop.model.MemberMatchVO;
+import com.slm.barbershop.model.MemberQuery;
 import com.slm.barbershop.model.MemberRequest;
 import com.slm.barbershop.model.MemberResponse;
-import com.slm.barbershop.model.MemberTransactionPageVO;
+import com.slm.barbershop.model.MemberTransactionQuery;
 import com.slm.barbershop.model.MemberTransactionRequest;
 import com.slm.barbershop.model.MemberTransactionResponse;
+import com.slm.barbershop.model.PageResult;
 import com.slm.barbershop.service.MemberAuthService;
 import com.slm.barbershop.service.MemberService;
 import com.slm.barbershop.service.MemberTransactionService;
@@ -25,6 +26,7 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -83,9 +85,8 @@ public class MemberController {
 
     @Operation(summary = "获取店铺会员列表")
     @GetMapping("/page")
-    public ApiResponse<IPage<MemberResponse>> page(@RequestParam Long shopId, IPage<Member> page) {
-        return ApiResponse.ok(memberService.page(page, shopId)
-                .convert(memberConverter::toResponse));
+    public ApiResponse<PageResult<MemberResponse>> page(@Validated MemberQuery query) {
+        return ApiResponse.ok(PageResult.map(memberService.page(query), memberConverter::toResponse));
     }
 
     @Deprecated
@@ -147,12 +148,10 @@ public class MemberController {
     @Operation(summary = "会员交易流水分页查询")
     @Parameter(name = "id", description = "会员ID", in = ParameterIn.PATH)
     @GetMapping("/{id}/transactions/page")
-    public ApiResponse<MemberTransactionPageVO> transactionsPage(
-            @PathVariable Long id,
-            @RequestParam(defaultValue = "1") long page,
-            @RequestParam(defaultValue = "20") long size) {
+    public ApiResponse<PageResult<MemberTransactionResponse>> transactionsPage(
+            @PathVariable Long id, MemberTransactionQuery query) {
         assertMemberSelf(id);
-        return ApiResponse.ok(transactionService.pageByMemberId(id, page, size));
+        return ApiResponse.ok(transactionService.pageByMemberId(id, query));
     }
 
     /**

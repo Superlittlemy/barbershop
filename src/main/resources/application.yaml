@@ -24,9 +24,9 @@ spring:
       # 连接测试sql
       connection-test-query: select 1
   mail:
-    host: ${MAIL_HOST:smtp.163.com}
-    username: ${MAIL_USERNAME:15867153769@163.com}
-    password: ${MAIL_PASSWORD:XOCGWKJBWYFWPAVI}
+    host: ${MAIL_HOST:}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
     default-encoding: UTF-8
   servlet:
     multipart:

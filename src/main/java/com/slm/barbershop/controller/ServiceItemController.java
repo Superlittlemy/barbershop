@@ -1,10 +1,11 @@
 package com.slm.barbershop.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.slm.barbershop.converter.ServiceItemConverter;
 import com.slm.barbershop.entity.ServiceItem;
 import com.slm.barbershop.exception.BizException;
 import com.slm.barbershop.model.ApiResponse;
+import com.slm.barbershop.model.PageResult;
+import com.slm.barbershop.model.ServiceItemQuery;
 import com.slm.barbershop.model.ServiceItemRequest;
 import com.slm.barbershop.model.ServiceItemResponse;
 import com.slm.barbershop.service.ServiceItemService;
@@ -14,6 +15,7 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -62,13 +64,12 @@ public class ServiceItemController {
     }
 
     @Operation(summary = "店铺消费项目分页")
+    @Parameter(name = "shopId", description = "店铺ID", in = ParameterIn.QUERY, required = true)
+    @Parameter(name = "categoryId", description = "服务项分类ID", in = ParameterIn.QUERY)
+    @Parameter(name = "includeOff", description = "是否包括下架", in = ParameterIn.QUERY)
     @GetMapping("/page")
-    public ApiResponse<IPage<ServiceItemResponse>> page(@RequestParam Long shopId,
-                                                        @RequestParam(required = false) Long categoryId,
-                                                        @RequestParam(defaultValue = "false") boolean includeOff,
-                                                        IPage<ServiceItem> page) {
-        // 列表已包含 categoryName 填充,controller 不再二次 convert
-        return ApiResponse.ok(itemService.page(page, shopId, categoryId, includeOff));
+    public ApiResponse<PageResult<ServiceItemResponse>> page(@Validated ServiceItemQuery query) {
+        return ApiResponse.ok(itemService.page(query));
     }
 
 }

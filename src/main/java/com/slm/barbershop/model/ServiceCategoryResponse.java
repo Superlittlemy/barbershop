@@ -33,7 +33,4 @@ public class ServiceCategoryResponse {
     @Schema(description = "更新时间")
     private LocalDateTime updatedTime;
 
-    @Schema(description = "该项目分类下的项目数量")
-    private Long itemCount;
-
 }
