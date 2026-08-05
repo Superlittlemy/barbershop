@@ -10,15 +10,17 @@
     </resultMap>
 
     <resultMap id="ShopStatsVO" type="com.slm.barbershop.model.ShopStatsVO">
-        <result property="id"            column="id" />
-        <result property="name"          column="name" />
-        <result property="logo"          column="logo" />
-        <result property="address"       column="address" />
-        <result property="phone"         column="phone" />
-        <result property="businessHours" column="business_hours" />
-        <result property="createdTime"   column="created_time" />
-        <result property="memberCount"   column="member_count" />
-        <result property="totalBalance"  column="total_balance" />
+        <result property="id"          column="id" />
+        <result property="name"        column="name" />
+        <result property="logo"        column="logo" />
+        <result property="address"     column="address" />
+        <result property="phone"       column="phone" />
+        <result property="openTime"    column="open_time" />
+        <result property="closeTime"   column="close_time" />
+        <result property="weeklyOff"   column="weekly_off" typeHandler="com.slm.barbershop.handler.WeeklyOffListTypeHandler" />
+        <result property="createdTime" column="created_time" />
+        <result property="memberCount" column="member_count" />
+        <result property="totalBalance" column="total_balance" />
     </resultMap>
 
     <select id="selectOverviewBase" resultMap="ShopOverviewStatsVO">
@@ -56,7 +58,9 @@
           s.logo,
           s.address,
           s.phone,
-          s.business_hours,
+          s.open_time,
+          s.close_time,
+          s.weekly_off,
           s.created_time,
           COUNT(m.id)                  AS member_count,
           COALESCE(SUM(m.balance), 0)  AS total_balance

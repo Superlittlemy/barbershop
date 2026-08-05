@@ -33,12 +33,14 @@ public class ShopService extends ServiceImpl<ShopMapper, Shop> {
     private ShopConverter shopConverter;
 
     public Shop create(ShopRequest request, Long userId) {
+        validateBusinessHours(request);
         Shop shop = shopConverter.toEntityWithUserId(request, userId);
         shopMapper.insert(shop);
         return shop;
     }
 
     public Shop update(Long id, ShopRequest request, Long userId) {
+        validateBusinessHours(request);
         Shop shop = getById(id);
         if (shop == null) {
             throw new BizException(HttpStatus.NOT_FOUND, "店铺不存在");
@@ -99,6 +101,21 @@ public class ShopService extends ServiceImpl<ShopMapper, Shop> {
         Page<ShopStatsVO> result = new Page<>(p, s, total);
         result.setRecords(records);
         return PageResult.of(result);
+    }
+
+    /**
+     * 营业时间校验:open_time <= close_time;weekly_off 至多 7 元素。
+     * 字段都允许 null(走默认 09:00/22:00);仅在两个都填写时校验顺序。
+     */
+    private void validateBusinessHours(ShopRequest request) {
+        if (request == null) return;
+        if (request.getOpenTime() != null && request.getCloseTime() != null
+                && request.getCloseTime().isBefore(request.getOpenTime())) {
+            throw new BizException(HttpStatus.BAD_REQUEST, "营业结束时间必须晚于或等于营业开始时间");
+        }
+        if (request.getWeeklyOff() != null && request.getWeeklyOff().size() > 7) {
+            throw new BizException(HttpStatus.BAD_REQUEST, "周内休息标记最多 7 个元素");
+        }
     }
 
 }

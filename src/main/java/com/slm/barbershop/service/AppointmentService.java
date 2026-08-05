@@ -8,7 +8,6 @@ import com.slm.barbershop.entity.Appointment;
 import com.slm.barbershop.entity.Member;
 import com.slm.barbershop.entity.ServiceItem;
 import com.slm.barbershop.entity.Shop;
-import com.slm.barbershop.entity.ShopBusinessHours;
 import com.slm.barbershop.enums.AppointmentStatus;
 import com.slm.barbershop.exception.BizException;
 import com.slm.barbershop.mapper.AppointmentMapper;
@@ -23,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -32,7 +30,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * 预约服务
@@ -48,14 +45,14 @@ public class AppointmentService extends ServiceImpl<AppointmentMapper, Appointme
     /** 预约时段固定 1 小时(分钟数) */
     private static final int SLOT_MINUTES = 60;
 
+    /** 周内休息标记字符串中索引 0 对应的 dayOfWeek(1=周一) */
+    private static final int WEEK_OFF_INDEX_BASE = 1;
+
     @Autowired
     private AppointmentMapper appointmentMapper;
 
     @Autowired
     private AppointmentConverter appointmentConverter;
-
-    @Autowired
-    private ShopBusinessHoursService businessHoursService;
 
     @Autowired
     private ShopMapper shopMapper;
@@ -81,11 +78,12 @@ public class AppointmentService extends ServiceImpl<AppointmentMapper, Appointme
         LocalTime start = parseStartTime(request.getStartTime());
         LocalTime end = start.plusHours(1);
 
-        // 1) 校验店铺存在
+        // 1) 校验店铺存在 + 营业时间
         Shop shop = shopMapper.selectById(request.getShopId());
         if (shop == null) {
             throw new BizException(HttpStatus.NOT_FOUND, "店铺不存在");
         }
+        assertWithinBusinessHours(shop, date, start, end);
         // 2) 校验服务项目存在且上架,且属于该店铺
         ServiceItem item = serviceItemMapper.selectById(request.getServiceItemId());
         if (item == null) {
@@ -97,9 +95,7 @@ public class AppointmentService extends ServiceImpl<AppointmentMapper, Appointme
         if (item.getStatus() == null || item.getStatus() != 1) {
             throw new BizException(HttpStatus.BAD_REQUEST, "服务项目已下架,无法预约");
         }
-        // 3) 校验时段在营业时间内
-        assertWithinBusinessHours(request.getShopId(), date, start, end);
-        // 4) 时段冲突校验(同人同时段)
+        // 3) 时段冲突校验(同人同时段)
         Long conflict = appointmentMapper.selectCount(new LambdaQueryWrapper<Appointment>()
                 .eq(Appointment::getShopId, request.getShopId())
                 .eq(Appointment::getMemberId, memberId)
@@ -124,34 +120,31 @@ public class AppointmentService extends ServiceImpl<AppointmentMapper, Appointme
 
     /**
      * 校验 [start, end) 是否被店铺在指定日期的营业时间完全覆盖。
-     * 跨日营业时间若 endTime < startTime,按 [startTime, 24:00) ∪ [00:00, endTime) 校验。
+     * 单段非跨日设计:open_time <= start, end <= close_time,且该日期未标记为周内休息。
      */
-    private void assertWithinBusinessHours(Long shopId, LocalDate date, LocalTime start, LocalTime end) {
-        // ISO: 1=Mon..7=Sun,与 day_of_week 直接对应
+    private void assertWithinBusinessHours(Shop shop, LocalDate date, LocalTime start, LocalTime end) {
+        LocalTime open = shop.getOpenTime();
+        LocalTime close = shop.getCloseTime();
+        if (open == null || close == null) {
+            throw new BizException(HttpStatus.UNPROCESSABLE_ENTITY, "店铺未配置营业时间");
+        }
         int dow = date.getDayOfWeek().getValue();
-        List<ShopBusinessHours> hours = businessHoursService.listByShopId(shopId).stream()
-                .filter(h -> h.getDayOfWeek() != null && h.getDayOfWeek() == dow)
-                .collect(Collectors.toList());
-        if (hours.isEmpty()) {
-            throw new BizException(HttpStatus.UNPROCESSABLE_ENTITY, "所选日期店铺未营业");
+        if (isWeeklyOff(shop.getWeeklyOff(), dow)) {
+            throw new BizException(HttpStatus.UNPROCESSABLE_ENTITY, "所选日期店铺休息");
         }
-        for (ShopBusinessHours h : hours) {
-            if (isCovered(h, start, end)) return;
+        if (start.isBefore(open) || end.isAfter(close)) {
+            throw new BizException(HttpStatus.UNPROCESSABLE_ENTITY, "所选时段不在营业时间内");
         }
-        throw new BizException(HttpStatus.UNPROCESSABLE_ENTITY, "所选时段不在营业时间内");
     }
 
-    private boolean isCovered(ShopBusinessHours h, LocalTime start, LocalTime end) {
-        LocalTime hs = h.getStartTime();
-        LocalTime he = h.getEndTime();
-        boolean cross = h.getCrossDay() != null && h.getCrossDay() == 1;
-        if (!cross) {
-            return !start.isBefore(hs) && !end.isAfter(he);
-        }
-        // 跨日:[hs, 24:00) ∪ [00:00, he)
-        if (!start.isBefore(hs) && end.compareTo(LocalTime.MAX) <= 0 && end.isAfter(hs)) return true;
-        if (!end.isAfter(he) && start.compareTo(LocalTime.MIN) >= 0 && start.isBefore(he)) return true;
-        return false;
+    /**
+     * 检查 weeklyOff 字符串中 dayOfWeek(1=周一...7=周日)对应位是否为 1。
+     */
+    private boolean isWeeklyOff(String weeklyOff, int dayOfWeek) {
+        if (weeklyOff == null || weeklyOff.length() < 7) return false;
+        int idx = dayOfWeek - WEEK_OFF_INDEX_BASE;
+        if (idx < 0 || idx >= 7) return false;
+        return weeklyOff.charAt(idx) == '1';
     }
 
     private LocalTime parseStartTime(String s) {
@@ -180,68 +173,40 @@ public class AppointmentService extends ServiceImpl<AppointmentMapper, Appointme
      * - 末端不足 1 小时丢弃
      * - 已被预约占用的时段丢弃
      * - 早于"现在"的时段丢弃
+     * - 周内休息日直接返回空列表
      */
     public List<String> listAvailableSlots(Long shopId, LocalDate date) {
         if (shopId == null || date == null) {
             return Collections.emptyList();
         }
+        Shop shop = shopMapper.selectById(shopId);
+        if (shop == null || shop.getOpenTime() == null || shop.getCloseTime() == null) {
+            return Collections.emptyList();
+        }
         int dow = date.getDayOfWeek().getValue();
-        List<ShopBusinessHours> hours = businessHoursService.listByShopId(shopId).stream()
-                .filter(h -> h.getDayOfWeek() != null && h.getDayOfWeek() == dow)
-                .collect(Collectors.toList());
-        if (hours.isEmpty()) return Collections.emptyList();
+        if (isWeeklyOff(shop.getWeeklyOff(), dow)) {
+            return Collections.emptyList();
+        }
 
-        // 已被占用的起始时段
         Set<LocalTime> occupied = new HashSet<>(appointmentMapper.listStartTimes(shopId, date));
-        // 过滤过期:今天之前全部过期;今天则只保留 >= 当前时间的格
         LocalDateTime now = LocalDateTime.now();
         boolean isToday = date.equals(now.toLocalDate());
         LocalTime current = now.toLocalTime();
 
-        List<String> result = new ArrayList<>();
-        for (ShopBusinessHours h : hours) {
-            result.addAll(generateSlots(h, occupied, isToday, current));
-        }
-        Collections.sort(result);
-        return result;
-    }
-
-    private List<String> generateSlots(ShopBusinessHours h, Set<LocalTime> occupied, boolean isToday, LocalTime current) {
-        LocalTime hs = h.getStartTime();
-        LocalTime he = h.getEndTime();
-        boolean cross = h.getCrossDay() != null && h.getCrossDay() == 1;
-        List<String> slots = new ArrayList<>();
-        if (cross) {
-            // 段一:[hs, 24:00);段二:[00:00, he)
-            slots.addAll(sliceSlots(hs, LocalTime.MAX, occupied, isToday, current, true));
-            slots.addAll(sliceSlots(LocalTime.MIN, he, occupied, isToday, current, false));
-        } else {
-            slots.addAll(sliceSlots(hs, he, occupied, isToday, current, false));
-        }
-        return slots;
-    }
-
-    /**
-     * 在 [from, to) 区间生成整点起始时段(单位:SLOT_MINUTES)。
-     * allowEndEqualsMax=true 时允许 to=24:00:00 的边界(用于跨日营业时间的第一段)。
-     * 末端不足 1 小时直接丢弃。
-     */
-    private List<String> sliceSlots(LocalTime from, LocalTime to, Set<LocalTime> occupied,
-                                    boolean isToday, LocalTime current, boolean allowEndEqualsMax) {
-        if (from == null || to == null) return Collections.emptyList();
-        long totalMin = Duration.between(from, to).toMinutes();
-        if (totalMin < SLOT_MINUTES) return Collections.emptyList();
+        LocalTime open = shop.getOpenTime();
+        LocalTime close = shop.getCloseTime();
+        long totalMin = java.time.Duration.between(open, close).toMinutes();
         long fullSlots = totalMin / SLOT_MINUTES;
-        List<String> slots = new ArrayList<>();
+        List<String> result = new ArrayList<>();
         for (long i = 0; i < fullSlots; i++) {
-            LocalTime s = from.plusMinutes(i * SLOT_MINUTES);
+            LocalTime s = open.plusMinutes(i * SLOT_MINUTES);
             LocalTime e = s.plusMinutes(SLOT_MINUTES);
-            if (!allowEndEqualsMax && e.isAfter(to)) break;
+            if (e.isAfter(close)) break;
             if (isToday && s.isBefore(current)) continue;
             if (occupied.contains(s)) continue;
-            slots.add(String.format("%02d:%02d", s.getHour(), s.getMinute()));
+            result.add(String.format("%02d:%02d", s.getHour(), s.getMinute()));
         }
-        return slots;
+        return result;
     }
 
     // ==================== 店家分页查询 ====================
