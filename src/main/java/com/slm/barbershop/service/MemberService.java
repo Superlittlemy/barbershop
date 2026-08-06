@@ -10,6 +10,7 @@ import com.slm.barbershop.mapper.MemberMapper;
 import com.slm.barbershop.model.MemberMatchVO;
 import com.slm.barbershop.model.MemberQuery;
 import com.slm.barbershop.model.MemberRequest;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -78,6 +79,11 @@ public class MemberService extends ServiceImpl<MemberMapper, Member> {
     public IPage<Member> page(MemberQuery query) {
         LambdaQueryWrapper<Member> wrapper = new LambdaQueryWrapper<Member>()
                 .eq(Member::getShopId, query.getShopId());
+        wrapper.and(StringUtils.isNotEmpty(query.getKeyword()), w -> {
+                w.like(Member::getName, query.getKeyword());
+                w.or();
+                w.like(Member::getPhone, query.getKeyword());
+        });
         return memberMapper.selectPage(query, wrapper);
     }
 

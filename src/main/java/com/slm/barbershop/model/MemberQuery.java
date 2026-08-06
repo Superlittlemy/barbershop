@@ -20,4 +20,7 @@ public class MemberQuery extends Page<Member> {
     @Schema(description = "店铺ID(必填,用于数据隔离)", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long shopId;
 
+    @Schema(description = "会员名称/手机号")
+    private String keyword;
+
 }
