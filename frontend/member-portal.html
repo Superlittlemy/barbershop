@@ -15,8 +15,11 @@
       .avatar { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 24px; font-weight: 600; }
       .profile-info h1 { font-size: 20px; color: #1a1a1a; margin-bottom: 4px; }
       .profile-info p { font-size: 13px; color: #8e8e93; }
-      .store-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0f0f5; padding: 6px 12px; border-radius: 20px; font-size: 12px; color: #666; margin-top: 12px; }
+      .store-badge-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+      .store-badge { display: inline-flex; align-items: center; gap: 6px; background: #f0f0f5; padding: 6px 12px; border-radius: 20px; font-size: 12px; color: #666; min-width: 0; white-space: normal; }
       .store-badge::before { content: '📍'; }
+      .shop-switch-btn { display: inline-flex; align-items: center; gap: 2px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; padding: 6px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; flex-shrink: 0; white-space: nowrap; }
+      .shop-switch-btn:active { transform: scale(0.95); }
 
       /* Balance Card */
       .balance-card { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 16px; padding: 28px 24px; margin-bottom: 16px; color: #fff; }
@@ -46,6 +49,7 @@
       .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0; padding-bottom: 16px; flex-shrink: 0; }
       .modal-body { flex: 1; overflow-y: auto; min-height: 0; scrollbar-width: none; -ms-overflow-style: none; }
       .modal-body::-webkit-scrollbar { display: none; }
+      .modal-footer { flex-shrink: 0; padding-top: 16px; background: #fff; }
       .modal-title { font-size: 18px; font-weight: 600; }
       .modal-close { width: 32px; height: 32px; border-radius: 50%; background: #f5f5f5; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; color: #666; }
       .time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
@@ -72,6 +76,8 @@
       .shop-picker-title { font-size: 13px; color: #8e8e93; margin-bottom: 10px; text-align: center; }
       .shop-item { padding: 12px 16px; border: 1px solid #e5e5e5; border-radius: 10px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; }
       .shop-item:hover { border-color: #667eea; background: #fafafa; }
+      .shop-item.current { border-color: #667eea; background: #f5f5ff; font-weight: 500; cursor: default; }
+      .shop-item.current:hover { background: #f5f5ff; }
 
       /* Transactions list */
       .tx-list { margin-top: 8px; }
@@ -111,9 +117,8 @@
 <div id="loginOverlay" class="overlay">
   <div class="login-card">
     <h2>会员登录</h2>
-    <p class="subtitle">输入手机号与姓名即可查询会员信息</p>
+    <p class="subtitle">输入手机号即可查询会员信息</p>
     <input id="loginPhone" class="login-input" placeholder="手机号" maxlength="11" inputmode="numeric" />
-    <input id="loginName"  class="login-input" placeholder="姓名"   maxlength="20" />
     <div id="shopPicker" class="shop-picker" style="display:none">
       <p class="shop-picker-title">检测到您在多家店铺有会员，请选择：</p>
       <div id="shopList"></div>
@@ -131,7 +136,10 @@
       <div class="profile-info">
         <h1 id="memberName">--</h1>
         <p id="memberPhone">--</p>
-        <div class="store-badge" id="storeBadge">-- · 会员</div>
+        <div class="store-badge-row">
+          <div class="store-badge" id="storeBadge">--</div>
+          <button class="shop-switch-btn" id="shopSwitchBtn" style="display:none" onclick="openShopSwitchModal()">切换 ▾</button>
+        </div>
       </div>
     </div>
   </div>
@@ -196,6 +204,8 @@
         <label class="booking-label" for="bookingRemark">4. 备注(可选)</label>
         <textarea id="bookingRemark" class="booking-textarea" maxlength="200" placeholder="如有特殊需求请说明"></textarea>
       </div>
+    </div>
+    <div class="modal-footer">
       <div id="bookingError" class="booking-error"></div>
       <button id="bookingSubmit" class="confirm-book" onclick="confirmBooking()">确认预约</button>
     </div>
@@ -216,6 +226,19 @@
   </div>
 </div>
 
+<!-- Shop Switch Modal -->
+<div class="modal" id="shopSwitchModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span class="modal-title">切换店铺</span>
+      <div class="modal-close" onclick="closeShopSwitchModal()">✕</div>
+    </div>
+    <div class="modal-body">
+      <div id="shopSwitchList"></div>
+    </div>
+  </div>
+</div>
+
 <script>
     // ====== 配置 ======
     const API_BASE = '/api/barbershop';
@@ -224,6 +247,8 @@
     const NAME_KEY  = 'member_name';
     const SHOP_KEY  = 'member_shop_id';
     const SHOPNAME_KEY = 'member_shop_name';
+    const PHONE_KEY = 'member_phone';
+    const SHOPS_KEY = 'member_shops';
 
     // ====== 工具 ======
     async function apiCall(url, method, body, opts) {
@@ -250,7 +275,7 @@
     }
 
     function logout() {
-        [TOKEN_KEY, ID_KEY, NAME_KEY, SHOP_KEY, SHOPNAME_KEY].forEach(k => localStorage.removeItem(k));
+        [TOKEN_KEY, ID_KEY, NAME_KEY, SHOP_KEY, SHOPNAME_KEY, PHONE_KEY, SHOPS_KEY].forEach(k => localStorage.removeItem(k));
         location.reload();
     }
 
@@ -285,21 +310,21 @@
 
     async function onLoginSubmit() {
         const phone = document.getElementById('loginPhone').value.trim();
-        const name  = document.getElementById('loginName').value.trim();
         const errEl = document.getElementById('loginError');
         const btn   = document.getElementById('loginSubmit');
         errEl.textContent = '';
-        if (!phone || !name) { errEl.textContent = '请填写手机号和姓名'; return; }
+        if (!phone) { errEl.textContent = '请输入手机号'; return; }
         btn.disabled = true;
         btn.textContent = '查询中...';
         try {
-            const list = await apiCall('/member/login/match?phone=' + encodeURIComponent(phone) + '&name=' + encodeURIComponent(name), 'GET', null, { skip401: true });
+            const list = await apiCall('/member/login/match?phone=' + encodeURIComponent(phone), 'GET', null, { skip401: true });
             if (!list || list.length === 0) {
                 errEl.textContent = '未找到匹配的会员，请联系门店';
                 return;
             }
+            localStorage.setItem(SHOPS_KEY, JSON.stringify(list));
             if (list.length === 1) {
-                await doLogin(phone, name, list[0].shopId, list[0].shopName, list[0].memberId);
+                await doLogin(phone, list[0].shopId, list[0].shopName, list[0].memberId);
                 return;
             }
             // 多店匹配,展示店铺选择
@@ -311,15 +336,15 @@
             list.forEach(s => {
                 const div = document.createElement('div');
                 div.className = 'shop-item';
-                div.textContent = s.shopName + '（会员 #' + s.memberId + '）';
+                div.textContent = s.shopName;
                 div.onclick = () => {
                     chosenShopId = s.shopId;
-                    document.querySelectorAll('.shop-item').forEach(el => el.style.borderColor = '#e5e5e5');
+                    document.querySelectorAll('#shopList .shop-item').forEach(el => el.style.borderColor = '#e5e5e5');
                     div.style.borderColor = '#667eea';
                     btn.disabled = false;
                     btn.textContent = '使用此店铺登录';
                     // 立即登录
-                    doLogin(phone, name, s.shopId, s.shopName, s.memberId);
+                    doLogin(phone, s.shopId, s.shopName, s.memberId);
                 };
                 listEl.appendChild(div);
             });
@@ -336,11 +361,11 @@
         }
     }
 
-    async function doLogin(phone, name, shopId, shopName, expectedMemberId) {
+    async function doLogin(phone, shopId, shopName, expectedMemberId) {
         const errEl = document.getElementById('loginError');
         const btn   = document.getElementById('loginSubmit');
         try {
-            const data = await apiCall('/member/login', 'POST', { phone, name, shopId });
+            const data = await apiCall('/member/login', 'POST', { phone, shopId });
             if (expectedMemberId && data.id !== expectedMemberId) {
                 errEl.textContent = '店铺信息不一致，请重试';
                 return;
@@ -350,6 +375,7 @@
             localStorage.setItem(NAME_KEY, data.username);
             localStorage.setItem(SHOP_KEY, shopId);
             localStorage.setItem(SHOPNAME_KEY, shopName || '');
+            localStorage.setItem(PHONE_KEY, phone);
             enterMain();
         } catch (e) {
             errEl.textContent = e.message || '登录失败';
@@ -361,7 +387,65 @@
     function enterMain() {
         document.getElementById('loginOverlay').classList.add('hidden');
         document.getElementById('mainContainer').style.display = 'block';
+        updateShopSwitchVisibility();
         loadProfile();
+    }
+
+    // ====== 店铺切换 ======
+    function getMatchedShops() {
+        try {
+            const shops = JSON.parse(localStorage.getItem(SHOPS_KEY) || '[]');
+            return Array.isArray(shops) ? shops : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function updateShopSwitchVisibility() {
+        const btn = document.getElementById('shopSwitchBtn');
+        btn.style.display = getMatchedShops().length > 1 ? 'inline-flex' : 'none';
+    }
+
+    function openShopSwitchModal() {
+        const listEl = document.getElementById('shopSwitchList');
+        const shops = getMatchedShops();
+        if (shops.length === 0) { alert('未获取到可切换的店铺'); return; }
+        const currentShopId = localStorage.getItem(SHOP_KEY);
+        listEl.innerHTML = '';
+        shops.forEach(s => {
+            const div = document.createElement('div');
+            div.className = 'shop-item';
+            const isCurrent = String(s.shopId) === String(currentShopId);
+            if (isCurrent) div.classList.add('current');
+            div.textContent = (isCurrent ? '✓ ' : '') + s.shopName;
+            if (!isCurrent) {
+                div.onclick = () => switchShop(s.shopId, s.shopName, s.memberId);
+            }
+            listEl.appendChild(div);
+        });
+        document.getElementById('shopSwitchModal').classList.add('active');
+    }
+
+    function closeShopSwitchModal() {
+        document.getElementById('shopSwitchModal').classList.remove('active');
+    }
+
+    async function switchShop(shopId, shopName, memberId) {
+        const phone = localStorage.getItem(PHONE_KEY);
+        if (!phone) { logout(); return; }
+        try {
+            const data = await apiCall('/member/login', 'POST', { phone, shopId });
+            if (data.id !== memberId) { alert('店铺信息不一致，请重试'); return; }
+            localStorage.setItem(TOKEN_KEY, data.token);
+            localStorage.setItem(ID_KEY, data.id);
+            localStorage.setItem(NAME_KEY, data.username);
+            localStorage.setItem(SHOP_KEY, shopId);
+            localStorage.setItem(SHOPNAME_KEY, shopName || '');
+            closeShopSwitchModal();
+            location.reload();
+        } catch (e) {
+            alert('切换店铺失败：' + e.message);
+        }
     }
 
     // ====== 主页数据加载 ======
@@ -372,7 +456,7 @@
 
         const shopName = localStorage.getItem(SHOPNAME_KEY);
         if (shopName) {
-            document.getElementById('storeBadge').textContent = shopName + ' · 会员';
+            document.getElementById('storeBadge').textContent = shopName;
         }
 
         try {
@@ -381,7 +465,7 @@
             document.getElementById('memberPhone').textContent = maskPhone(member.phone);
             document.getElementById('avatar').textContent      = avatarChar(member.name);
             if (shopName) {
-                document.getElementById('storeBadge').textContent = shopName + ' · 会员';
+                document.getElementById('storeBadge').textContent = shopName;
             }
             document.getElementById('balanceAmount').textContent = fmtMoney(member.balance);
         } catch (e) {

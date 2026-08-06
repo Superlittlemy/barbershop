@@ -238,7 +238,7 @@ public class AppointmentService extends ServiceImpl<AppointmentMapper, Appointme
                     .stream().map(ServiceItem::getId).collect(Collectors.toList());
 
             if (memberIds.isEmpty() && serviceItemIds.isEmpty()) {
-                return PageResult.empty(p, s);
+                return PageResult.empty(query.getCurrent(), query.getSize());
             }
 
             wrapper.and(w -> {

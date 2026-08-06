@@ -126,22 +126,21 @@ public class MemberController {
 
     // ====== 新增：会员门户相关接口 ======
 
-    @Operation(summary = "跨店铺查找会员(按手机号+姓名)")
+    @Operation(summary = "跨店铺查找会员(按手机号)")
     @GetMapping("/login/match")
     public ApiResponse<List<MemberMatchVO>> matchForLogin(
-            @RequestParam String phone,
-            @RequestParam String name) {
-        if (phone == null || phone.trim().isEmpty() || name == null || name.trim().isEmpty()) {
-            throw new BizException(HttpStatus.BAD_REQUEST, "手机号和姓名不能为空");
+            @RequestParam String phone) {
+        if (phone == null || phone.trim().isEmpty()) {
+            throw new BizException(HttpStatus.BAD_REQUEST, "手机号不能为空");
         }
-        return ApiResponse.ok(memberService.match(phone, name));
+        return ApiResponse.ok(memberService.match(phone));
     }
 
     @Operation(summary = "会员登录(返回JWT)")
     @PostMapping("/login")
     public ApiResponse<LoginResponse> loginForMember(@RequestBody MemberLoginRequest request) {
         LoginResponse response = memberAuthService.login(
-                request.getPhone(), request.getName(), request.getShopId());
+                request.getPhone(), request.getShopId());
         return ApiResponse.ok(response);
     }
 

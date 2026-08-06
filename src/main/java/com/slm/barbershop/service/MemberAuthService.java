@@ -20,11 +20,10 @@ public class MemberAuthService {
     private JWTUtil jwtUtil;
 
     /**
-     * 会员登录：phone + name + shopId 三项校验,签发 JWT
+     * 会员登录：phone + shopId 两项校验,签发 JWT
      */
-    public LoginResponse login(String phone, String name, Long shopId) {
+    public LoginResponse login(String phone, Long shopId) {
         if (phone == null || phone.isEmpty()
-                || name == null || name.isEmpty()
                 || shopId == null) {
             throw new BizException(HttpStatus.BAD_REQUEST, "参数不完整");
         }
@@ -33,13 +32,12 @@ public class MemberAuthService {
                 new LambdaQueryWrapper<Member>()
                         .eq(Member::getShopId, shopId)
                         .eq(Member::getPhone, phone.trim())
-                        .eq(Member::getName, name.trim())
                         .eq(Member::getIsDeleted, 0)
                         .last("LIMIT 1")
         );
 
         if (member == null) {
-            throw new BizException(HttpStatus.UNAUTHORIZED, "姓名或手机号不正确");
+            throw new BizException(HttpStatus.UNAUTHORIZED, "手机号不正确");
         }
 
         String subject = JWTUtil.MEMBER_TOKEN_SUBJECT_PREFIX + member.getId();

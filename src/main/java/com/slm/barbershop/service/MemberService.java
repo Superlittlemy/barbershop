@@ -82,14 +82,14 @@ public class MemberService extends ServiceImpl<MemberMapper, Member> {
     }
 
     /**
-     * 跨店铺查找匹配手机号+姓名的会员。
+     * 跨店铺查找匹配手机号的会员。
      * 入参校验由 Controller 完成；这里只负责查询。
      */
-    public List<MemberMatchVO> match(String phone, String name) {
-        if (phone == null || phone.isEmpty() || name == null || name.isEmpty()) {
+    public List<MemberMatchVO> match(String phone) {
+        if (phone == null || phone.isEmpty()) {
             return Collections.emptyList();
         }
-        return memberMapper.matchAcrossShops(phone.trim(), name.trim());
+        return memberMapper.matchAcrossShops(phone.trim());
     }
 
     public Optional<Member> getByIdAndShopId(Long shopId, Long id) {

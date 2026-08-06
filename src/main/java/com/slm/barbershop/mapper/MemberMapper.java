@@ -11,6 +11,6 @@ import java.util.List;
 @Mapper
 public interface MemberMapper extends BaseMapper<Member> {
 
-    List<MemberMatchVO> matchAcrossShops(@Param("phone") String phone, @Param("name") String name);
+    List<MemberMatchVO> matchAcrossShops(@Param("phone") String phone);
 
 }

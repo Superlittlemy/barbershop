@@ -20,7 +20,6 @@
         FROM member m
         INNER JOIN shop s ON s.id = m.shop_id AND s.is_deleted = 0
         WHERE m.phone = #{phone}
-          AND m.name  = #{name}
           AND m.is_deleted = 0
         ORDER BY m.id ASC
     </select>
