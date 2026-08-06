@@ -55,12 +55,11 @@ public class ServiceItemService extends ServiceImpl<ServiceItemMapper, ServiceIt
      * categoryId 非空时按分类筛选。
      */
     public PageResult<ServiceItemResponse> page(ServiceItemQuery query) {
-        Page<ServiceItem> page = new Page<>(query.getCurrent(), query.getSize());
         LambdaQueryWrapper<ServiceItem> wrapper = new LambdaQueryWrapper<ServiceItem>()
                 .eq(ServiceItem::getShopId, query.getShopId())
                 .eq(query.getCategoryId() != null, ServiceItem::getCategoryId, query.getCategoryId())
                 .eq(!query.isIncludeOff(), ServiceItem::getStatus, 1);
-        IPage<ServiceItem> itemPage = itemMapper.selectPage(page, wrapper);
+        IPage<ServiceItem> itemPage = itemMapper.selectPage(query, wrapper);
 
         // 收集本页所有非空 categoryId,批量查分类名(一次 IN 查询)
         Set<Long> categoryIds = itemPage.getRecords().stream()

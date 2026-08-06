@@ -288,16 +288,8 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
     }
 
     public PageResult<BillResponse> page(BillQuery query) {
-        if (query == null) {
-            query = new BillQuery();
-        }
-        long p = Math.max(query.getCurrent(), 1);
-        long s = Math.min(Math.max(query.getSize(), 1), 100);
-        Page<Bill> mpPage = new Page<>(p, s);
         LambdaQueryWrapper<Bill> wrapper = new LambdaQueryWrapper<Bill>()
-                .eq(Bill::getShopId, query.getShopId())
-                .orderByDesc(Bill::getCreatedTime)
-                .orderByDesc(Bill::getId);
+                .eq(Bill::getShopId, query.getShopId());
         if (!query.includeCancelled()) {
             wrapper.eq(Bill::getIsCancelled, 0);
         }
@@ -322,7 +314,7 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
         if (query.getEndTime() != null) {
             wrapper.le(Bill::getCreatedTime, query.getEndTime());
         }
-        IPage<Bill> result = billMapper.selectPage(mpPage, wrapper);
+        IPage<Bill> result = billMapper.selectPage(query, wrapper);
         List<BillResponse> records = toResponseListWithItems(result.getRecords());
         return PageResult.of(result, records);
     }

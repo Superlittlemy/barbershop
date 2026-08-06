@@ -347,14 +347,9 @@ public class MemberTransactionService extends ServiceImpl<MemberTransactionMappe
      * page 从 1 开始,size 默认 20,上限 100。
      */
     public PageResult<MemberTransactionResponse> pageByMemberId(Long memberId, MemberTransactionQuery query) {
-        long p = Math.max(query.getCurrent(), 1);
-        long s = Math.min(Math.max(query.getSize(), 1), 100);
-        Page<MemberTransaction> mpPage = new Page<>(p, s);
         LambdaQueryWrapper<MemberTransaction> wrapper = new LambdaQueryWrapper<MemberTransaction>()
-                .eq(MemberTransaction::getMemberId, memberId)
-                .orderByDesc(MemberTransaction::getCreatedTime)
-                .orderByDesc(MemberTransaction::getId);
-        IPage<MemberTransaction> result = transactionMapper.selectPage(mpPage, wrapper);
+                .eq(MemberTransaction::getMemberId, memberId);
+        IPage<MemberTransaction> result = transactionMapper.selectPage(query, wrapper);
         List<MemberTransactionResponse> responseList = toResponseListWithItems(result.getRecords());
         return PageResult.of(result, responseList);
     }

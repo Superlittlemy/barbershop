@@ -65,10 +65,9 @@ public class ShopService extends ServiceImpl<ShopMapper, Shop> {
     }
 
     public IPage<Shop> page(ShopQuery query, Long userId) {
-        Page<Shop> page = new Page<>(query.getCurrent(), query.getSize());
         LambdaQueryWrapper<Shop> wrapper = new LambdaQueryWrapper<Shop>()
                 .eq(Shop::getUserId, userId);
-        return shopMapper.selectPage(page, wrapper);
+        return shopMapper.selectPage(query, wrapper);
     }
 
     public ShopOverviewStatsVO overviewStats(Long userId) {

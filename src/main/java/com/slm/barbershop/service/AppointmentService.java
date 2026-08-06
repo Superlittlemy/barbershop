@@ -217,10 +217,6 @@ public class AppointmentService extends ServiceImpl<AppointmentMapper, Appointme
     // ==================== 店家分页查询 ====================
 
     public PageResult<AppointmentResponse> page(AppointmentPageQuery query) {
-        long p = Math.max(query.getCurrent(), 1);
-        long s = Math.min(Math.max(query.getSize(), 1), 100);
-        Page<Appointment> mpPage = new Page<>(p, s);
-
         LambdaQueryWrapper<Appointment> wrapper = new LambdaQueryWrapper<Appointment>()
                 .eq(Appointment::getShopId, query.getShopId())
                 .eq(query.getDate() != null, Appointment::getAppointmentDate, query.getDate());
@@ -258,7 +254,7 @@ public class AppointmentService extends ServiceImpl<AppointmentMapper, Appointme
             });
         }
 
-        IPage<Appointment> result = appointmentMapper.selectPage(mpPage, wrapper);
+        IPage<Appointment> result = appointmentMapper.selectPage(query, wrapper);
         return PageResult.of(result, toResponseListWithNames(result.getRecords()));
     }
 
