@@ -77,10 +77,9 @@ public class MemberService extends ServiceImpl<MemberMapper, Member> {
     }
 
     public IPage<Member> page(MemberQuery query) {
-        Page<Member> page = new Page<>(query.getCurrent(), query.getSize());
         LambdaQueryWrapper<Member> wrapper = new LambdaQueryWrapper<Member>()
                 .eq(Member::getShopId, query.getShopId());
-        return memberMapper.selectPage(page, wrapper);
+        return memberMapper.selectPage(query, wrapper);
     }
 
     /**

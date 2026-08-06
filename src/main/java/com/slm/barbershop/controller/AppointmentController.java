@@ -1,13 +1,14 @@
 package com.slm.barbershop.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.slm.barbershop.entity.Appointment;
 import com.slm.barbershop.entity.Shop;
 import com.slm.barbershop.exception.BizException;
 import com.slm.barbershop.model.ApiResponse;
+import com.slm.barbershop.model.AppointmentPageQuery;
 import com.slm.barbershop.model.AppointmentRequest;
 import com.slm.barbershop.model.AppointmentResponse;
 import com.slm.barbershop.model.AuthUser;
+import com.slm.barbershop.model.PageResult;
 import com.slm.barbershop.service.AppointmentService;
 import com.slm.barbershop.service.ShopService;
 import com.slm.barbershop.utils.UserContext;
@@ -42,13 +43,9 @@ public class AppointmentController {
 
     @Operation(summary = "店家分页查询预约")
     @GetMapping("/page")
-    public ApiResponse<IPage<AppointmentResponse>> page(
-            @RequestParam Long shopId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam(required = false) String keyword,
-            IPage<Appointment> page) {
-        assertShopOwner(shopId);
-        return ApiResponse.ok(appointmentService.pageByShop(page, shopId, date, keyword));
+    public ApiResponse<PageResult<AppointmentResponse>> page(AppointmentPageQuery query) {
+        assertShopOwner(query.getShopId());
+        return ApiResponse.ok(appointmentService.page(query));
     }
 
     @Operation(summary = "会员端拉取可用时段(HH:mm 列表)")

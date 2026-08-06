@@ -618,7 +618,7 @@
         bookingState.loading = true;
         btn.disabled = true; btn.textContent = '提交中...';
         try {
-            await apiCall('/appointment', 'POST', { shopId: Number(shopId), serviceItemId: Number(serviceItemId), appointmentDate: date, startTime: slot, remark: remark || null });
+            await apiCall('/appointment', 'POST', { shopId: shopId, serviceItemId: serviceItemId, appointmentDate: date, startTime: slot, remark: remark || null });
             alert('预约成功！');
             closeModal();
         } catch (e) {

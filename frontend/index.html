@@ -990,23 +990,26 @@
                     <div class="input-group">
                         <label class="input-label">营业时间</label>
                         <div style="display:flex;align-items:center;gap:8px;">
-                            <input type="time" id="shopOpenTime" name="openTime" class="input" value="09:00" style="flex:1;">
+                            <input type="time" id="shopOpenTime" name="openTime" class="input" value="09:00" style="flex:1;" oninput="refreshShopHoursHint()">
                             <span style="color:var(--text-tertiary);">至</span>
-                            <input type="time" id="shopCloseTime" name="closeTime" class="input" value="22:00" style="flex:1;">
+                            <input type="time" id="shopCloseTime" name="closeTime" class="input" value="22:00" style="flex:1;" oninput="refreshShopHoursHint()">
+                            <div id="shopWeeklyOff" style="position:relative;flex:1.5;">
+                                <div id="weeklyOffDisplay" class="input" onclick="toggleWeeklyOffDropdown(event)" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;background:var(--surface);color:var(--text-tertiary);">
+                                    <span>选择休息日</span>
+                                    <span style="color:var(--text-tertiary);font-size:11px;">▾</span>
+                                </div>
+                                <div id="weeklyOffOptions" hidden style="position:absolute;top:100%;left:0;right:0;margin-top:4px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px 4px;z-index:10;box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+                                    <label style="display:flex;align-items:center;gap:6px;padding:6px 10px;font-size:13px;cursor:pointer;border-radius:4px;"><input type="checkbox" data-day="1">周一</label>
+                                    <label style="display:flex;align-items:center;gap:6px;padding:6px 10px;font-size:13px;cursor:pointer;border-radius:4px;"><input type="checkbox" data-day="2">周二</label>
+                                    <label style="display:flex;align-items:center;gap:6px;padding:6px 10px;font-size:13px;cursor:pointer;border-radius:4px;"><input type="checkbox" data-day="3">周三</label>
+                                    <label style="display:flex;align-items:center;gap:6px;padding:6px 10px;font-size:13px;cursor:pointer;border-radius:4px;"><input type="checkbox" data-day="4">周四</label>
+                                    <label style="display:flex;align-items:center;gap:6px;padding:6px 10px;font-size:13px;cursor:pointer;border-radius:4px;"><input type="checkbox" data-day="5">周五</label>
+                                    <label style="display:flex;align-items:center;gap:6px;padding:6px 10px;font-size:13px;cursor:pointer;border-radius:4px;"><input type="checkbox" data-day="6">周六</label>
+                                    <label style="display:flex;align-items:center;gap:6px;padding:6px 10px;font-size:13px;cursor:pointer;border-radius:4px;"><input type="checkbox" data-day="7">周日</label>
+                                </div>
+                            </div>
                         </div>
-                        <div class="input-hint">非跨日营业,结束时间必须晚于或等于开始时间</div>
-                    </div>
-                    <div class="input-group">
-                        <label class="input-label">周内休息日</label>
-                        <div id="shopWeeklyOff" style="display:flex;flex-wrap:wrap;gap:10px;">
-                            <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="checkbox" data-day="1">周一</label>
-                            <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="checkbox" data-day="2">周二</label>
-                            <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="checkbox" data-day="3">周三</label>
-                            <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="checkbox" data-day="4">周四</label>
-                            <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="checkbox" data-day="5">周五</label>
-                            <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="checkbox" data-day="6">周六</label>
-                            <label style="display:flex;align-items:center;gap:4px;font-size:13px;"><input type="checkbox" data-day="7">周日</label>
-                        </div>
+                        <div class="input-hint" id="shopHoursHint">非跨日营业,结束时间必须晚于或等于开始时间</div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1652,11 +1655,13 @@
             fields.phone.value = (shop && shop.phone) || '';
             fields.openTime.value = (shop && shop.openTime) ? String(shop.openTime).substring(0, 5) : '09:00';
             fields.closeTime.value = (shop && shop.closeTime) ? String(shop.closeTime).substring(0, 5) : '22:00';
+            refreshShopHoursHint();
             const weeklyOff = (shop && Array.isArray(shop.weeklyOff)) ? shop.weeklyOff : [0,0,0,0,0,0,0];
-            document.querySelectorAll('#shopWeeklyOff input[type=checkbox]').forEach(cb => {
+            document.querySelectorAll('#weeklyOffOptions input[type=checkbox]').forEach(cb => {
                 const day = parseInt(cb.dataset.day, 10);
                 cb.checked = weeklyOff[day - 1] === 1;
             });
+            document.getElementById('weeklyOffOptions').hidden = true;
             logoSavedUrl = (shop && shop.logo) || null;
             setLogoUploaderState(logoSavedUrl, logoSavedUrl ? 'saved' : 'none');
             document.getElementById('shopModal').classList.add('active');
@@ -2058,11 +2063,6 @@
             if (logoUploading) { showToast('Logo 正在上传，请稍候', 'error'); return; }
             const form = e.target;
             const id = document.getElementById('shopId').value;
-            const weeklyOff = [0,0,0,0,0,0,0];
-            document.querySelectorAll('#shopWeeklyOff input[type=checkbox]').forEach(cb => {
-                const day = parseInt(cb.dataset.day, 10);
-                if (cb.checked && day >= 1 && day <= 7) weeklyOff[day - 1] = 1;
-            });
             const data = {
                 name: form.name.value.trim(),
                 logo: form.logo.value.trim(),
@@ -2070,7 +2070,7 @@
                 phone: form.phone.value.trim(),
                 openTime: (form.openTime.value || '09:00') + ':00',
                 closeTime: (form.closeTime.value || '22:00') + ':00',
-                weeklyOff: weeklyOff
+                weeklyOff: getWeeklyOffSelected()
             };
             if (!data.name) { showToast('请输入店铺名称', 'error'); return; }
             const btn = document.getElementById('shopSubmitBtn');
@@ -2105,7 +2105,8 @@
             return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         }
 
-        const WEEK_DAY_LABEL = ['周一','周二','周三','周四','周五','周六','周日'];
+        const WEEK_DAY_LABELS = ['周一','周二','周三','周四','周五','周六','周日'];
+
         function formatShopHours(shop) {
             if (!shop) return '未填写营业时间';
             const open = shop.openTime ? String(shop.openTime).substring(0, 5) : '';
@@ -2113,14 +2114,58 @@
             const range = (open && close) ? `${open}-${close}` : '';
             const weeklyOff = Array.isArray(shop.weeklyOff) ? shop.weeklyOff : [];
             if (weeklyOff.length === 7) {
+                const offLabels = [];
                 for (let i = 0; i < 7; i++) {
-                    if (weeklyOff[i] === 1) {
-                        return range ? `${WEEK_DAY_LABEL[i]}休息 · ${range}` : `${WEEK_DAY_LABEL[i]}休息`;
-                    }
+                    if (weeklyOff[i] === 1) offLabels.push(WEEK_DAY_LABELS[i]);
+                }
+                if (offLabels.length > 0) {
+                    const offText = offLabels.join('、');
+                    return range ? `${offText}休息 · ${range}` : `${offText}休息`;
                 }
             }
             return range || '未填写营业时间';
         }
+
+        function toggleWeeklyOffDropdown(e) {
+            if (e) e.stopPropagation();
+            const opts = document.getElementById('weeklyOffOptions');
+            opts.hidden = !opts.hidden;
+        }
+
+        function getWeeklyOffSelected() {
+            const arr = [0,0,0,0,0,0,0];
+            const opts = document.querySelectorAll('#weeklyOffOptions input[type=checkbox]');
+            opts.forEach(cb => {
+                const day = parseInt(cb.dataset.day, 10);
+                if (cb.checked && day >= 1 && day <= 7) arr[day - 1] = 1;
+            });
+            return arr;
+        }
+
+        function refreshShopHoursHint() {
+            const hint = document.getElementById('shopHoursHint');
+            if (!hint) return;
+            const o = document.getElementById('shopOpenTime').value;
+            const c = document.getElementById('shopCloseTime').value;
+            if (!o || !c) {
+                hint.textContent = '非跨日营业,结束时间必须晚于或等于开始时间';
+                hint.style.color = '';
+                return;
+            }
+            const [oh, om] = o.split(':').map(Number);
+            const [ch, cm] = c.split(':').map(Number);
+            const invalid = (ch * 60 + cm) < (oh * 60 + om);
+            hint.textContent = invalid ? '结束时间要大于开始时间' : '非跨日营业,结束时间必须晚于或等于开始时间';
+            hint.style.color = invalid ? '#dc2626' : '';
+        }
+
+        document.addEventListener('click', e => {
+            const opts = document.getElementById('weeklyOffOptions');
+            const display = document.getElementById('weeklyOffDisplay');
+            if (!opts || !display || opts.hidden) return;
+            if (display.contains(e.target) || opts.contains(e.target)) return;
+            opts.hidden = true;
+        });
 
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') { closeModal(); closeShopModal(); closeMemberModal(); closeTxModal(); closeTxListModal(); closeServiceCategoryModal(); closeServiceItemModal(); }

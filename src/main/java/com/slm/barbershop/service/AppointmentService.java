@@ -2,6 +2,7 @@ package com.slm.barbershop.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.slm.barbershop.converter.AppointmentConverter;
 import com.slm.barbershop.entity.Appointment;
@@ -14,9 +15,11 @@ import com.slm.barbershop.mapper.AppointmentMapper;
 import com.slm.barbershop.mapper.MemberMapper;
 import com.slm.barbershop.mapper.ServiceItemMapper;
 import com.slm.barbershop.mapper.ShopMapper;
+import com.slm.barbershop.model.AppointmentPageQuery;
 import com.slm.barbershop.model.AppointmentRequest;
 import com.slm.barbershop.model.AppointmentResponse;
 import com.slm.barbershop.model.AuthUser;
+import com.slm.barbershop.model.PageResult;
 import com.slm.barbershop.utils.UserContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -29,7 +32,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 预约服务
@@ -211,17 +216,50 @@ public class AppointmentService extends ServiceImpl<AppointmentMapper, Appointme
 
     // ==================== 店家分页查询 ====================
 
-    public IPage<AppointmentResponse> pageByShop(IPage<Appointment> page, Long shopId, LocalDate date, String keyword) {
-        // 注:keyword 在本期极简版未参与 SQL 过滤(memberName/serviceItemName 在另一张表,
-        // 引入 join 提升复杂度;为保持最小化改动,留待后续需求按 member_id/service_item_id IN 改造)。
-        // 服务端拿到 keyword 后会在 controller 直接透传,前端"暂无匹配"由前端对当前页 records 做内存过滤呈现。
+    public PageResult<AppointmentResponse> page(AppointmentPageQuery query) {
+        long p = Math.max(query.getCurrent(), 1);
+        long s = Math.min(Math.max(query.getSize(), 1), 100);
+        Page<Appointment> mpPage = new Page<>(p, s);
+
         LambdaQueryWrapper<Appointment> wrapper = new LambdaQueryWrapper<Appointment>()
-                .eq(Appointment::getShopId, shopId)
-                .eq(date != null, Appointment::getAppointmentDate, date)
-                .orderByDesc(Appointment::getAppointmentDate)
-                .orderByDesc(Appointment::getStartTime);
-        IPage<Appointment> ap = appointmentMapper.selectPage(page, wrapper);
-        return ap.convert(this::toResponseWithNames);
+                .eq(Appointment::getShopId, query.getShopId())
+                .eq(query.getDate() != null, Appointment::getAppointmentDate, query.getDate());
+
+        String keyword = query.getKeyword();
+        if (keyword != null && !keyword.isBlank()) {
+            List<Long> memberIds = memberMapper.selectList(
+                    new LambdaQueryWrapper<Member>()
+                            .select(Member::getId)
+                            .eq(Member::getShopId, query.getShopId())
+                            .like(Member::getName, keyword))
+                    .stream().map(Member::getId).collect(Collectors.toList());
+
+            List<Long> serviceItemIds = serviceItemMapper.selectList(
+                    new LambdaQueryWrapper<ServiceItem>()
+                            .select(ServiceItem::getId)
+                            .eq(ServiceItem::getShopId, query.getShopId())
+                            .like(ServiceItem::getName, keyword))
+                    .stream().map(ServiceItem::getId).collect(Collectors.toList());
+
+            if (memberIds.isEmpty() && serviceItemIds.isEmpty()) {
+                return PageResult.empty(p, s);
+            }
+
+            wrapper.and(w -> {
+                if (!memberIds.isEmpty()) {
+                    w.in(Appointment::getMemberId, memberIds);
+                }
+                if (!serviceItemIds.isEmpty()) {
+                    if (!memberIds.isEmpty()) {
+                        w.or();
+                    }
+                    w.in(Appointment::getServiceItemId, serviceItemIds);
+                }
+            });
+        }
+
+        IPage<Appointment> result = appointmentMapper.selectPage(mpPage, wrapper);
+        return PageResult.of(result, toResponseListWithNames(result.getRecords()));
     }
 
     public AppointmentResponse toResponseWithNames(Appointment ap) {
@@ -247,6 +285,40 @@ public class AppointmentService extends ServiceImpl<AppointmentMapper, Appointme
             if (sh != null) resp.setShopName(sh.getName());
         }
         return resp;
+    }
+
+    /**
+     * 批量实体转 response,并一次性回填 memberName / serviceItemName / shopName。
+     * <p>
+     * 相比循环调用 {@link #fillNames} 的 N+1(selectById × N × 3)实现,本方法固定 3 次批量查询,
+     * 适用于分页场景(单条 create 场景仍走 fillNames,避免无谓的批量查)。
+     */
+    private List<AppointmentResponse> toResponseListWithNames(List<Appointment> aps) {
+        if (aps == null || aps.isEmpty()) return Collections.emptyList();
+
+        Set<Long> memberIds = aps.stream().map(Appointment::getMemberId)
+                .filter(java.util.Objects::nonNull).collect(Collectors.toSet());
+        Set<Long> serviceItemIds = aps.stream().map(Appointment::getServiceItemId)
+                .filter(java.util.Objects::nonNull).collect(Collectors.toSet());
+        Set<Long> shopIds = aps.stream().map(Appointment::getShopId)
+                .filter(java.util.Objects::nonNull).collect(Collectors.toSet());
+
+        Map<Long, String> memberNames = memberMapper.selectBatchIds(memberIds).stream()
+                .collect(Collectors.toMap(Member::getId, Member::getName));
+        Map<Long, String> serviceItemNames = serviceItemMapper.selectBatchIds(serviceItemIds).stream()
+                .collect(Collectors.toMap(ServiceItem::getId, ServiceItem::getName));
+        Map<Long, String> shopNames = shopMapper.selectBatchIds(shopIds).stream()
+                .collect(Collectors.toMap(Shop::getId, Shop::getName));
+
+        List<AppointmentResponse> out = new ArrayList<>(aps.size());
+        for (Appointment ap : aps) {
+            AppointmentResponse resp = appointmentConverter.toResponse(ap);
+            if (ap.getMemberId() != null) resp.setMemberName(memberNames.get(ap.getMemberId()));
+            if (ap.getServiceItemId() != null) resp.setServiceItemName(serviceItemNames.get(ap.getServiceItemId()));
+            if (ap.getShopId() != null) resp.setShopName(shopNames.get(ap.getShopId()));
+            out.add(resp);
+        }
+        return out;
     }
 
 }

@@ -31,6 +31,7 @@ public class JwtAuthenticationFilter implements Filter {
             "/auth/send-email-code",
             "/member/login",
             "/member/login/match",
+            "/actuator",
             "/swagger-ui",
             "/v3/api-docs",
             "/swagger-resources",
