@@ -5,8 +5,9 @@ import com.slm.barbershop.entity.Bill;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.springframework.format.annotation.DateTimeFormat;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 /**
  * 账单查询条件(Controller 层入参)
@@ -37,10 +38,12 @@ public class BillQuery extends Page<Bill> {
     private String customerPhone;
 
     @Schema(description = "起始时间(包含)")
-    private LocalDateTime startTime;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate startTime;
 
     @Schema(description = "结束时间(包含)")
-    private LocalDateTime endTime;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate endTime;
 
     @Schema(description = "是否包含已作废的账单(默认 false)")
     private Boolean includeCancelled;

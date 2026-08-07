@@ -309,10 +309,10 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
             wrapper.like(Bill::getCustomerPhone, query.getCustomerPhone());
         }
         if (query.getStartTime() != null) {
-            wrapper.ge(Bill::getCreatedTime, query.getStartTime());
+            wrapper.ge(Bill::getCreatedTime, query.getStartTime().atStartOfDay());
         }
         if (query.getEndTime() != null) {
-            wrapper.le(Bill::getCreatedTime, query.getEndTime());
+            wrapper.lt(Bill::getCreatedTime, query.getEndTime().plusDays(1).atStartOfDay());
         }
         IPage<Bill> result = billMapper.selectPage(query, wrapper);
         List<BillResponse> records = toResponseListWithItems(result.getRecords());

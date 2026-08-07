@@ -1,0 +1,22 @@
+# 全局配置
+global:
+  scrape_interval: 15s      # 默认采集间隔，每15秒拉取一次数据
+  evaluation_interval: 15s  # 告警规则评估间隔（暂未配置告警，保持默认）
+  # scrape_timeout: 10s     # 采集超时时间（默认10秒，一般不需要改）
+
+# 告警规则文件（暂未配置，后续可扩展）
+# rule_files:
+#   - "alerts.yml"
+
+# 采集目标配置
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]   # 因为是容器内访问自身
+  - job_name: 'barbershop'
+    metrics_path: '/barbershop/actuator/prometheus'
+    scrape_interval: 15s  # 抓取间隔
+    static_configs:
+      - targets: ['host.docker.internal:8080'] # Java 应用的地址与端口
+        labels:
+          env: 'production'

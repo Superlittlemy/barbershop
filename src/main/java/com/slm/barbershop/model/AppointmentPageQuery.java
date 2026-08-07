@@ -5,6 +5,7 @@ import com.slm.barbershop.entity.Appointment;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
@@ -26,6 +27,7 @@ public class AppointmentPageQuery extends Page<Appointment> {
     private Long shopId;
 
     @Schema(description = "预约日期(yyyy-MM-dd,可选)")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate date;
 
     @Schema(description = "关键词:会员姓名/服务项目名模糊匹配(OR 关系,LIKE,可选)")

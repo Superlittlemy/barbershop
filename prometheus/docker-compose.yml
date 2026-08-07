@@ -1,0 +1,42 @@
+services:
+  prometheus:
+    image: prom/prometheus:latest  # 官方镜像 [citation:2][citation:5][citation:12]
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - prometheus_data:/prometheus   # 数据持久化卷 [citation:5][citation:11][citation:12]
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro  # 挂载配置文件
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'  # 数据保留30天 [citation:5]
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest  # 官方镜像 [citation:2][citation:5][citation:12]
+    container_name: grafana
+    restart: unless-stopped
+    volumes:
+      - grafana_data:/var/lib/grafana  # 数据持久化卷 [citation:5][citation:11][citation:12]
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin      # 初始用户名 [citation:5]
+      - GF_SECURITY_ADMIN_PASSWORD=admin  # 初始密码，首次登录会要求修改 [citation:5]
+      - GF_USERS_ALLOW_SIGN_UP=false      # 禁止用户注册 [citation:5]
+    ports:
+      - "3000:3000"
+    networks:
+      - monitoring
+
+# 也可以加入 node-exporter 和 cadvisor 来监控主机和容器指标 [citation:1][citation:5][citation:8]
+# 参考: https://github.com/linview/prometheus-grafana-quickstart [citation:1]
+
+networks:
+  monitoring:
+    driver: bridge  # 创建一个桥接网络，让服务互相通信 [citation:2][citation:5]
+
+volumes:
+  prometheus_data:
+  grafana_data:
