@@ -16,17 +16,16 @@
 | 接口文档    | springdoc-openapi-ui 1.7.0        |
 | 对象映射    | MapStruct 1.5.5 + Lombok          |
 | 邮件        | Spring Boot Mail (SMTP)           |
-| 前端        | 原生单页 HTML（[frontend/index.html](frontend/index.html)） |
 
 ## 目录结构
 
 ```
 barbershop/
 ├── src/main/java/com/slm/barbershop/
-│   ├── controller/        # Auth / Shop / Member / File
+│   ├── controller/        # Auth / Shop / Member / Appointment / Bill / ServiceCategory / ServiceItem / File
 │   ├── service/           # 业务实现
 │   ├── mapper/            # MyBatis-Plus Mapper
-│   ├── entity/            # User / Shop / Member / MemberTransaction / FileMetadata
+│   ├── entity/            # User / Shop / Member / MemberTransaction / Appointment / Bill / ServiceCategory / ServiceItem / FileMetadata
 │   ├── model/             # DTO / VO
 │   ├── converter/         # MapStruct 转换器
 │   ├── config/            # Web / MyBatis-Plus / Redisson / MinIO 等配置
@@ -39,7 +38,7 @@ barbershop/
 │   ├── db/migration/      # Flyway SQL 迁移脚本
 │   └── mapper/            # 自定义 XML
 ├── src/test/              # 单元测试
-├── frontend/index.html    # 控制台单页应用
+├── frontend/member-portal.html  # 会员门户单页应用（手机号登录、店铺切换、预约等）
 ├── docker/                # Docker 构建配置
 ├── docker-compose.yml     # MySQL / MinIO / Redis 一键启动
 ├── Dockerfile
@@ -92,12 +91,15 @@ http://localhost:8080/barbershop/swagger-ui.html
 
 主要端点（context-path: `/barbershop`）：
 
-| 模块     | 路径前缀        | 说明             |
-| -------- | --------------- | ---------------- |
-| 认证     | `/auth`         | 登录、刷新令牌等 |
-| 门店     | `/shop`         | 门店信息维护     |
-| 会员     | `/member`       | 会员与交易流水   |
-| 文件     | `/file`         | MinIO 上传/下载  |
+| 模块       | 路径前缀             | 说明                          |
+|----------|------------------|-----------------------------|
+| 认证       | `/auth`          | 登录、刷新令牌等                   |
+| 店铺       | `/shop`          | 店铺信息维护、营业时间、概览/统计接口        |
+| 会员       | `/member`        | 会员信息与交易流水（含手机号登录）           |
+| 预约       | `/appointment`   | 预约创建/分页查询/状态流转                |
+| 账单       | `/bill`          | 独立账单系统（含 KPI 指标、散户/会员消费明细）   |
+| 服务类目/项目 | `/service-category` `/service-item` | 服务类目与项目维护             |
+| 文件       | `/file`          | MinIO 上传/下载                |
 
 ## 配置项（环境变量）
 
@@ -125,12 +127,12 @@ http://localhost:8080/barbershop/swagger-ui.html
 - 全局异常统一在 `exception/` 处理，Controller 不应捕获业务异常
 - DTO / VO 与 Entity 互转统一使用 `converter/` 下的 MapStruct
 
-## 控制台预览
+## 会员门户
 
-控制台前端位于 [frontend/index.html](frontend/index.html)，为单文件 SPA，无构建步骤，浏览器直接打开即可。
+会员门户前端位于 [frontend/member-portal.html](frontend/member-portal.html)，为单文件 SPA，无构建步骤，浏览器直接打开即可。
 
-### 控制台首页（概览）
-
-![控制台首页](docs/screenshots/dashboard.png)
-
-> 截图来自 `frontend/index.html` 初始视图，左侧为导航栏（概览 / 店铺管理 / 会员管理），右侧为系统通知与快速入口。
+核心能力：
+- 手机号验证码登录
+- 店铺切换（支持多店会员体系）
+- 服务项目浏览与预约
+- 会员账单/消费明细查询
