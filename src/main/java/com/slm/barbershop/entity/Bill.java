@@ -30,18 +30,6 @@ public class Bill extends BaseEntity {
     private Long memberId;
 
     /**
-     * 客户姓名(非会员快照)
-     */
-    @TableField("customer_name")
-    private String customerName;
-
-    /**
-     * 客户手机号(非会员快照)
-     */
-    @TableField("customer_phone")
-    private String customerPhone;
-
-    /**
      * 支付方式
      */
     @TableField("pay_channel")

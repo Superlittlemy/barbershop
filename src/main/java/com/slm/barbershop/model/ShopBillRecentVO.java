@@ -22,17 +22,14 @@ public class ShopBillRecentVO {
     @Schema(description = "账单金额")
     private BigDecimal totalAmount;
 
-    @Schema(description = "客户姓名(非会员)")
-    private String customerName;
-
-    @Schema(description = "客户手机号(非会员)")
-    private String customerPhone;
-
     @Schema(description = "会员ID")
     private Long memberId;
 
     @Schema(description = "会员姓名")
     private String memberName;
+
+    @Schema(description = "会员手机号(实时查询)")
+    private String memberPhone;
 
     @Schema(description = "创建时间")
     private LocalDateTime createdTime;

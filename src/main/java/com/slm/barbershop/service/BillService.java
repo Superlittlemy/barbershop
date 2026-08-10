@@ -107,7 +107,7 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
         }
 
         // 客户信息
-        // 非会员场景不再要求客户姓名/手机号,Bill.customerName/phone 仅作为会员姓名快照使用(由 MemberTransactionService 在写入账单时回填)
+        // 账单不再冗余存储客户姓名/手机号;会员姓名/手机号在响应层实时 JOIN member 表查询。
         if (channel == BillPayChannel.MEMBER) {
             if (request.getMemberId() == null) {
                 throw new BizException(HttpStatus.BAD_REQUEST, "会员划账时 memberId 必填");
@@ -195,9 +195,7 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
         Bill bill = new Bill();
         bill.setShopId(request.getShopId());
         bill.setMemberId(request.getMemberId());
-        // 客户姓名/手机号不再由前端传入;会员路径由 MemberTransactionService 在写入账单时回填快照
-        bill.setCustomerName(null);
-        bill.setCustomerPhone(null);
+        // 客户姓名/手机号不再冗余存储;会员姓名/手机号在响应层实时 JOIN member 表查询
         bill.setPayChannel(channel.name());
         bill.setType(billType.name());
         bill.setTotalAmount(total);
@@ -219,7 +217,9 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
             }
         }
 
-        return billConverter.toResponseWithItems(bill, toItemResponseList(persistItems));
+        BillResponse response = billConverter.toResponseWithItems(bill, toItemResponseList(persistItems));
+        fillMemberInfo(bill, response);
+        return response;
     }
 
     public BillResponse cancel(Long shopId, Long billId, String reason) {
@@ -301,12 +301,6 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
         }
         if (query.getMemberId() != null) {
             wrapper.eq(Bill::getMemberId, query.getMemberId());
-        }
-        if (StringUtils.hasText(query.getCustomerName())) {
-            wrapper.like(Bill::getCustomerName, query.getCustomerName());
-        }
-        if (StringUtils.hasText(query.getCustomerPhone())) {
-            wrapper.like(Bill::getCustomerPhone, query.getCustomerPhone());
         }
         if (query.getStartTime() != null) {
             wrapper.ge(Bill::getCreatedTime, query.getStartTime().atStartOfDay());
@@ -410,7 +404,9 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
 
     private BillResponse toResponseWithItems(Bill bill) {
         List<TransactionItemResponse> items = listItemsByBillId(bill.getId());
-        return billConverter.toResponseWithItems(bill, items);
+        BillResponse response = billConverter.toResponseWithItems(bill, items);
+        fillMemberInfo(bill, response);
+        return response;
     }
 
     private List<TransactionItemResponse> listItemsByBillId(Long billId) {
@@ -462,6 +458,15 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
             itemsByBillId.computeIfAbsent(bi.getBillId(), k -> new ArrayList<>())
                     .add(toItemResponse(bi));
         }
+        // 一次性批量查 member,避免 N+1;参考 AppointmentService.toResponseListWithNames 的实现风格
+        Set<Long> memberIds = bills.stream()
+                .map(Bill::getMemberId)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toSet());
+        Map<Long, Member> memberMap = memberIds.isEmpty()
+                ? Collections.emptyMap()
+                : memberMapper.selectBatchIds(memberIds).stream()
+                    .collect(Collectors.toMap(Member::getId, m -> m));
         List<BillResponse> responses = new ArrayList<>(bills.size());
         for (Bill b : bills) {
             BillResponse r = billConverter.toResponse(b);
@@ -470,9 +475,39 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
                 r.setType(b.getType());
             }
             r.setItems(itemsByBillId.getOrDefault(b.getId(), Collections.emptyList()));
+            fillMemberInfo(b, r, memberMap);
             responses.add(r);
         }
         return responses;
+    }
+
+    /**
+     * 单条回填会员姓名/手机号: 通过 memberId 实时查 Member。
+     * memberId 为空时保持 null(非会员场景)。
+     */
+    private void fillMemberInfo(Bill bill, BillResponse response) {
+        if (bill == null || response == null || bill.getMemberId() == null) {
+            return;
+        }
+        Member member = memberMapper.selectById(bill.getMemberId());
+        if (member != null) {
+            response.setMemberName(member.getName());
+            response.setMemberPhone(member.getPhone());
+        }
+    }
+
+    /**
+     * 批量回填会员姓名/手机号: 使用预查好的 memberMap,不再 selectById,避免 N+1。
+     */
+    private void fillMemberInfo(Bill bill, BillResponse response, Map<Long, Member> memberMap) {
+        if (bill == null || response == null || bill.getMemberId() == null || memberMap == null) {
+            return;
+        }
+        Member member = memberMap.get(bill.getMemberId());
+        if (member != null) {
+            response.setMemberName(member.getName());
+            response.setMemberPhone(member.getPhone());
+        }
     }
 
     private TransactionItemResponse toItemResponse(BillItem bi) {

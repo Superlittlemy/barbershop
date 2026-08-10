@@ -270,7 +270,10 @@ public class AppointmentService extends ServiceImpl<AppointmentMapper, Appointme
         if (ap == null) return resp;
         if (ap.getMemberId() != null) {
             Member m = memberMapper.selectById(ap.getMemberId());
-            if (m != null) resp.setMemberName(m.getName());
+            if (m != null) {
+                resp.setMemberName(m.getName());
+                resp.setMemberPhone(m.getPhone());
+            }
         }
         if (ap.getServiceItemId() != null) {
             ServiceItem it = serviceItemMapper.selectById(ap.getServiceItemId());
@@ -299,8 +302,8 @@ public class AppointmentService extends ServiceImpl<AppointmentMapper, Appointme
         Set<Long> shopIds = aps.stream().map(Appointment::getShopId)
                 .filter(java.util.Objects::nonNull).collect(Collectors.toSet());
 
-        Map<Long, String> memberNames = memberMapper.selectBatchIds(memberIds).stream()
-                .collect(Collectors.toMap(Member::getId, Member::getName));
+        Map<Long, Member> memberMap = memberMapper.selectBatchIds(memberIds).stream()
+                .collect(Collectors.toMap(Member::getId, m -> m));
         Map<Long, String> serviceItemNames = serviceItemMapper.selectBatchIds(serviceItemIds).stream()
                 .collect(Collectors.toMap(ServiceItem::getId, ServiceItem::getName));
         Map<Long, String> shopNames = shopMapper.selectBatchIds(shopIds).stream()
@@ -309,7 +312,11 @@ public class AppointmentService extends ServiceImpl<AppointmentMapper, Appointme
         List<AppointmentResponse> out = new ArrayList<>(aps.size());
         for (Appointment ap : aps) {
             AppointmentResponse resp = appointmentConverter.toResponse(ap);
-            if (ap.getMemberId() != null) resp.setMemberName(memberNames.get(ap.getMemberId()));
+            Member mem = ap.getMemberId() != null ? memberMap.get(ap.getMemberId()) : null;
+            if (mem != null) {
+                resp.setMemberName(mem.getName());
+                resp.setMemberPhone(mem.getPhone());
+            }
             if (ap.getServiceItemId() != null) resp.setServiceItemName(serviceItemNames.get(ap.getServiceItemId()));
             if (ap.getShopId() != null) resp.setShopName(shopNames.get(ap.getShopId()));
             out.add(resp);

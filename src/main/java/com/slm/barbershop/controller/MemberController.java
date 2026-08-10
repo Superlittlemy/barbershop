@@ -89,14 +89,6 @@ public class MemberController {
         return ApiResponse.ok(PageResult.map(memberService.page(query), memberConverter::toResponse));
     }
 
-    @Deprecated
-    @Operation(summary = "获取店铺会员列表")
-    @GetMapping("/list")
-    public ApiResponse<List<MemberResponse>> list(@RequestParam Long shopId) {
-        List<Member> members = memberService.listByShopId(shopId);
-        return ApiResponse.ok(memberConverter.toResponseList(members));
-    }
-
     @Operation(summary = "储值")
     @Parameter(name = "id", description = "会员ID", in = ParameterIn.PATH)
     @PostMapping("/{id}/store")

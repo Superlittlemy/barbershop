@@ -228,9 +228,7 @@ public class MemberTransactionService extends ServiceImpl<MemberTransactionMappe
             Bill bill = new Bill();
             bill.setShopId(member.getShopId());
             bill.setMemberId(memberId);
-            // 会员姓名/手机号快照(便于账单列表"客户"列展示,即使会员改名也不影响历史账单)
-            bill.setCustomerName(member.getName());
-            bill.setCustomerPhone(member.getPhone());
+            // 会员姓名/手机号不再冗余存储到账单;响应层实时 JOIN member 表查询最新资料
             bill.setPayChannel(BillPayChannel.MEMBER.name());
             bill.setType(BillType.CONSUME.name());
             bill.setTotalAmount(finalAmount);
@@ -253,9 +251,7 @@ public class MemberTransactionService extends ServiceImpl<MemberTransactionMappe
             Bill bill = new Bill();
             bill.setShopId(member.getShopId());
             bill.setMemberId(memberId);
-            // 储值账单也用会员姓名/手机号快照,便于列表展示
-            bill.setCustomerName(member.getName());
-            bill.setCustomerPhone(member.getPhone());
+            // 会员姓名/手机号不再冗余存储到账单;响应层实时 JOIN member 表查询最新资料
             // 储值默认 OFFLINE(用户通过店铺后台手工登记的储值,默认线下收款)
             bill.setPayChannel(BillPayChannel.OFFLINE.name());
             bill.setType(BillType.STORE.name());

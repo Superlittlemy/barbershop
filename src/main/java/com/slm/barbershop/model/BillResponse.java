@@ -23,11 +23,11 @@ public class BillResponse {
     @Schema(description = "会员ID")
     private Long memberId;
 
-    @Schema(description = "客户姓名(快照)")
-    private String customerName;
+    @Schema(description = "会员姓名(实时查询)")
+    private String memberName;
 
-    @Schema(description = "客户手机号(快照)")
-    private String customerPhone;
+    @Schema(description = "会员手机号(实时查询)")
+    private String memberPhone;
 
     @Schema(description = "支付方式")
     private String payChannel;

@@ -39,10 +39,9 @@
         <id property="id" column="id" />
         <result property="payChannel" column="pay_channel" />
         <result property="totalAmount" column="total_amount" />
-        <result property="customerName" column="customer_name" />
-        <result property="customerPhone" column="customer_phone" />
         <result property="memberId" column="member_id" />
         <result property="memberName" column="member_name" />
+        <result property="memberPhone" column="member_phone" />
         <result property="createdTime" column="created_time" />
     </resultMap>
 
@@ -50,10 +49,9 @@
         SELECT b.id,
                b.pay_channel,
                b.total_amount,
-               b.customer_name,
-               b.customer_phone,
                b.member_id,
                m.name AS member_name,
+               m.phone AS member_phone,
                b.created_time
         FROM bill b
         LEFT JOIN member m ON m.id = b.member_id AND m.is_deleted = 0
