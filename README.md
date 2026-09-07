@@ -1,139 +1,101 @@
-# Barbershop Service
+# 💈 理发店管理系统
 
-理发店业务管理系统后端服务，提供门店、会员、交易、文件等核心能力的 RESTful 接口。
+**让每一家理发店，都拥有属于自己的数字化门店。**
 
-## 技术栈
+一套专为理发店、美容美发门店打造的轻量级运营管理系统，开箱即用，让你**当天就能上手**，把会员、预约、账单、员工这些日常琐事全部交给系统，自己专心做好服务。
 
-| 模块        | 版本 / 选型                       |
-| ----------- | --------------------------------- |
-| JDK         | 11                                |
-| 框架        | Spring Boot 2.7.18                |
-| 持久层      | MyBatis-Plus 3.5.9                |
-| 数据库      | MySQL 8.0 + Flyway 版本迁移       |
-| 缓存 / 锁   | Redis + Redisson 3.24.3           |
-| 对象存储    | MinIO 8.5.10                      |
-| 鉴权        | JWT (jjwt 0.12.5)                 |
-| 接口文档    | springdoc-openapi-ui 1.7.0        |
-| 对象映射    | MapStruct 1.5.5 + Lombok          |
-| 邮件        | Spring Boot Mail (SMTP)           |
+---
 
-## 目录结构
+## 🌟 为什么选择我们
 
-```
-barbershop/
-├── src/main/java/com/slm/barbershop/
-│   ├── controller/        # Auth / Shop / Member / Appointment / Bill / ServiceCategory / ServiceItem / File
-│   ├── service/           # 业务实现
-│   ├── mapper/            # MyBatis-Plus Mapper
-│   ├── entity/            # User / Shop / Member / MemberTransaction / Appointment / Bill / ServiceCategory / ServiceItem / FileMetadata
-│   ├── model/             # DTO / VO
-│   ├── converter/         # MapStruct 转换器
-│   ├── config/            # Web / MyBatis-Plus / Redisson / MinIO 等配置
-│   ├── lock/              # 分布式锁抽象（多模式）
-│   ├── exception/         # 全局异常处理
-│   ├── enums/             # 枚举
-│   └── utils/             # 工具类
-├── src/main/resources/
-│   ├── application.yaml   # 主配置
-│   ├── db/migration/      # Flyway SQL 迁移脚本
-│   └── mapper/            # 自定义 XML
-├── src/test/              # 单元测试
-├── frontend/member-portal.html  # 会员门户单页应用（手机号登录、店铺切换、预约等）
-├── docker/                # Docker 构建配置
-├── docker-compose.yml     # MySQL / MinIO / Redis 一键启动
-├── Dockerfile
-└── pom.xml
-```
+- **真的简单**：不需要懂技术，会用手机就能学会
+- **当天上线**：一条命令启动全部服务，浏览器打开就能用
+- **多店通用**：一家店能用，十家连锁也能管
+- **会员自助**：配套的手机端门户，让顾客自己查余额、约时间，前台少接一半电话
 
-## 快速开始
+---
 
-### 环境依赖
+## 👤 它能为你做什么
 
-- JDK 11+
-- Maven 3.8+
-- Docker（可选，用于一键拉起 MySQL / MinIO / Redis）
+### 🏪 给店长
 
-### 启动基础服务
+- 一眼看穿每家店的经营情况：营业额、会员数、储值总额
+- 哪家店最近火了、哪家店冷清，数据说了算
+- 多个门店统一管理，无需切换多个系统
 
+### 💁 给前台 / 收银
+
+- 录入会员只需手机号，3 秒搞定
+- 储值、扣费、开票、作废，全部在一个屏幕完成
+- 当天预约一目了然，再也不用翻小本子
+
+### 💇 给理发师
+
+- 查看今天的预约安排，提前知道服务谁
+- 维护自己能做的项目，方便顾客点名预约
+
+### 📱 给会员（顾客）
+
+- 手机号登录，自动匹配自己常去的店
+- 余额、消费记录随时翻，储值用得明白
+- 自己挑时间、挑师傅、挑项目，在线预约不打电话
+
+---
+
+## ✨ 六大核心功能
+
+| 功能 | 你能做什么 |
+| --- | --- |
+| 🏪 **门店管理** | 新增/编辑门店，设置营业时间，查看每家店的会员与储值情况 |
+| 👥 **会员管理** | 建档、按手机号查找、储值、扣费、查看完整交易流水 |
+| 📆 **预约管理** | 顾客在线预约、查看当天可约时段、按日期统一查看全部预约 |
+| 🧾 **账单管理** | 开具账单、四种支付方式、按日查询、营业汇总、自动统计占比 |
+| 💇 **员工管理** | 录入理发师、绑定服务项目、账单与预约自动关联具体员工 |
+| ✂️ **服务项目** | 维护剪发、烫染、护理等项目，支持分类、排序、上下架 |
+
+---
+
+## 📱 会员门户：让顾客自己动手
+
+随系统附带的**会员自助门户**，无需安装 App，无需下载，**手机浏览器直接打开就能用**。
+
+顾客可以：
+- ✅ 用手机号登录，自动找到自己常去的店
+- ✅ 查看账户余额、消费记录，账目清清楚楚
+- ✅ 在线预约：选日期、选时段、选师傅、选项目
+- ✅ 多店会员可一键切换门店
+
+> 前台每天接的咨询电话，一半可以从这里省下来。
+
+---
+
+## 🚀 三步上线，今天就用
+
+不需要专业的运维工程师，不需要复杂的配置流程。
+
+### 第一步：准备环境
+只需要一台能跑 Docker 的电脑或服务器。
+
+### 第二步：一条命令启动
 ```bash
-docker-compose up -d mysql minio redis
+docker-compose up -d
 ```
+等 1-2 分钟，全部服务就绪。
 
-### 本地运行
+---
 
-```bash
-# 默认配置：服务监听 8080，context-path = /barbershop
-mvn spring-boot:run
-```
+## 📋 启动后一览
 
-### 打包部署
+| 你需要看的东西 | 在哪里 |
+| --- | --- |
+| 系统主入口（后台 API） | http://localhost:8080/barbershop |
+| 接口文档（在线查阅） | http://localhost:8080/barbershop/swagger-ui.html |
+| 会员手机端门户 | 打开 `frontend/member-portal.html` |
 
-```bash
-mvn clean package -DskipTests
-java -jar target/barbershop.jar
-```
+---
 
-### 接口文档
+## 📞 联系我们
 
-启动后访问：
+如果你对系统有任何建议或需求，欢迎随时告诉我们。
 
-```
-http://localhost:8080/barbershop/swagger-ui.html
-```
-
-## 接口约定
-
-统一响应结构：
-
-```json
-{ "code": 0, "message": "ok", "data": { /* 业务数据 */ } }
-```
-
-主要端点（context-path: `/barbershop`）：
-
-| 模块       | 路径前缀             | 说明                          |
-|----------|------------------|-----------------------------|
-| 认证       | `/auth`          | 登录、刷新令牌等                   |
-| 店铺       | `/shop`          | 店铺信息维护、营业时间、概览/统计接口        |
-| 会员       | `/member`        | 会员信息与交易流水（含手机号登录）           |
-| 预约       | `/appointment`   | 预约创建/分页查询/状态流转                |
-| 账单       | `/bill`          | 独立账单系统（含 KPI 指标、散户/会员消费明细，消费账单关联员工） |
-| 服务类目/项目 | `/service-category` `/service-item` | 服务类目与项目维护             |
-| 员工       | `/employee`      | 店铺员工维护（工号自动生成、服务项目多选；`/employee/options` 供门户预约下拉） |
-| 文件       | `/file`          | MinIO 上传/下载                |
-
-## 配置项（环境变量）
-
-| 变量名                       | 默认值                                | 说明                       |
-| ---------------------------- | ------------------------------------- | -------------------------- |
-| `SERVER_PORT`                | `8080`                                | 监听端口                   |
-| `SERVER_SERVLET_CONTEXT_PATH` | `/barbershop`                         | 服务前缀                   |
-| `SPRING_DATASOURCE_URL`      | `jdbc:mysql://localhost:3306/barbershop` | 数据库连接                 |
-| `SPRING_DATASOURCE_USERNAME` | `root`                                | 数据库用户                 |
-| `SPRING_DATASOURCE_PASSWORD` | `123456`                              | 数据库密码                 |
-| `REDIS_HOST` / `REDIS_PORT`  | `localhost` / `6379`                  | Redis 连接                 |
-| `REDIS_PASSWORD`             | `redis123456`                         | Redis 密码                 |
-| `MINIO_ENDPOINT`             | `http://localhost:9000`               | MinIO 服务地址             |
-| `MINIO_ACCESS_KEY`           | `minioadmin`                          | MinIO 账号                 |
-| `MINIO_SECRET_KEY`           | `minioadmin`                          | MinIO 密码                 |
-| `MINIO_BUCKET`               | `barbershop`                          | 存储桶                     |
-| `JWT_SECRET`                 | （32 字节 base64）                    | JWT 签名密钥               |
-| `JWT_ACCESS_TOKEN_EXPIRATION` | `86400`                              | Access Token 过期（秒）    |
-| `MAIL_HOST` / `MAIL_USERNAME` / `MAIL_PASSWORD` | 163 SMTP 默认值           | 邮件通知                   |
-
-## 开发说明
-
-- 数据库变更一律通过 [src/main/resources/db/migration/](src/main/resources/db/migration) 中的 Flyway 脚本管理，禁止直接改库
-- 会员交易等高并发写操作使用 [src/main/java/com/slm/barbershop/lock/](src/main/java/com/slm/barbershop/lock) 中的分布式锁抽象（支持 Redisson 多模式）
-- 全局异常统一在 `exception/` 处理，Controller 不应捕获业务异常
-- DTO / VO 与 Entity 互转统一使用 `converter/` 下的 MapStruct
-
-## 会员门户
-
-会员门户前端位于 [frontend/member-portal.html](frontend/member-portal.html)，为单文件 SPA，无构建步骤，浏览器直接打开即可。
-
-核心能力：
-- 手机号验证码登录
-- 店铺切换（支持多店会员体系）
-- 服务项目浏览与预约
-- 会员账单/消费明细查询
+> 我们相信，**好的工具，应该让理发师更专注于手艺，而不是被琐事缠身。** 💈
