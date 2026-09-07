@@ -6,12 +6,14 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.slm.barbershop.converter.AppointmentConverter;
 import com.slm.barbershop.entity.Appointment;
+import com.slm.barbershop.entity.Employee;
 import com.slm.barbershop.entity.Member;
 import com.slm.barbershop.entity.ServiceItem;
 import com.slm.barbershop.entity.Shop;
 import com.slm.barbershop.enums.AppointmentStatus;
 import com.slm.barbershop.exception.BizException;
 import com.slm.barbershop.mapper.AppointmentMapper;
+import com.slm.barbershop.mapper.EmployeeMapper;
 import com.slm.barbershop.mapper.MemberMapper;
 import com.slm.barbershop.mapper.ServiceItemMapper;
 import com.slm.barbershop.mapper.ShopMapper;
@@ -68,6 +70,9 @@ public class AppointmentService extends ServiceImpl<AppointmentMapper, Appointme
     @Autowired
     private MemberMapper memberMapper;
 
+    @Autowired
+    private EmployeeMapper employeeMapper;
+
     // ==================== 创建预约 ====================
 
     public Appointment create(AppointmentRequest request) {
@@ -100,6 +105,16 @@ public class AppointmentService extends ServiceImpl<AppointmentMapper, Appointme
         if (item.getStatus() == null || item.getStatus() != 1) {
             throw new BizException(HttpStatus.BAD_REQUEST, "服务项目已下架,无法预约");
         }
+        // 3) 校验员工(可空:未指定则不校验)
+        if (request.getEmployeeId() != null) {
+            Employee employee = employeeMapper.selectById(request.getEmployeeId());
+            if (employee == null) {
+                throw new BizException(HttpStatus.NOT_FOUND, "员工不存在");
+            }
+            if (!employee.getShopId().equals(request.getShopId())) {
+                throw new BizException(HttpStatus.BAD_REQUEST, "员工不属于该店铺");
+            }
+        }
         // 3) 时段冲突校验(同人同时段)
         Long conflict = appointmentMapper.selectCount(new LambdaQueryWrapper<Appointment>()
                 .eq(Appointment::getShopId, request.getShopId())
@@ -114,6 +129,7 @@ public class AppointmentService extends ServiceImpl<AppointmentMapper, Appointme
         ap.setShopId(request.getShopId());
         ap.setMemberId(memberId);
         ap.setServiceItemId(request.getServiceItemId());
+        ap.setEmployeeId(request.getEmployeeId());
         ap.setAppointmentDate(date);
         ap.setStartTime(start);
         ap.setEndTime(end);
@@ -283,6 +299,10 @@ public class AppointmentService extends ServiceImpl<AppointmentMapper, Appointme
             Shop sh = shopMapper.selectById(ap.getShopId());
             if (sh != null) resp.setShopName(sh.getName());
         }
+        if (ap.getEmployeeId() != null) {
+            Employee e = employeeMapper.selectById(ap.getEmployeeId());
+            if (e != null) resp.setEmployeeName(e.getName());
+        }
         return resp;
     }
 
@@ -309,6 +329,12 @@ public class AppointmentService extends ServiceImpl<AppointmentMapper, Appointme
         Map<Long, String> shopNames = shopMapper.selectBatchIds(shopIds).stream()
                 .collect(Collectors.toMap(Shop::getId, Shop::getName));
 
+        Set<Long> employeeIds = aps.stream().map(Appointment::getEmployeeId)
+                .filter(java.util.Objects::nonNull).collect(Collectors.toSet());
+        Map<Long, String> employeeNames = employeeIds.isEmpty() ? Collections.emptyMap()
+                : employeeMapper.selectBatchIds(employeeIds).stream()
+                    .collect(Collectors.toMap(Employee::getId, Employee::getName));
+
         List<AppointmentResponse> out = new ArrayList<>(aps.size());
         for (Appointment ap : aps) {
             AppointmentResponse resp = appointmentConverter.toResponse(ap);
@@ -319,6 +345,7 @@ public class AppointmentService extends ServiceImpl<AppointmentMapper, Appointme
             }
             if (ap.getServiceItemId() != null) resp.setServiceItemName(serviceItemNames.get(ap.getServiceItemId()));
             if (ap.getShopId() != null) resp.setShopName(shopNames.get(ap.getShopId()));
+            if (ap.getEmployeeId() != null) resp.setEmployeeName(employeeNames.get(ap.getEmployeeId()));
             out.add(resp);
         }
         return out;

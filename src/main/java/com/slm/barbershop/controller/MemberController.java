@@ -101,7 +101,7 @@ public class MemberController {
     @Parameter(name = "id", description = "会员ID", in = ParameterIn.PATH)
     @PostMapping("/{id}/consume")
     public ApiResponse<MemberTransactionResponse> consume(@PathVariable Long id, @RequestBody MemberTransactionRequest request) {
-        MemberTransaction transaction = transactionService.consume(id, request.getAmount(), request.getRemark(), request.getItems(), request.getIdempotencyKey());
+        MemberTransaction transaction = transactionService.consume(id, request.getAmount(), request.getRemark(), request.getItems(), request.getIdempotencyKey(), request.getEmployeeId());
         // 回填 items 字段(根据 id 查询明细)
         MemberTransactionResponse response = transactionConverter.toResponse(transaction);
         response.setItems(transactionService.listItemsByTransactionId(transaction.getId()));

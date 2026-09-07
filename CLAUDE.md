@@ -1,4 +1,4 @@
-# sleep-center 项目
+# Barbershop 项目
 
 ## 技术栈
 - Java 11 + Spring Boot 2.7.18

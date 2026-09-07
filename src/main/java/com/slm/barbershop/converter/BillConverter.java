@@ -21,6 +21,8 @@ public interface BillConverter {
             @Mapping(source = "id", target = "id"),
             @Mapping(source = "shopId", target = "shopId"),
             @Mapping(source = "memberId", target = "memberId"),
+            @Mapping(source = "memberName", target = "memberName"),
+            @Mapping(source = "employeeName", target = "employeeName"),
             @Mapping(source = "payChannel", target = "payChannel"),
             @Mapping(source = "type", target = "type"),
             @Mapping(source = "totalAmount", target = "totalAmount"),

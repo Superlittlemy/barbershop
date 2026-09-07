@@ -16,6 +16,9 @@ public class MemberTransactionRequest {
     @Schema(description = "交易金额(当 items 非空时,本字段会被按项目汇总值覆盖)")
     private BigDecimal amount;
 
+    @Schema(description = "员工ID(消费时必填;储值忽略)")
+    private Long employeeId;
+
     @Schema(description = "备注")
     private String remark;
 

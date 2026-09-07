@@ -41,7 +41,6 @@
         <result property="totalAmount" column="total_amount" />
         <result property="memberId" column="member_id" />
         <result property="memberName" column="member_name" />
-        <result property="memberPhone" column="member_phone" />
         <result property="createdTime" column="created_time" />
     </resultMap>
 
@@ -50,11 +49,9 @@
                b.pay_channel,
                b.total_amount,
                b.member_id,
-               m.name AS member_name,
-               m.phone AS member_phone,
+               b.member_name AS member_name,
                b.created_time
         FROM bill b
-        LEFT JOIN member m ON m.id = b.member_id AND m.is_deleted = 0
         WHERE b.is_deleted = 0
           AND b.shop_id = #{shopId}
         ORDER BY b.created_time DESC, b.id DESC

@@ -32,6 +32,12 @@ public class AppointmentResponse {
     @Schema(description = "会员手机号(实时查询)")
     private String memberPhone;
 
+    @Schema(description = "员工ID(可空:未指定员工)")
+    private Long employeeId;
+
+    @Schema(description = "员工姓名(实时查询)")
+    private String employeeName;
+
     @Schema(description = "服务项目ID")
     private Long serviceItemId;
 

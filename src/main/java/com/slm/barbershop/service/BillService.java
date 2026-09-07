@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.slm.barbershop.converter.BillConverter;
 import com.slm.barbershop.entity.Bill;
 import com.slm.barbershop.entity.BillItem;
+import com.slm.barbershop.entity.Employee;
 import com.slm.barbershop.entity.Member;
 import com.slm.barbershop.entity.ServiceItem;
 import com.slm.barbershop.enums.BillPayChannel;
@@ -15,6 +16,7 @@ import com.slm.barbershop.exception.BizException;
 import com.slm.barbershop.lock.DistributedLock;
 import com.slm.barbershop.mapper.BillItemMapper;
 import com.slm.barbershop.mapper.BillMapper;
+import com.slm.barbershop.mapper.EmployeeMapper;
 import com.slm.barbershop.mapper.MemberMapper;
 import com.slm.barbershop.mapper.ServiceItemMapper;
 import com.slm.barbershop.model.BillQuery;
@@ -68,6 +70,9 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
     private ServiceItemMapper serviceItemMapper;
 
     @Autowired
+    private EmployeeMapper employeeMapper;
+
+    @Autowired
     @Lazy
     private BillService self;
 
@@ -107,7 +112,6 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
         }
 
         // 客户信息
-        // 账单不再冗余存储客户姓名/手机号;会员姓名/手机号在响应层实时 JOIN member 表查询。
         if (channel == BillPayChannel.MEMBER) {
             if (request.getMemberId() == null) {
                 throw new BizException(HttpStatus.BAD_REQUEST, "会员划账时 memberId 必填");
@@ -123,6 +127,21 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
             }
             if (!member.getShopId().equals(request.getShopId())) {
                 throw new BizException(HttpStatus.FORBIDDEN, "会员不属于当前店铺");
+            }
+        }
+
+        // 校验员工(消费账单必填;储值不需要,传了也忽略)
+        Employee employee = null;
+        if (billType == BillType.CONSUME) {
+            if (request.getEmployeeId() == null) {
+                throw new BizException(HttpStatus.BAD_REQUEST, "消费账单必须选择员工");
+            }
+            employee = employeeMapper.selectById(request.getEmployeeId());
+            if (employee == null) {
+                throw new BizException(HttpStatus.NOT_FOUND, "员工不存在");
+            }
+            if (!employee.getShopId().equals(request.getShopId())) {
+                throw new BizException(HttpStatus.FORBIDDEN, "员工不属于当前店铺");
             }
         }
 
@@ -195,7 +214,15 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
         Bill bill = new Bill();
         bill.setShopId(request.getShopId());
         bill.setMemberId(request.getMemberId());
-        // 客户姓名/手机号不再冗余存储;会员姓名/手机号在响应层实时 JOIN member 表查询
+        // 客户信息为开单时快照(对齐 bill_item.item_name 的快照模式),后续改档/删除不回写历史账单
+        if (member != null) {
+            bill.setMemberName(member.getName());
+        }
+        // 员工仅消费账单关联;储值恒为空
+        bill.setEmployeeId(billType == BillType.CONSUME ? request.getEmployeeId() : null);
+        if (employee != null) {
+            bill.setEmployeeName(employee.getName());
+        }
         bill.setPayChannel(channel.name());
         bill.setType(billType.name());
         bill.setTotalAmount(total);
@@ -217,9 +244,8 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
             }
         }
 
-        BillResponse response = billConverter.toResponseWithItems(bill, toItemResponseList(persistItems));
-        fillMemberInfo(bill, response);
-        return response;
+        // 快照列已随实体落库,由 converter 同名字段自动映射
+        return billConverter.toResponseWithItems(bill, toItemResponseList(persistItems));
     }
 
     public BillResponse cancel(Long shopId, Long billId, String reason) {
@@ -301,6 +327,9 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
         }
         if (query.getMemberId() != null) {
             wrapper.eq(Bill::getMemberId, query.getMemberId());
+        }
+        if (query.getEmployeeId() != null) {
+            wrapper.eq(Bill::getEmployeeId, query.getEmployeeId());
         }
         if (query.getStartTime() != null) {
             wrapper.ge(Bill::getCreatedTime, query.getStartTime().atStartOfDay());
@@ -404,9 +433,8 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
 
     private BillResponse toResponseWithItems(Bill bill) {
         List<TransactionItemResponse> items = listItemsByBillId(bill.getId());
-        BillResponse response = billConverter.toResponseWithItems(bill, items);
-        fillMemberInfo(bill, response);
-        return response;
+        // memberName/employeeName 为开单快照列,由 converter 同名字段自动映射
+        return billConverter.toResponseWithItems(bill, items);
     }
 
     private List<TransactionItemResponse> listItemsByBillId(Long billId) {
@@ -458,15 +486,6 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
             itemsByBillId.computeIfAbsent(bi.getBillId(), k -> new ArrayList<>())
                     .add(toItemResponse(bi));
         }
-        // 一次性批量查 member,避免 N+1;参考 AppointmentService.toResponseListWithNames 的实现风格
-        Set<Long> memberIds = bills.stream()
-                .map(Bill::getMemberId)
-                .filter(java.util.Objects::nonNull)
-                .collect(Collectors.toSet());
-        Map<Long, Member> memberMap = memberIds.isEmpty()
-                ? Collections.emptyMap()
-                : memberMapper.selectBatchIds(memberIds).stream()
-                    .collect(Collectors.toMap(Member::getId, m -> m));
         List<BillResponse> responses = new ArrayList<>(bills.size());
         for (Bill b : bills) {
             BillResponse r = billConverter.toResponse(b);
@@ -475,39 +494,9 @@ public class BillService extends ServiceImpl<BillMapper, Bill> {
                 r.setType(b.getType());
             }
             r.setItems(itemsByBillId.getOrDefault(b.getId(), Collections.emptyList()));
-            fillMemberInfo(b, r, memberMap);
             responses.add(r);
         }
         return responses;
-    }
-
-    /**
-     * 单条回填会员姓名/手机号: 通过 memberId 实时查 Member。
-     * memberId 为空时保持 null(非会员场景)。
-     */
-    private void fillMemberInfo(Bill bill, BillResponse response) {
-        if (bill == null || response == null || bill.getMemberId() == null) {
-            return;
-        }
-        Member member = memberMapper.selectById(bill.getMemberId());
-        if (member != null) {
-            response.setMemberName(member.getName());
-            response.setMemberPhone(member.getPhone());
-        }
-    }
-
-    /**
-     * 批量回填会员姓名/手机号: 使用预查好的 memberMap,不再 selectById,避免 N+1。
-     */
-    private void fillMemberInfo(Bill bill, BillResponse response, Map<Long, Member> memberMap) {
-        if (bill == null || response == null || bill.getMemberId() == null || memberMap == null) {
-            return;
-        }
-        Member member = memberMap.get(bill.getMemberId());
-        if (member != null) {
-            response.setMemberName(member.getName());
-            response.setMemberPhone(member.getPhone());
-        }
     }
 
     private TransactionItemResponse toItemResponse(BillItem bi) {

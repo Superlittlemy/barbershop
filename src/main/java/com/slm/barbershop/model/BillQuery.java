@@ -31,6 +31,9 @@ public class BillQuery extends Page<Bill> {
     @Schema(description = "会员ID过滤")
     private Long memberId;
 
+    @Schema(description = "员工ID过滤")
+    private Long employeeId;
+
     @Schema(description = "起始时间(包含)")
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate startTime;

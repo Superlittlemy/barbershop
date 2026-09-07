@@ -110,6 +110,32 @@
       .booking-slot-empty { font-size: 13px; color: #8e8e93; padding: 10px 0; }
       .booking-slot.slot-disabled { background: #f5f5f5; color: #c7c7cc; cursor: not-allowed; }
       .booking-error { color: #e74c3c; font-size: 13px; margin-top: 8px; min-height: 18px; }
+
+      /* Success Modal (booking success) */
+      .success-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.55); z-index: 200; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+      .success-modal.active { display: flex; }
+      .success-card { background: #fff; border-radius: 20px; width: 100%; max-width: 340px; padding: 32px 24px 24px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.25); animation: successPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); position: relative; overflow: hidden; }
+      @keyframes successPop { 0% { transform: scale(0.7); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+      .success-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 120px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px 20px 50% 50% / 20px 20px 30% 30%; z-index: 0; }
+      .success-icon-wrap { position: relative; z-index: 1; width: 80px; height: 80px; margin: 0 auto 16px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(102, 126, 234, 0.35); }
+      .success-icon { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%); display: flex; align-items: center; justify-content: center; animation: successBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both; }
+      @keyframes successBounce { 0% { transform: scale(0); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
+      .success-icon svg { width: 28px; height: 28px; stroke: #fff; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 50; stroke-dashoffset: 50; animation: drawCheck 0.4s ease 0.5s forwards; }
+      @keyframes drawCheck { to { stroke-dashoffset: 0; } }
+      .success-title { position: relative; z-index: 1; font-size: 20px; font-weight: 600; color: #1a1a1a; margin-bottom: 4px; }
+      .success-subtitle { position: relative; z-index: 1; font-size: 13px; color: #8e8e93; margin-bottom: 20px; }
+      .success-detail { position: relative; z-index: 1; background: #f8f8fb; border-radius: 12px; padding: 16px; margin-bottom: 20px; text-align: left; }
+      .success-detail-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 14px; }
+      .success-detail-row + .success-detail-row { border-top: 1px dashed #e5e5ea; }
+      .success-detail-label { color: #8e8e93; font-size: 13px; }
+      .success-detail-value { color: #1a1a1a; font-weight: 500; }
+      .success-detail-value.highlight { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 600; }
+      .success-actions { position: relative; z-index: 1; display: flex; gap: 10px; }
+      .success-btn { flex: 1; padding: 13px; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+      .success-btn.primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35); }
+      .success-btn.primary:active { transform: scale(0.97); }
+      .success-btn.secondary { background: #f0f0f5; color: #1a1a1a; }
+      .success-btn.secondary:active { transform: scale(0.97); }
   </style>
 </head>
 <body>
@@ -201,7 +227,13 @@
         </select>
       </div>
       <div class="booking-section">
-        <label class="booking-label" for="bookingRemark">4. 备注(可选)</label>
+        <label class="booking-label" for="bookingEmployee">4. 选择员工(可选)</label>
+        <select id="bookingEmployee" class="booking-select">
+          <option value="">不指定员工</option>
+        </select>
+      </div>
+      <div class="booking-section">
+        <label class="booking-label" for="bookingRemark">5. 备注(可选)</label>
         <textarea id="bookingRemark" class="booking-textarea" maxlength="200" placeholder="如有特殊需求请说明"></textarea>
       </div>
     </div>
@@ -584,6 +616,7 @@
         slots: [],         // 字符串数组 ["09:00", ...]
         selectedSlot: '',  // 选中的 HH:mm
         items: [],         // 服务项目数组(下拉用)
+        employees: [],     // 员工选项数组(下拉用)
         loading: false,
     };
 
@@ -605,6 +638,8 @@
         bookingState.date = dateInput.value;
         // 服务项目异步加载(只加载一次)
         if (bookingState.items.length === 0) loadServiceItemsForBooking();
+        // 员工选项异步加载(只加载一次)
+        if (bookingState.employees.length === 0) loadEmployeesForBooking();
         // 拉取时段
         loadAvailableSlots();
     }
@@ -675,6 +710,23 @@
         }
     }
 
+    async function loadEmployeesForBooking() {
+        const sel = document.getElementById('bookingEmployee');
+        sel.innerHTML = '<option value="">不指定员工</option>';
+        const shopId = localStorage.getItem(SHOP_KEY);
+        if (!shopId) return;
+        try {
+            const list = await apiCall('/employee/options?shopId=' + encodeURIComponent(shopId), 'GET');
+            bookingState.employees = Array.isArray(list) ? list : [];
+            if (bookingState.employees.length === 0) return;
+            sel.innerHTML = '<option value="">不指定员工</option>' + bookingState.employees.map(e =>
+                '<option value="' + e.id + '">' + escapeHtml(e.name) + (e.employeeNo ? ' (' + escapeHtml(e.employeeNo) + ')' : '') + '</option>'
+            ).join('');
+        } catch (e) {
+            // 加载失败不阻塞预约,保持「不指定员工」
+        }
+    }
+
     function onBookingDateChange(v) {
         bookingState.date = v;
         loadAvailableSlots();
@@ -691,6 +743,7 @@
         if (bookingState.loading) return;
         const shopId = localStorage.getItem(SHOP_KEY);
         const serviceItemId = document.getElementById('bookingItem').value;
+        const employeeId = document.getElementById('bookingEmployee').value;
         const date = document.getElementById('bookingDate').value;
         const slot = bookingState.selectedSlot;
         const remark = document.getElementById('bookingRemark').value.trim();
@@ -702,8 +755,20 @@
         bookingState.loading = true;
         btn.disabled = true; btn.textContent = '提交中...';
         try {
-            await apiCall('/appointment', 'POST', { shopId: shopId, serviceItemId: serviceItemId, appointmentDate: date, startTime: slot, remark: remark || null });
-            alert('预约成功！');
+            const body = { shopId: shopId, serviceItemId: serviceItemId, appointmentDate: date, startTime: slot, remark: remark || null };
+            if (employeeId) body.employeeId = employeeId;
+            const result = await apiCall('/appointment', 'POST', body);
+            // 收集弹窗摘要
+            const itemName = (bookingState.items.find(i => String(i.id) === String(serviceItemId)) || {}).name || '--';
+            const empName  = employeeId ? ((bookingState.employees.find(e => String(e.id) === String(employeeId)) || {}).name || '') : '';
+            showBookingSuccess({
+                itemName: itemName,
+                date: date,
+                time: slot,
+                shopName: localStorage.getItem(SHOPNAME_KEY) || '--',
+                employeeName: empName,
+                appointmentId: result && result.id ? result.id : null
+            });
             closeModal();
         } catch (e) {
             errEl.textContent = e.message || '预约失败';
@@ -711,6 +776,27 @@
             bookingState.loading = false;
             btn.disabled = false; btn.textContent = '确认预约';
         }
+    }
+
+    // ====== 预约成功弹窗 ======
+    function showBookingSuccess(info) {
+        document.getElementById('successItem').textContent = info.itemName || '--';
+        document.getElementById('successDateTime').textContent = (info.date || '') + '  ' + (info.time || '');
+        document.getElementById('successShop').textContent = info.shopName || '--';
+        const modal = document.getElementById('bookingSuccessModal');
+        // 重置动画(移除再加回 active)以便连续预约触发动画
+        modal.classList.remove('active');
+        void modal.offsetWidth;
+        modal.classList.add('active');
+    }
+
+    function closeSuccessModal() {
+        document.getElementById('bookingSuccessModal').classList.remove('active');
+    }
+
+    function onSuccessViewRecords() {
+        closeSuccessModal();
+        openTxModal();
     }
 
     // ====== 初始化 ======
@@ -733,5 +819,36 @@
         }
     })();
 </script>
+<!-- Booking Success Modal -->
+<div class="success-modal" id="bookingSuccessModal">
+  <div class="success-card">
+    <div class="success-icon-wrap">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24"><polyline points="5 12 10 17 19 7"/></svg>
+      </div>
+    </div>
+    <div class="success-title">预约成功</div>
+    <div class="success-subtitle">期待您的光临，到店请出示预约信息</div>
+    <div class="success-detail" id="successDetail">
+      <div class="success-detail-row">
+        <span class="success-detail-label">服务项目</span>
+        <span class="success-detail-value" id="successItem">--</span>
+      </div>
+      <div class="success-detail-row">
+        <span class="success-detail-label">预约日期</span>
+        <span class="success-detail-value highlight" id="successDateTime">--</span>
+      </div>
+      <div class="success-detail-row">
+        <span class="success-detail-label">店铺</span>
+        <span class="success-detail-value" id="successShop">--</span>
+      </div>
+    </div>
+    <div class="success-actions">
+      <button class="success-btn secondary" onclick="closeSuccessModal()">好的</button>
+      <button class="success-btn primary" onclick="onSuccessViewRecords()">查看消费记录</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

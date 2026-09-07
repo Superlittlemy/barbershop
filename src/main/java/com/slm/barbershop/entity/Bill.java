@@ -30,6 +30,24 @@ public class Bill extends BaseEntity {
     private Long memberId;
 
     /**
+     * 会员姓名(开单时快照)
+     */
+    @TableField("member_name")
+    private String memberName;
+
+    /**
+     * 员工ID(消费账单关联;储值为空)
+     */
+    @TableField("employee_id")
+    private Long employeeId;
+
+    /**
+     * 员工姓名(开单时快照)
+     */
+    @TableField("employee_name")
+    private String employeeName;
+
+    /**
      * 支付方式
      */
     @TableField("pay_channel")

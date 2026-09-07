@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.slm.barbershop.converter.MemberTransactionConverter;
 import com.slm.barbershop.entity.Bill;
 import com.slm.barbershop.entity.BillItem;
+import com.slm.barbershop.entity.Employee;
 import com.slm.barbershop.entity.Member;
 import com.slm.barbershop.entity.MemberTransaction;
 import com.slm.barbershop.entity.MemberTransactionItem;
@@ -18,6 +19,7 @@ import com.slm.barbershop.exception.BizException;
 import com.slm.barbershop.lock.DistributedLock;
 import com.slm.barbershop.mapper.BillItemMapper;
 import com.slm.barbershop.mapper.BillMapper;
+import com.slm.barbershop.mapper.EmployeeMapper;
 import com.slm.barbershop.mapper.MemberMapper;
 import com.slm.barbershop.mapper.MemberTransactionItemMapper;
 import com.slm.barbershop.mapper.MemberTransactionMapper;
@@ -71,6 +73,9 @@ public class MemberTransactionService extends ServiceImpl<MemberTransactionMappe
     @Autowired
     private BillItemMapper billItemMapper;
 
+    @Autowired
+    private EmployeeMapper employeeMapper;
+
     /**
      * 注入自身代理,使 {@link #doUpdate} 上的 @Transactional 通过代理生效
      */
@@ -79,15 +84,16 @@ public class MemberTransactionService extends ServiceImpl<MemberTransactionMappe
     private MemberTransactionService self;
 
     public MemberTransaction store(Long memberId, BigDecimal amount, String remark, String idempotencyKey) {
-        return applyBalance(memberId, amount, TransactionType.STORE, remark, null, idempotencyKey);
+        return applyBalance(memberId, amount, TransactionType.STORE, remark, null, idempotencyKey, null);
     }
 
     public MemberTransaction consume(Long memberId,
                                      BigDecimal amount,
                                      String remark,
                                      List<TransactionItemRequest> items,
-                                     String idempotencyKey) {
-        return applyBalance(memberId, amount, TransactionType.CONSUME, remark, items, idempotencyKey);
+                                     String idempotencyKey,
+                                     Long employeeId) {
+        return applyBalance(memberId, amount, TransactionType.CONSUME, remark, items, idempotencyKey, employeeId);
     }
 
     /**
@@ -97,13 +103,15 @@ public class MemberTransactionService extends ServiceImpl<MemberTransactionMappe
      * <p>
      * 消费时同时写 bill/bill_item(支付方式 MEMBER),通过 member_transaction.bill_id 反向关联;
      * MemberTransactionItem 不再写入,明细统一存到 bill_item。
+     * 员工仅消费场景关联(必填),储值不关联。
      */
     private MemberTransaction applyBalance(Long memberId,
                                            BigDecimal amount,
                                            TransactionType type,
                                            String remark,
                                            List<TransactionItemRequest> items,
-                                           String idempotencyKey) {
+                                           String idempotencyKey,
+                                           Long employeeId) {
         if (idempotencyKey != null && !idempotencyKey.isEmpty()) {
             MemberTransaction existed = findByIdempotencyKey(idempotencyKey);
             if (existed != null) {
@@ -111,7 +119,7 @@ public class MemberTransactionService extends ServiceImpl<MemberTransactionMappe
             }
         }
 
-        return self.doUpdate(memberId, amount, type, remark, items, idempotencyKey);
+        return self.doUpdate(memberId, amount, type, remark, items, idempotencyKey, employeeId);
     }
 
     /**
@@ -124,10 +132,26 @@ public class MemberTransactionService extends ServiceImpl<MemberTransactionMappe
                                       TransactionType type,
                                       String remark,
                                       List<TransactionItemRequest> items,
-                                      String idempotencyKey) {
+                                      String idempotencyKey,
+                                      Long employeeId) {
         Member member = memberMapper.selectById(memberId);
         if (member == null) {
             throw new BizException(HttpStatus.NOT_FOUND, "会员不存在");
+        }
+
+        // 消费必须关联员工(归属以会员所属店铺为准);储值不需要,传了也忽略
+        Employee employee = null;
+        if (type == TransactionType.CONSUME) {
+            if (employeeId == null) {
+                throw new BizException(HttpStatus.BAD_REQUEST, "消费必须选择员工");
+            }
+            employee = employeeMapper.selectById(employeeId);
+            if (employee == null) {
+                throw new BizException(HttpStatus.NOT_FOUND, "员工不存在");
+            }
+            if (!employee.getShopId().equals(member.getShopId())) {
+                throw new BizException(HttpStatus.FORBIDDEN, "员工不属于当前店铺");
+            }
         }
 
         // 1) 若消费带 items,按项目汇总金额并校验;同时构造 bill_item 列表
@@ -228,7 +252,12 @@ public class MemberTransactionService extends ServiceImpl<MemberTransactionMappe
             Bill bill = new Bill();
             bill.setShopId(member.getShopId());
             bill.setMemberId(memberId);
-            // 会员姓名/手机号不再冗余存储到账单;响应层实时 JOIN member 表查询最新资料
+            bill.setEmployeeId(employeeId);
+            // 客户信息为开单时快照(对齐 bill_item.item_name 的快照模式)
+            bill.setMemberName(member.getName());
+            if (employee != null) {
+                bill.setEmployeeName(employee.getName());
+            }
             bill.setPayChannel(BillPayChannel.MEMBER.name());
             bill.setType(BillType.CONSUME.name());
             bill.setTotalAmount(finalAmount);
@@ -251,7 +280,8 @@ public class MemberTransactionService extends ServiceImpl<MemberTransactionMappe
             Bill bill = new Bill();
             bill.setShopId(member.getShopId());
             bill.setMemberId(memberId);
-            // 会员姓名/手机号不再冗余存储到账单;响应层实时 JOIN member 表查询最新资料
+            // 客户信息为开单时快照(储值不关联员工,employee_id/name 恒为空)
+            bill.setMemberName(member.getName());
             // 储值默认 OFFLINE(用户通过店铺后台手工登记的储值,默认线下收款)
             bill.setPayChannel(BillPayChannel.OFFLINE.name());
             bill.setType(BillType.STORE.name());

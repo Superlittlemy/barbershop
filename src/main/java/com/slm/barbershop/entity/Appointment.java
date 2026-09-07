@@ -28,6 +28,11 @@ public class Appointment extends BaseEntity {
     private Long memberId;
 
     /**
+     * 员工ID(可空:未指定员工)
+     */
+    private Long employeeId;
+
+    /**
      * 服务项目ID
      */
     private Long serviceItemId;

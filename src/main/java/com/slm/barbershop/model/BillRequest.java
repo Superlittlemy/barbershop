@@ -26,6 +26,9 @@ public class BillRequest {
     @Schema(description = "会员ID(支付方式为 MEMBER 时必填)")
     private Long memberId;
 
+    @Schema(description = "员工ID(消费类账单必填;储值类型忽略)")
+    private Long employeeId;
+
     @NotBlank
     @Schema(description = "支付方式:MEMBER / OFFLINE / WECHAT / ALIPAY", requiredMode = Schema.RequiredMode.REQUIRED)
     private String payChannel;

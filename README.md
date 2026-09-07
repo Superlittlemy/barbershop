@@ -97,8 +97,9 @@ http://localhost:8080/barbershop/swagger-ui.html
 | 店铺       | `/shop`          | 店铺信息维护、营业时间、概览/统计接口        |
 | 会员       | `/member`        | 会员信息与交易流水（含手机号登录）           |
 | 预约       | `/appointment`   | 预约创建/分页查询/状态流转                |
-| 账单       | `/bill`          | 独立账单系统（含 KPI 指标、散户/会员消费明细）   |
+| 账单       | `/bill`          | 独立账单系统（含 KPI 指标、散户/会员消费明细，消费账单关联员工） |
 | 服务类目/项目 | `/service-category` `/service-item` | 服务类目与项目维护             |
+| 员工       | `/employee`      | 店铺员工维护（工号自动生成、服务项目多选；`/employee/options` 供门户预约下拉） |
 | 文件       | `/file`          | MinIO 上传/下载                |
 
 ## 配置项（环境变量）

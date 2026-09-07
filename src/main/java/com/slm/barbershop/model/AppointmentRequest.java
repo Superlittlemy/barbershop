@@ -21,6 +21,9 @@ public class AppointmentRequest {
     @Schema(description = "服务项目ID")
     private Long serviceItemId;
 
+    @Schema(description = "员工ID(可空:不指定员工)")
+    private Long employeeId;
+
     @NotNull(message = "预约日期不能为空")
     @Schema(description = "预约日期(yyyy-MM-dd)")
     private LocalDate appointmentDate;

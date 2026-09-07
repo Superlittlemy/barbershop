@@ -25,11 +25,8 @@ public class ShopBillRecentVO {
     @Schema(description = "会员ID")
     private Long memberId;
 
-    @Schema(description = "会员姓名")
+    @Schema(description = "会员姓名(开单时快照)")
     private String memberName;
-
-    @Schema(description = "会员手机号(实时查询)")
-    private String memberPhone;
 
     @Schema(description = "创建时间")
     private LocalDateTime createdTime;
