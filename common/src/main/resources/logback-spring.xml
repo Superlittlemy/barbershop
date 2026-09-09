@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 热刷新支持 -->
+<configuration scan="true" scanPeriod="60 seconds">
+
+    <!-- 引入Spring属性 -->
+    <springProperty scope="context" name="APP_NAME" source="spring.application.name" defaultValue="app"/>
+
+    <!-- 1. 定义属性 -->
+    <property name="LOG_PATH" value="${user.dir}/logs"/>
+    <!-- 彩色日志依赖的渲染类 - 必须添加这三行 -->
+    <conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter" />
+    <conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter" />
+    <conversionRule conversionWord="wEx" converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter" />
+    <!-- 注册 traceId converter -->
+    <conversionRule conversionWord="traceId" converterClass="com.slm.common.config.TraceIdConverter" />
+    <!-- 完整彩色格式（Spring Boot 默认风格） -->
+    <property name="CONSOLE_LOG_PATTERN_FULL"
+              value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%-5level) %clr(${PID:-}){magenta} %clr(---){faint} %clr([%15.15thread]){faint} [%traceId] %clr(%-40.40logger{39}){cyan} %clr(:){faint} %msg%n"/>
+    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%traceId] %-5level %logger{50} - %msg%n"/>
+    <property name="MAX_HISTORY" value="30"/>
+    <property name="MAX_FILE_SIZE" value="50MB"/>
+    <property name="MAX_TOTAL_SIZE" value="10GB"/>
+
+    <!-- 2. 定义Appender -->
+    <!-- 控制台日志 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN_FULL}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- 滚动日志 -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 日志文件路径 -->
+        <file>${LOG_PATH}/${APP_NAME}/${APP_NAME}.log</file>
+
+        <!-- 滚动策略 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- 按日期和文件大小滚动 -->
+            <fileNamePattern>${LOG_PATH}/${APP_NAME}/${APP_NAME}.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <!-- 单个文件最大 -->
+            <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+            <!-- 日志文件清理 -->
+            <!-- 保留天数 -->
+            <maxHistory>${MAX_HISTORY}</maxHistory>
+            <!-- 总大小限制 -->
+            <totalSizeCap>${MAX_TOTAL_SIZE}</totalSizeCap>
+        </rollingPolicy>
+
+        <!-- 日志格式 -->
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- 错误日志 -->
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${APP_NAME}/error.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- 按日期和文件大小滚动 -->
+            <fileNamePattern>${LOG_PATH}/${APP_NAME}/error.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <!-- 单个文件最大 -->
+            <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+            <!-- 错误日志延长保留时间 -->
+            <maxHistory>90</maxHistory>
+        </rollingPolicy>
+
+        <!-- 日志格式 -->
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+
+        <!-- 错误日志提取 -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+        </filter>
+    </appender>
+
+    <!-- 3. 定义Logger -->
+    <!-- Root Logger配置 -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="ERROR_FILE"/>
+    </root>
+
+</configuration>
