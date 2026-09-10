@@ -30,7 +30,7 @@ common
 
 ### 2.1 `config/` — Spring 自动装配
 
-以下 Bean 一旦业务模块把 common 引入 classpath 并被 Spring 扫描到，就会**自动生效**，不需要任何 `@Import`。
+以下 Bean **绝大多数**在业务模块把 common 引入 classpath 并被 Spring 扫描到后会自动生效，**无需 `@Import`**。个别例外见表格内说明及 §3.5。
 
 | 类 | 作用 | 关键行为 |
 |---|---|---|
@@ -40,6 +40,7 @@ common
 | `PageHandlerMethodArgumentResolver` | Controller 参数 `Page<T>` 自动绑定 | 支持 `current / size / sort`；`size` 上限 1000；`sort` 字段必须为实体字段（含主键）防 SQL 注入；排序支持驼峰或下划线，方向 `asc/desc`（缺省 desc） |
 | `EntityMetadataConfig` | MyBatis-Plus `MetaObjectHandler` | insert 填 `createdBy / createdTime / isDeleted=0`；update 填 `updatedBy / updatedTime`。**依赖 `UserContext.getUser()`，未登录场景对应字段为 `null`** |
 | `MyBatisPlusConfig` | MyBatis-Plus 拦截器 | 注册分页拦截器（`DbType.MYSQL`）和乐观锁拦截器 |
+| `WildcardMapperScanRegistrar` | 通配 Mapper 扫描器 | 实现 `ImportBeanDefinitionRegistrar`；扫描 `com.slm.*.mapper` 子包下所有接口并通过 `MapperScannerConfigurer` 注册。**与表格中其它 Bean 不同——它不会随包扫描自动生效**，必须在每个业务 `@SpringBootApplication` 上显式 `@Import(WildcardMapperScanRegistrar.class)`（详见 §3.5）。约定：所有 Mapper 接口必须落在 `com.slm.<module>.mapper` 包下，新增模块无需在此处追加配置 |
 | `SwaggerConfig` | SpringDoc OpenAPI | 绑定 `application.yaml` 中 `springdoc-info.*`（title / description / version / contact-name），固定 `Apache License 2.0` |
 | `TraceFilter` + `TraceIdConverter` + `logback-spring.xml` | 请求级 traceId 链路追踪 | 见 §3.4 |
 | `WebMVCConfig` | MVC 配置 | 注册分页参数解析器 |
@@ -152,6 +153,20 @@ common 自带 `logback-spring.xml`，包含 traceId 输出格式（`[%traceId]`�
 ```
 
 并在 pattern 里使用 `[%traceId]`。
+
+### 3.5 Mapper 扫描器（必须显式注册）
+
+业务 `@SpringBootApplication` 必须显式 `@Import` 通配扫描器，否则 `com.slm.<module>.mapper` 下的 Mapper 接口不会被注册，启动期出现 `Invalid bound statement (not found)`：
+
+```java
+import com.slm.common.config.WildcardMapperScanRegistrar;
+
+@Import(WildcardMapperScanRegistrar.class)
+@SpringBootApplication(scanBasePackages = "com.slm")
+public class BarberShopApplication { ... }
+```
+
+扫描器按 `com.slm.<module>.mapper` 路径通配匹配，因此**新增业务模块时只要把 Mapper 放到这个包下，无需修改任何配置**。
 
 ### 3.6 业务异常处理
 
@@ -284,6 +299,7 @@ if (user != null) {
 | 12 | **`ApiResponse` 是 `@Getter` 而非 `@Data`** | 不可 set，构造时通过静态工厂方法生成 |
 | 13 | **`BizException.message` 会覆盖 `ResultStatus.message`** | 即 status.code 用枚举的，message 用 `BizException` 传入的，便于业务侧自定义提示 |
 | 14 | **`@ConfigurationProperties(prefix = "springdoc-info")` 必须填** | Swagger 启动可能因缺字段失败/标题为空 |
+| 15 | **`WildcardMapperScanRegistrar` 必须显式 `@Import`** | 不导入则 `com.slm.<module>.mapper` 全部 Mapper 不生效，启动报 `Invalid bound statement (not found)`，且编译期无报错 |
 
 ---
 

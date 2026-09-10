@@ -1,0 +1,46 @@
+server:
+  port: ${SERVER_PORT:8081}
+  servlet:
+    context-path: ${SERVER_SERVLET_CONTEXT_PATH:/storage}
+spring:
+  application:
+    name: storage
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/barbershop?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useLegacyDatetimeCode=false}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:123456}
+    hikari:
+      maximum-pool-size: 10     # 按 CPU 核数和实例数估算，连接数 = CPU核数 × 2 + 有效磁盘数
+      minimum-idle: 10          # 建议等于 maximum-pool-size，固定连接池大小，避免频繁创建/销毁连接
+      idle-timeout: 300000      # 5 分钟，仅当 minimum-idle < maximum-pool-size 时才生效
+      max-lifetime: 900000      # 15 分钟，需 < 数据库 wait_timeout
+      connection-timeout: 30000 # 30 秒，按业务容忍度调整
+      # connection-test-query: select 1 # 一般省略，依赖 JDBC4 isValid()
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 20MB
+      max-request-size: 22MB
+      file-size-threshold: 2MB
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: false
+  mybatis:
+    mapper-locations: classpath:mapper/*.xml
+    configuration:
+      map-underscore-to-camel-case: true
+      log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  bucket: ${MINIO_BUCKET:barbershop}
+  # 预签名访问地址缺省有效期(秒),客户端可用 expiresSeconds 覆盖,上限7天
+  presign-expiration-seconds: ${MINIO_PRESIGN_EXPIRATION_SECONDS:1800}
+# Swagger 文档信息(由 common.config.SwaggerConfig 读取)
+springdoc-info:
+  title: 文件存储接口文档
+  description: 对象存储服务 OpenAPI 3.0
+  version: v1.0.3
+  contact-name: Superlittlemy

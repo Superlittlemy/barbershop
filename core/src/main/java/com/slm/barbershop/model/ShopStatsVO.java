@@ -21,7 +21,7 @@ public class ShopStatsVO {
     @Schema(description = "店铺名称")
     private String name;
 
-    @Schema(description = "店铺Logo URL")
+    @Schema(description = "店铺Logo(objectKey)")
     private String logo;
 
     @Schema(description = "地址")

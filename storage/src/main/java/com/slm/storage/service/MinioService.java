@@ -1,14 +1,15 @@
-package com.slm.barbershop.service;
+package com.slm.storage.service;
 
-import com.slm.barbershop.config.MinioConfig;
 import com.slm.common.enums.ResultStatus;
 import com.slm.common.exception.BizException;
+import com.slm.storage.config.MinioConfig;
 import io.minio.BucketExistsArgs;
+import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
-import io.minio.SetBucketPolicyArgs;
+import io.minio.http.Method;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,13 +17,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.PostConstruct;
 import java.io.InputStream;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
 public class MinioService {
-
-    private static final String PUBLIC_READ_POLICY_TEMPLATE =
-            "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":[\"*\"]},\"Action\":[\"s3:GetObject\"],\"Resource\":[\"arn:aws:s3:::%s/*\"]}]}";
 
     @Autowired
     private MinioClient minioClient;
@@ -39,9 +38,6 @@ public class MinioService {
                 minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucket).build());
                 log.info("MinIO bucket created: {}", bucket);
             }
-            String policy = String.format(PUBLIC_READ_POLICY_TEMPLATE, bucket);
-            minioClient.setBucketPolicy(SetBucketPolicyArgs.builder().bucket(bucket).config(policy).build());
-            log.info("MinIO bucket policy set to public-read: {}", bucket);
         } catch (Exception e) {
             log.error("MinIO 初始化失败", e);
             throw new BizException(ResultStatus.MINIO_INIT_ERROR, "MinIO 初始化失败: " + e.getMessage());
@@ -67,10 +63,21 @@ public class MinioService {
     }
 
     /**
-     * 构造公开访问URL
+     * 生成带过期时间的GET预签名URL(私有bucket文件访问的唯一入口)
      */
-    public String buildPublicUrl(String objectKey) {
-        return props.getPublicBaseUrl() + "/" + props.getBucket() + "/" + objectKey;
+    public String getPresignedUrl(String objectKey, int expirySeconds) {
+        try {
+            GetPresignedObjectUrlArgs args = GetPresignedObjectUrlArgs.builder()
+                    .method(Method.GET)
+                    .bucket(props.getBucket())
+                    .object(objectKey)
+                    .expiry(expirySeconds, TimeUnit.SECONDS)
+                    .build();
+            return minioClient.getPresignedObjectUrl(args);
+        } catch (Exception e) {
+            log.error("MinIO 生成预签名URL失败: objectKey={}", objectKey, e);
+            throw new BizException(ResultStatus.MINIO_OPERATION_ERROR, "生成文件访问地址失败: " + e.getMessage());
+        }
     }
 
     /**

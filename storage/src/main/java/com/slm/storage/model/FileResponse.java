@@ -1,4 +1,4 @@
-package com.slm.barbershop.model;
+package com.slm.storage.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -26,9 +26,6 @@ public class FileResponse {
 
     @Schema(description = "MinIO对象Key")
     private String objectKey;
-
-    @Schema(description = "公开访问URL")
-    private String accessUrl;
 
     @Schema(description = "创建时间")
     private LocalDateTime createdTime;

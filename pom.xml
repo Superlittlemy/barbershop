@@ -11,6 +11,7 @@
 
     <modules>
         <module>common</module>
+        <module>storage</module>
         <module>core</module>
     </modules>
 
@@ -90,23 +91,7 @@
     <build>
         <finalName>barbershop</finalName>
         <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>${springboot.version}</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>repackage</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <includeSystemScope>true</includeSystemScope>
-                    <fork>true</fork>
-                    <addResources>true</addResources>
-                </configuration>
-            </plugin>
+            <!-- spring-boot-maven-plugin 仅在 core 模块启用，避免对 library 模块执行 repackage 报错 -->
         </plugins>
     </build>
 

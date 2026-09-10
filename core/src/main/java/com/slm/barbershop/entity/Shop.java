@@ -21,7 +21,7 @@ public class Shop extends BaseEntity {
     private String name;
 
     /**
-     * 店铺Logo
+     * 店铺Logo(objectKey,经 storage 服务预签名URL换取临时访问地址)
      */
     private String logo;
 

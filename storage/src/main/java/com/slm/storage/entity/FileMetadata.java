@@ -1,4 +1,4 @@
-package com.slm.barbershop.entity;
+package com.slm.storage.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -43,11 +43,5 @@ public class FileMetadata extends BaseEntity {
      */
     @TableField("md5")
     private String md5;
-
-    /**
-     * 公开访问URL
-     */
-    @TableField("access_url")
-    private String accessUrl;
 
 }

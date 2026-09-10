@@ -11,29 +11,17 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:root}
     password: ${SPRING_DATASOURCE_PASSWORD:123456}
     hikari:
-      # 连接池最大连接数
-      maximum-pool-size: 10
-      # 空闲时保持最小连接数
-      minimum-idle: 2
-      # 空闲连接存活时间
-      idle-timeout: 300000
-      # 连接最大生命周期时长
-      max-lifetime: 900000
-      # 连接超时时间
-      connection-timeout: 20000
-      # 连接测试sql
-      connection-test-query: select 1
+      maximum-pool-size: 10     # 按 CPU 核数和实例数估算，连接数 = CPU核数 × 2 + 有效磁盘数
+      minimum-idle: 10          # 建议等于 maximum-pool-size，固定连接池大小，避免频繁创建/销毁连接
+      idle-timeout: 300000      # 5 分钟，仅当 minimum-idle < maximum-pool-size 时才生效
+      max-lifetime: 900000      # 15 分钟，需 < 数据库 wait_timeout
+      connection-timeout: 30000 # 30 秒，按业务容忍度调整
+      # connection-test-query: select 1 # 一般省略，依赖 JDBC4 isValid()
   mail:
     host: ${MAIL_HOST:}
     username: ${MAIL_USERNAME:}
     password: ${MAIL_PASSWORD:}
     default-encoding: UTF-8
-  servlet:
-    multipart:
-      enabled: true
-      max-file-size: 20MB
-      max-request-size: 22MB
-      file-size-threshold: 2MB
   jackson:
     deserialization:
       fail-on-unknown-properties: false
@@ -64,12 +52,6 @@ mybatis:
 #    org.apache.ibatis: DEBUG
 #    # 覆盖特定类的日志
 #    org.mybatis.spring.mapper.ClassPathMapperScanner: INFO
-minio:
-  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
-  access-key: ${MINIO_ACCESS_KEY:minioadmin}
-  secret-key: ${MINIO_SECRET_KEY:minioadmin}
-  bucket: ${MINIO_BUCKET:barbershop}
-  public-base-url: ${MINIO_PUBLIC_BASE_URL:http://localhost:9000}
 management:
   endpoints:
     web:

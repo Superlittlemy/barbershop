@@ -1,4 +1,4 @@
-package com.slm.barbershop.config;
+package com.slm.storage.config;
 
 import io.minio.MinioClient;
 import lombok.Data;
@@ -27,7 +27,7 @@ public class MinioConfig {
         private String accessKey;
         private String secretKey;
         private String bucket;
-        private String publicBaseUrl;
+        private Integer presignExpirationSeconds;
 
     }
 

@@ -4,16 +4,15 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: core/Dockerfile
     container_name: barbershop-app
     depends_on:
       mysql:
         condition: service_healthy
-      minio:
-        condition: service_healthy
       redis:
         condition: service_healthy
     environment:
+      TZ: Asia/Shanghai
       SERVER_PORT: ${SERVER_PORT}
       SERVER_SERVLET_CONTEXT_PATH: ${SERVER_SERVLET_CONTEXT_PATH}
       SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
@@ -24,17 +23,37 @@ services:
       MAIL_PASSWORD: ${MAIL_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       JWT_ACCESS_TOKEN_EXPIRATION: ${JWT_ACCESS_TOKEN_EXPIRATION}
-      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_BUCKET: ${MINIO_BUCKET}
-      MINIO_PUBLIC_BASE_URL: ${MINIO_PUBLIC_BASE_URL}
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_DATABASE: ${REDIS_DATABASE}
     ports:
       - "8080:8080"
+
+  storage:
+    build:
+      context: .
+      dockerfile: storage/Dockerfile
+    container_name: barbershop-storage
+    depends_on:
+      mysql:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      TZ: Asia/Shanghai
+      SERVER_PORT: 8081
+      SERVER_SERVLET_CONTEXT_PATH: /storage
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BUCKET: ${MINIO_BUCKET}
+      MINIO_PRESIGN_EXPIRATION_SECONDS: ${MINIO_PRESIGN_EXPIRATION_SECONDS}
+    ports:
+      - "8081:8081"
   mysql:
     image: mysql:8.0
     container_name: barbershop-mysql

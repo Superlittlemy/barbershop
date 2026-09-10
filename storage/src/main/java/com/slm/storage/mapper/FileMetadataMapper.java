@@ -1,7 +1,7 @@
-package com.slm.barbershop.mapper;
+package com.slm.storage.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.slm.barbershop.entity.FileMetadata;
+import com.slm.storage.entity.FileMetadata;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
