@@ -115,14 +115,19 @@ public class AppointmentService extends ServiceImpl<AppointmentMapper, Appointme
                 throw new BizException(ResultStatus.BAD_REQUEST, "员工不属于该店铺");
             }
         }
-        // 3) 时段冲突校验(同人同时段)
-        Long conflict = appointmentMapper.selectCount(new LambdaQueryWrapper<Appointment>()
+        // 3) 唯一性校验:同一会员在当前店铺下只允许一条「未来 + 有效」预约。
+        //    今日已过期的预约(endTime < now)不视为占用,可重新预约。
+        LocalDate today = LocalDate.now();
+        LocalTime nowTime = LocalTime.now();
+        Long active = appointmentMapper.selectCount(new LambdaQueryWrapper<Appointment>()
                 .eq(Appointment::getShopId, request.getShopId())
                 .eq(Appointment::getMemberId, memberId)
-                .eq(Appointment::getAppointmentDate, date)
-                .eq(Appointment::getStartTime, start));
-        if (conflict != null && conflict > 0) {
-            throw new BizException(ResultStatus.SOURCE_CONFLICT, "该时段已被占用,请重新选择");
+                .eq(Appointment::getStatus, AppointmentStatus.VALID.getCode())
+                .and(w -> w.gt(Appointment::getAppointmentDate, today)
+                        .or(orw -> orw.eq(Appointment::getAppointmentDate, today)
+                                .ge(Appointment::getEndTime, nowTime))));
+        if (active != null && active > 0) {
+            throw new BizException(ResultStatus.SOURCE_CONFLICT, "您在该店铺已有未到期的预约,请先取消后再重新预约");
         }
 
         Appointment ap = new Appointment();
@@ -185,6 +190,89 @@ public class AppointmentService extends ServiceImpl<AppointmentMapper, Appointme
         }
     }
 
+    // ==================== 会员端查询 / 取消 ====================
+
+    /**
+     * 「当前有效」判定:status=VALID 且 结束时间在现在之后。
+     * 过去时间的预约(即便 status=VALID)视为历史,不阻塞新预约、不再展示、不允许取消。
+     */
+    private boolean isCurrentlyValid(Appointment ap) {
+        if (ap == null || ap.getStatus() == null
+                || ap.getStatus() != AppointmentStatus.VALID.getCode()
+                || ap.getAppointmentDate() == null || ap.getEndTime() == null) {
+            return false;
+        }
+        LocalDateTime endAt = LocalDateTime.of(ap.getAppointmentDate(), ap.getEndTime());
+        return endAt.isAfter(LocalDateTime.now());
+    }
+
+    /**
+     * 查询当前会员在指定店铺下的最新一条「未来 + 有效」预约。
+     * 会员端"已预约"按钮展示用,返回 null 表示当前可继续预约。
+     */
+    public Appointment findLatestValidByMemberAndShop(Long shopId) {
+        AuthUser auth = UserContext.getUser();
+        if (auth == null) {
+            throw new BizException(ResultStatus.UNAUTHORIZED, "未登录");
+        }
+        if (!auth.isMember()) {
+            throw new BizException(ResultStatus.PERMISSION_DENIED, "仅会员可查询");
+        }
+        if (shopId == null) {
+            throw new BizException(ResultStatus.BAD_REQUEST, "shopId 不能为空");
+        }
+        LocalDate today = LocalDate.now();
+        LocalTime nowTime = LocalTime.now();
+        return appointmentMapper.selectOne(new LambdaQueryWrapper<Appointment>()
+                .eq(Appointment::getShopId, shopId)
+                .eq(Appointment::getMemberId, auth.getId())
+                .eq(Appointment::getStatus, AppointmentStatus.VALID.getCode())
+                .and(w -> w.gt(Appointment::getAppointmentDate, today)
+                        .or(orw -> orw.eq(Appointment::getAppointmentDate, today)
+                                .ge(Appointment::getEndTime, nowTime)))
+                .orderByDesc(Appointment::getAppointmentDate)
+                .orderByDesc(Appointment::getStartTime)
+                .orderByDesc(Appointment::getId)
+                .last("LIMIT 1"));
+    }
+
+    /**
+     * 会员自助取消预约。要求:预约存在 / 属于当前登录会员 / 状态=VALID / 未到期。
+     * 取消后 status 置为 CANCELLED,updatedBy / updatedTime 由 BaseEntity 自动填充。
+     */
+    public void cancelByMember(Long appointmentId) {
+        AuthUser auth = UserContext.getUser();
+        if (auth == null) {
+            throw new BizException(ResultStatus.UNAUTHORIZED, "未登录");
+        }
+        if (!auth.isMember()) {
+            throw new BizException(ResultStatus.PERMISSION_DENIED, "仅会员可取消");
+        }
+        if (appointmentId == null) {
+            throw new BizException(ResultStatus.BAD_REQUEST, "预约ID不能为空");
+        }
+
+        Appointment ap = appointmentMapper.selectById(appointmentId);
+        if (ap == null) {
+            throw new BizException(ResultStatus.SOURCE_NOT_FOUND, "预约不存在");
+        }
+        if (!java.util.Objects.equals(ap.getMemberId(), auth.getId())) {
+            throw new BizException(ResultStatus.PERMISSION_DENIED, "无权取消他人预约");
+        }
+        if (ap.getStatus() == null || ap.getStatus() != AppointmentStatus.VALID.getCode()) {
+            throw new BizException(ResultStatus.BAD_REQUEST, "该预约已取消或不可取消");
+        }
+        if (!isCurrentlyValid(ap)) {
+            throw new BizException(ResultStatus.BAD_REQUEST, "已过期的预约不可取消");
+        }
+
+        ap.setStatus(AppointmentStatus.CANCELLED.getCode());
+        int rows = appointmentMapper.updateById(ap);
+        if (rows == 0) {
+            throw new BizException(ResultStatus.SOURCE_CONFLICT, "取消失败,请重试");
+        }
+    }
+
     // ==================== 可用时段 ====================
 
     /**
@@ -235,7 +323,8 @@ public class AppointmentService extends ServiceImpl<AppointmentMapper, Appointme
     public PageResult<AppointmentResponse> page(AppointmentPageQuery query) {
         LambdaQueryWrapper<Appointment> wrapper = new LambdaQueryWrapper<Appointment>()
                 .eq(Appointment::getShopId, query.getShopId())
-                .eq(query.getDate() != null, Appointment::getAppointmentDate, query.getDate());
+                .eq(query.getDate() != null, Appointment::getAppointmentDate, query.getDate())
+                .eq(query.getStatus() != null, Appointment::getStatus, query.getStatus());
 
         String keyword = query.getKeyword();
         if (keyword != null && !keyword.isBlank()) {

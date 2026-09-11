@@ -38,8 +38,34 @@
       .menu-arrow { color: #c7c7cc; font-size: 14px; }
 
       /* Book Button */
-      .book-btn { display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(102, 126, 234, 0.35); }
+      .book-btn { display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(102, 126, 234, 0.35); text-align: center; }
       .book-btn:active { transform: scale(0.98); }
+      .book-btn-booked {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+          text-align: left;
+          background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+          box-shadow: 0 4px 16px rgba(74, 222, 128, 0.35);
+          cursor: default;
+      }
+      .book-btn-booked:active { transform: none; }
+      .book-btn-text { flex: 1; text-align: left; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .book-btn-cancel {
+          flex-shrink: 0;
+          width: 28px; height: 28px;
+          display: inline-flex; align-items: center; justify-content: center;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.25);
+          color: #fff;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.2s;
+      }
+      .book-btn-cancel:hover { background: rgba(255,255,255,0.4); }
+      .book-btn-cancel:active { transform: scale(0.9); }
 
       /* Modal (generic) */
       .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: flex-end; justify-content: center; }
@@ -136,6 +162,16 @@
       .success-btn.primary:active { transform: scale(0.97); }
       .success-btn.secondary { background: #f0f0f5; color: #1a1a1a; }
       .success-btn.secondary:active { transform: scale(0.97); }
+
+      /* Cancel-confirm modal tweaks: warning gradient + cross icon */
+      .success-card.cancel-card::before { background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%); }
+      .success-icon-wrap.cancel-icon-wrap { box-shadow: 0 8px 24px rgba(239, 68, 68, 0.35); }
+      .success-icon.cancel-icon { background: linear-gradient(135deg, #fbbf24 0%, #ef4444 100%); }
+      .success-icon.cancel-icon svg { stroke-dasharray: 0; animation: none; stroke-dashoffset: 0; }
+      .success-btn.primary.cancel-confirm-btn {
+          background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+      }
   </style>
 </head>
 <body>
@@ -193,7 +229,7 @@
 
   <!-- Book Button -->
   <!-- Book Button -->
-  <button class="book-btn" onclick="openModal()">📅 立即预约理发</button>
+  <button class="book-btn" id="bookBtn" onclick="onBookBtnClick()">📅 立即预约理发</button>
 
   <!-- Footer -->
   <div class="footer">
@@ -513,6 +549,8 @@
                 document.getElementById('balanceHint').textContent = '暂无消费记录';
             }
         } catch (e) { /* 已在 loadProfile 中提示 */ }
+
+        await loadLatestAppointment();
     }
 
     // ====== 交易记录 Modal ======
@@ -758,6 +796,9 @@
             const body = { shopId: shopId, serviceItemId: serviceItemId, appointmentDate: date, startTime: slot, remark: remark || null };
             if (employeeId) body.employeeId = employeeId;
             const result = await apiCall('/appointment', 'POST', body);
+            // 刷新按钮为「已预约」状态(后端返回完整 AppointmentResponse)
+            currentAppointment = (result && result.id) ? result : null;
+            renderBookButton();
             // 收集弹窗摘要
             const itemName = (bookingState.items.find(i => String(i.id) === String(serviceItemId)) || {}).name || '--';
             const empName  = employeeId ? ((bookingState.employees.find(e => String(e.id) === String(employeeId)) || {}).name || '') : '';
@@ -778,6 +819,88 @@
         }
     }
 
+    // ====== 会员端"已预约"按钮状态 ======
+    let currentAppointment = null;  // 当前店铺下最新一条「未来 + 有效」预约
+
+    async function loadLatestAppointment() {
+        const memberId = localStorage.getItem(ID_KEY);
+        const shopId   = localStorage.getItem(SHOP_KEY);
+        if (!memberId || !shopId) return;
+        try {
+            const ap = await apiCall('/appointment/latest?shopId=' + encodeURIComponent(shopId), 'GET');
+            currentAppointment = (ap && ap.id) ? ap : null;
+        } catch (e) {
+            currentAppointment = null;
+            console.warn('加载最新预约失败:', e.message);
+        }
+        renderBookButton();
+    }
+
+    function renderBookButton() {
+        const btn = document.getElementById('bookBtn');
+        if (currentAppointment && currentAppointment.id) {
+            const itemName = currentAppointment.serviceItemName || '已预约';
+            const dateStr  = currentAppointment.appointmentDate || '';
+            const timeStr  = currentAppointment.startTime ? String(currentAppointment.startTime).substring(0, 5) : '';
+            btn.classList.add('book-btn-booked');
+            btn.innerHTML =
+                '<span class="book-btn-text">📅 已预约:' + escapeHtml(itemName) + '  '
+                + escapeHtml(dateStr) + (timeStr ? ' ' + escapeHtml(timeStr) : '') + '</span>'
+                + '<span class="book-btn-cancel" role="button" aria-label="取消预约">✕</span>';
+            const cancelEl = btn.querySelector('.book-btn-cancel');
+            if (cancelEl) {
+                cancelEl.onclick = function (ev) {
+                    ev.stopPropagation();
+                    confirmCancelBooking();
+                };
+            }
+        } else {
+            btn.classList.remove('book-btn-booked');
+            btn.innerHTML = '📅 立即预约理发';
+        }
+    }
+
+    function onBookBtnClick() {
+        if (currentAppointment && currentAppointment.id) return;
+        openModal();
+    }
+
+    function confirmCancelBooking() {
+        if (!currentAppointment || !currentAppointment.id) return;
+        document.getElementById('cancelItem').textContent      = currentAppointment.serviceItemName || '--';
+        const dateStr = currentAppointment.appointmentDate || '';
+        const timeStr = currentAppointment.startTime ? String(currentAppointment.startTime).substring(0, 5) : '';
+        document.getElementById('cancelDateTime').textContent  = (dateStr + (timeStr ? '  ' + timeStr : '')) || '--';
+        document.getElementById('cancelShop').textContent      = localStorage.getItem(SHOPNAME_KEY) || '--';
+        document.getElementById('cancelConfirmBtn').disabled   = false;
+        document.getElementById('cancelConfirmBtn').textContent = '确认取消';
+        const modal = document.getElementById('cancelConfirmModal');
+        modal.classList.remove('active');
+        void modal.offsetWidth;
+        modal.classList.add('active');
+    }
+
+    function closeCancelConfirmModal() {
+        document.getElementById('cancelConfirmModal').classList.remove('active');
+    }
+
+    async function doCancelBooking() {
+        if (!currentAppointment || !currentAppointment.id) return;
+        const btn = document.getElementById('cancelConfirmBtn');
+        btn.disabled = true;
+        btn.textContent = '取消中...';
+        try {
+            await apiCall('/appointment/' + currentAppointment.id + '/cancel', 'POST', null);
+            currentAppointment = null;
+            renderBookButton();
+            closeCancelConfirmModal();
+        } catch (e) {
+            alert('取消失败:' + e.message);
+            btn.disabled = false;
+            btn.textContent = '确认取消';
+        }
+    }
+
     // ====== 预约成功弹窗 ======
     function showBookingSuccess(info) {
         document.getElementById('successItem').textContent = info.itemName || '--';
@@ -790,14 +913,9 @@
         modal.classList.add('active');
     }
 
-    function closeSuccessModal() {
-        document.getElementById('bookingSuccessModal').classList.remove('active');
-    }
-
-    function onSuccessViewRecords() {
-        closeSuccessModal();
-        openTxModal();
-    }
+function closeSuccessModal() {
+    document.getElementById('bookingSuccessModal').classList.remove('active');
+}
 
     // ====== 初始化 ======
     document.querySelectorAll('.time-slot').forEach(slot => {
@@ -844,8 +962,38 @@
       </div>
     </div>
     <div class="success-actions">
-      <button class="success-btn secondary" onclick="closeSuccessModal()">好的</button>
-      <button class="success-btn primary" onclick="onSuccessViewRecords()">查看消费记录</button>
+      <button class="success-btn primary" onclick="closeSuccessModal()">好的</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cancel Appointment Confirm Modal -->
+<div class="success-modal" id="cancelConfirmModal">
+  <div class="success-card cancel-card">
+    <div class="success-icon-wrap cancel-icon-wrap">
+      <div class="success-icon cancel-icon">
+        <svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="6" y1="18" x2="18" y2="6"/></svg>
+      </div>
+    </div>
+    <div class="success-title">确认取消预约?</div>
+    <div class="success-subtitle">取消后该预约时段将释放,如需可重新预约</div>
+    <div class="success-detail" id="cancelDetail">
+      <div class="success-detail-row">
+        <span class="success-detail-label">服务项目</span>
+        <span class="success-detail-value" id="cancelItem">--</span>
+      </div>
+      <div class="success-detail-row">
+        <span class="success-detail-label">预约日期</span>
+        <span class="success-detail-value highlight" id="cancelDateTime">--</span>
+      </div>
+      <div class="success-detail-row">
+        <span class="success-detail-label">店铺</span>
+        <span class="success-detail-value" id="cancelShop">--</span>
+      </div>
+    </div>
+    <div class="success-actions">
+      <button class="success-btn secondary" onclick="closeCancelConfirmModal()">再想想</button>
+      <button class="success-btn primary cancel-confirm-btn" id="cancelConfirmBtn" onclick="doCancelBooking()">确认取消</button>
     </div>
   </div>
 </div>

@@ -57,6 +57,23 @@ public class AppointmentController {
         return ApiResponse.success(appointmentService.listAvailableSlots(shopId, date));
     }
 
+    @Operation(summary = "会员端查询当前店铺最新一条未来有效预约(无则返回 null)")
+    @GetMapping("/latest")
+    public ApiResponse<AppointmentResponse> latest(@RequestParam Long shopId) {
+        Appointment ap = appointmentService.findLatestValidByMemberAndShop(shopId);
+        if (ap == null) {
+            return ApiResponse.success(null);
+        }
+        return ApiResponse.success(appointmentService.toResponseWithNames(ap));
+    }
+
+    @Operation(summary = "会员自助取消预约(仅限自己、仅限未到期、仅限有效)")
+    @PostMapping("/{id}/cancel")
+    public ApiResponse<Void> cancelByMember(@PathVariable("id") Long id) {
+        appointmentService.cancelByMember(id);
+        return ApiResponse.success();
+    }
+
     private void assertShopOwner(Long shopId) {
         AuthUser auth = UserContext.getUser();
         if (auth == null) {

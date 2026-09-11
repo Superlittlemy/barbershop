@@ -6,13 +6,15 @@ import lombok.Getter;
 /**
  * 预约状态
  * <p>
- * 本期极简,无状态机,仅 0=有效 一个值,预留扩展。
+ * 0=有效(创建初始态,或取消后又重新创建)
+ * 1=已取消(会员自助取消后的终态;过期历史预约在查询时另行按 endTime>now 过滤)
  */
 @Getter
 @AllArgsConstructor
 public enum AppointmentStatus {
 
-    VALID(0, "有效");
+    VALID(0, "有效"),
+    CANCELLED(1, "已取消");
 
     private final Integer code;
     private final String description;

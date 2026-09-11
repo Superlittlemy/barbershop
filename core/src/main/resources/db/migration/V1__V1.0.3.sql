@@ -180,8 +180,6 @@ CREATE TABLE appointment (
                              updated_time      DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
                              is_deleted        TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除:0.未删除 1.已删除',
                              version           BIGINT NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
-    -- 同店铺同人同时段仅一条有效预约(is_deleted 加入联合键,允许软删后再次创建)
-                             UNIQUE KEY uk_shop_member_slot (shop_id, member_id, appointment_date, start_time, is_deleted),
                              INDEX idx_shop_date (shop_id, appointment_date, is_deleted),
                              INDEX idx_member (member_id, is_deleted),
                              INDEX idx_employee_id (employee_id)

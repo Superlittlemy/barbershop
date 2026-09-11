@@ -75,7 +75,7 @@
         </encoder>
 
         <!-- 错误日志提取 -->
-        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>ERROR</level>
         </filter>
     </appender>

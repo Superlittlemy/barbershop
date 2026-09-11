@@ -53,7 +53,7 @@ public class AppointmentResponse {
     @Schema(description = "结束时段(HH:mm:ss)")
     private LocalTime endTime;
 
-    @Schema(description = "状态:0=有效")
+    @Schema(description = "状态:0=有效(AppointmentStatus.VALID)、1=已取消(AppointmentStatus.CANCELLED)")
     private Integer status;
 
     @Schema(description = "备注")

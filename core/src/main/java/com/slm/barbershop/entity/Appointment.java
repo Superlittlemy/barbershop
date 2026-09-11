@@ -11,7 +11,8 @@ import java.time.LocalTime;
 /**
  * 会员预约
  * <p>
- * 本期极简:无状态机,创建即生效。{@code status} 列仅作兜底(0=有效),不暴露给店家操作。
+ * 状态由 {@link com.slm.barbershop.enums.AppointmentStatus} 描述:0=有效(创建即生效)、1=已取消(会员自助取消)。
+ * 取消后的预约({@code status=1})不占用时段,可被重新预约;店家分页查询可见全部状态。
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -54,7 +55,8 @@ public class Appointment extends BaseEntity {
     private LocalTime endTime;
 
     /**
-     * 状态:0=有效(本期唯一值);预留扩展
+     * 状态:0=有效(AppointmentStatus.VALID,创建初始态)、1=已取消(AppointmentStatus.CANCELLED,会员自助取消后的终态)。
+     * 取消后的预约不再占用时段,可被重新预约。
      */
     private Integer status;
 

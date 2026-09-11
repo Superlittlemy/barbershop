@@ -15,7 +15,8 @@ import java.time.LocalDate;
  * <p>
  * 继承 {@link Page}，实现"分页 + 查询"合一。
  * <p>
- * date 非空时按日期过滤;keyword 非空时按会员姓名/服务项目名模糊匹配(OR 关系,LIKE)。
+ * date 非空时按日期过滤;keyword 非空时按会员姓名/服务项目名模糊匹配(OR 关系,LIKE);
+ * status 非空时按状态过滤(见 {@link com.slm.barbershop.enums.AppointmentStatus})。
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -32,5 +33,8 @@ public class AppointmentPageQuery extends Page<Appointment> {
 
     @Schema(description = "关键词:会员姓名/服务项目名模糊匹配(OR 关系,LIKE,可选)")
     private String keyword;
+
+    @Schema(description = "状态过滤(可选):0=有效(AppointmentStatus.VALID)、1=已取消(AppointmentStatus.CANCELLED);不传则返回全部状态")
+    private Integer status;
 
 }
