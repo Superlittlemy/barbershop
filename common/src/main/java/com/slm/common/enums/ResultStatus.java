@@ -26,6 +26,7 @@ public enum ResultStatus {
     ERROR(-1, "未知异常", HttpStatus.INTERNAL_SERVER_ERROR),
 
     BAD_REQUEST(1000, "请求参数错误", HttpStatus.BAD_REQUEST),
+    METHOD_NOT_ALLOWED(1001, "请求方法不支持", HttpStatus.METHOD_NOT_ALLOWED),
     SOURCE_NOT_FOUND(1002, "资源不存在", HttpStatus.NOT_FOUND),
     FILE_SIZE_EXCEEDED(1003, "文件大小超出限制", HttpStatus.PAYLOAD_TOO_LARGE),
     FILE_UPLOAD_ERROR(1004, "上传文件异常", HttpStatus.BAD_REQUEST),
